@@ -8,3 +8,12 @@
 
 - name: cleanup removed users
   include_tasks: cleanup_users.yml
+
+- name: allow our admin users to do passwordless sudo
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+  become: true
