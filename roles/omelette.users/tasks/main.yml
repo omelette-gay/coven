@@ -5,3 +5,6 @@
   loop_control:
     label: "{{ user.key }}"
     loop_var: user
+
+- name: cleanup removed users
+  include_tasks: cleanup_users.yml
