@@ -1,0 +1,14 @@
+---
+- name: add admin user
+  user:
+    name: "{{ user.key }}"
+    state: present
+    groups: "wheel"
+  become: true
+
+- name: configure SSH keys
+  authorized_key:
+    user: "{{ user.key }}"
+    key: "{{ item }}"
+  loop: "{{ user.value }}"
+  become: true
