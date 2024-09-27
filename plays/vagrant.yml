@@ -2,3 +2,4 @@
 - hosts: all
   roles:
     - omelette.auto-updates
+    - omelette.users
