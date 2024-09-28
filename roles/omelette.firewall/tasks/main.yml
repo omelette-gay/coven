@@ -1,0 +1,14 @@
+---
+- name: allow necessary services
+  firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+  loop:
+    - ssh
+
+- name: enable firewalld
+  systemd:
+    name: firewalld.service
+    enabled: yes
+    state: started

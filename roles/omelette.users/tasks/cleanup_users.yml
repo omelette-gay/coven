@@ -18,4 +18,3 @@
       map(attribute='key') |
       list
     }}
-  become: true
