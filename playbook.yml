@@ -2,4 +2,6 @@
 - hosts: all
   roles:
     - omelette.auto-updates
+    - omelette.firewall
     - omelette.users
+  become: true

@@ -2,18 +2,15 @@
 - name: install dnf-automatic
   dnf:
     name: dnf-automatic
-  become: true
 
 - name: enable automatic updates
   systemd:
     name: dnf-automatic.timer
     enabled: yes
     state: started
-  become: true
 
 - name: configure updates to be automatically applied
   lineinfile:
     path:  /etc/dnf/automatic.conf
     regexp: '^apply_updates ='
     line: 'apply_updates = yes'
-  become: true
