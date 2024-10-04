@@ -1,0 +1,53 @@
+---
+- name: allow k8s controller from trusted IPv4 networks
+  firewalld:
+    rich_rule: rule family="ipv4" source address="{{ item }}" port port="6443" protocol="tcp" accept
+    permanent: true
+    state: enabled
+  loop: "{{ trusted_ipv4_networks }}"
+
+- name: allow k8s controller from trusted IPv6 networks
+  firewalld:
+    rich_rule: rule family="ipv6" source address="{{ item.address }}" port port="6443" protocol="tcp" accept
+    permanent: true
+    state: enabled
+  loop: "{{ trusted_ipv6_networks }}"
+
+- name: allow required inter-node communication (IPv4)
+  include_tasks: enable_ipv4_inter_node_port.yml
+  loop:
+    - port: 8472
+      protocol: udp
+    - port: 6443
+      protocol: tcp
+    - port: 10250
+      protocol: tcp
+  loop_control:
+    loop_var: required_port
+
+- name: allow required inter-node communication (IPv6)
+  include_tasks: enable_ipv6_inter_node_port.yml
+  loop:
+    - port: 8472
+      protocol: udp
+    - port: 6443
+      protocol: tcp
+    - port: 10250
+      protocol: tcp
+  loop_control:
+    loop_var: required_port
+
+- name: allow k8s to talk to the host
+  firewalld:
+    zone: trusted
+    source: "{{ item }}"
+    permanent: true
+    state: enabled
+  loop:
+    - 10.42.0.0/16
+    - 10.43.0.0/16
+
+- name: reload firewalld
+  systemd:
+    name: firewalld.service
+    state: reloaded

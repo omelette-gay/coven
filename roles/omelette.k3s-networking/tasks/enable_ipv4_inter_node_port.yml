@@ -1,0 +1,5 @@
+- firewalld:
+    rich_rule: rule family="ipv4" source address="{{ item }}" port port="{{ required_port.port }}" protocol="{{ required_port.protocol }}" accept
+    permanent: true
+    state: enabled
+  loop: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"

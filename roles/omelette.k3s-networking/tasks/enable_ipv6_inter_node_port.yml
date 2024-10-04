@@ -1,0 +1,6 @@
+- firewalld:
+    rich_rule: rule family="ipv6" source address="{{ item.address }}" port port="{{ required_port.port }}" protocol="{{ required_port.protocol }}" accept
+    permanent: true
+    state: enabled
+  when: '"address" in item'
+  loop: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv6']) }}"
