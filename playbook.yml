@@ -4,4 +4,5 @@
     - omelette.auto-updates
     - omelette.firewall
     - omelette.users
+    - xanmanning.k3s
   become: true

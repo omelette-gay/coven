@@ -1,0 +1,3 @@
+# this defines the Ansible roles we want from an external source
+
+- name: xanmanning.k3s
