@@ -5,4 +5,5 @@
     - omelette.firewall
     - omelette.users
     - xanmanning.k3s
+    - omelette.k3s-networking
   become: true
