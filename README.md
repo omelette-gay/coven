@@ -23,6 +23,10 @@ To provision a VM which tests out our Ansible scripts and deployments, you will 
 and Ansible installed. Note that on Windows, this must be installed under WSL. You can then start the testlab by
 running `vagrant up`. `vagrant ssh` will then give you a shell on the host machine.
 
+Once the VM is created with `vagrant up` you will need to run:
+    `ansible-playbook -i vagrant-inventory playbook.yml`
+This will run Ansible against the test lab to configure it.
+
 How To
 ------
 

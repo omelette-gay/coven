@@ -12,9 +12,4 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "shell",
                       inline: "nmcli c mod 'Wired connection 2' connection.autoconnect true; nmcli dev mod eth1 ipv4.addresses 192.168.57.100/24; nmcli dev mod eth1 ipv4.method manual"
-  
-  config.vm.provision :ansible do |ansible|
-    ansible.playbook = "playbook.yml"
-    ansible.inventory_path = "vagrant-inventory"
-  end
 end
