@@ -14,3 +14,5 @@ trusted_ipv4_networks:
   - 192.168.57.0/24
 
 trusted_ipv6_networks: []
+
+kubeconfig_require_secure: false

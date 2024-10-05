@@ -1,0 +1,12 @@
+- name: read kubeconfig from host
+  slurp:
+    src: "{{ k3s_config_file|default('/etc/rancher/k3s/k3s.yaml') }}"
+  become: true
+  register: node_kubeconfig
+
+- name: set kubeconfig auth facts
+  set_fact:
+    kubeconfig_ca_data: "{{ (node_kubeconfig.content | b64decode | from_yaml).clusters[0].cluster['certificate-authority-data'] }}"
+    kubeconfig_client_cert_data: "{{ (node_kubeconfig.content | b64decode | from_yaml).users[0].user['client-certificate-data'] }}"
+    kubeconfig_client_key_data: "{{ (node_kubeconfig.content | b64decode | from_yaml).users[0].user['client-key-data'] }}"
+
