@@ -7,3 +7,42 @@
     - xanmanning.k3s
     - omelette.k3s-networking
   become: true
+
+- hosts: all
+  gather_facts: no
+  run_once: true
+  vars:
+    kubeconfig:
+      apiVersion: v1
+      kind: Config
+      current-context: default
+      contexts:
+        - name: default
+          context:
+            cluster: default
+            user: default
+      clusters:
+        - name: default
+          cluster:
+            server: "https://{{ ansible_ssh_host }}:6443"
+            certificate-authority-data: "{{ kubeconfig_ca_data }}"
+      users:
+        - name: default
+          user:
+            client-certificate-data: "{{ kubeconfig_client_cert_data }}"
+            client-key-data: "{{ kubeconfig_client_key_data }}"
+
+  roles:
+    - omelette.kubeconfig
+
+  tasks:
+    - name: test connection
+      connection: local
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ kubeconfig }}"
+        validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+        kind: Pod
+      register: pod_list
+
+    - debug:
+        var: pod_list

@@ -10,6 +10,9 @@ NOTE: If you are running this on Windows, Ansible only runs under WSL, so run ev
 
 You will need to have [Ansible installed](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) to use this repo.
 
+In addition, you will also need the following libraries for Python:
+* kubernetes: `pip3 install kubernetes`
+
 Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
 
