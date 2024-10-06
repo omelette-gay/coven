@@ -3,12 +3,11 @@ gitops
 
 This repo contains all the infrastructure-as-code stuff for deploying and managing Chris & Meg's server and IoT setup.
 
-Getting Started
----------------
+# Getting Started
 
 You will need to have [Ansible installed](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) to use this repo.
 
-NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL (Please see the How To section below for more information).
+NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL (Please see the [How To section](#windows-subsystem-for-linux-install-method) for more information).
 
 In addition, you will also need the following libraries for Python:
 * kubernetes: `pip3 install kubernetes`
@@ -16,8 +15,7 @@ In addition, you will also need the following libraries for Python:
 Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
 
-Testlab
--------
+# Testlab
 
 To provision a VM which tests out our Ansible scripts and deployments, you will need [Vagrant](https://www.vagrantup.com/)
 and Ansible installed. Note that on Windows, this must be installed under WSL. You can then start the testlab by
@@ -26,8 +24,7 @@ running `vagrant up`. `vagrant ssh` will then give you a shell on the host machi
 Once the VM is created with `vagrant up` you will need to run: `ansible-playbook -i vagrant-inventory playbook.yml`.
 This will run Ansible against the test lab to configure it.
 
-How To
-------
+# How To
 
 ### Configure admin users
 
@@ -89,6 +86,6 @@ In WSL run: `ansible-galaxy install -r requirements.yml`
 - **Install kubernetes**
 In WSL type: `sudo apt install python3-kubernetes`
 
-Now it should all work!  You can now carry on from where the note was in getting started
+Now it should all work!  You can now carry on from [here.](#getting-started)
 
 
