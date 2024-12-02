@@ -1,4 +1,5 @@
 ---
+# this block defines roles which get run against the host machines which form part of our k8s cluster
 - hosts: all
   roles:
     - omelette.auto-updates
@@ -9,6 +10,7 @@
     - omelette.kubeconfig
   become: true
 
+# the roles defined in this section are for roles which run on the cluster, rather than the individual hosts
 - hosts: localhost
   gather_facts: no
   vars:
@@ -24,23 +26,13 @@
       clusters:
         - name: default
           cluster:
-            server: "https://{{ hostvars.default.ansible_ssh_host }}:6443"
-            certificate-authority-data: "{{ hostvars.default.kubeconfig_ca_data }}"
+            server: "https://{{ hostvars[groups.all[0]].ansible_ssh_host }}:6443"
+            certificate-authority-data: "{{ hostvars[groups.all[0]].kubeconfig_ca_data }}"
       users:
         - name: default
           user:
-            client-certificate-data: "{{ hostvars.default.kubeconfig_client_cert_data }}"
-            client-key-data: "{{ hostvars.default.kubeconfig_client_key_data }}"
+            client-certificate-data: "{{ hostvars[groups.all[0]].kubeconfig_client_cert_data }}"
+            client-key-data: "{{ hostvars[groups.all[0]].kubeconfig_client_key_data }}"
 
-
-
-  tasks:
-    - name: test connection
-      kubernetes.core.k8s_info:
-        kubeconfig: "{{ kubeconfig }}"
-        validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
-        kind: Pod
-      register: pod_list
-
-    - debug:
-        var: pod_list
+  roles:
+    - omelette.monitoring

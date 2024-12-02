@@ -1,16 +1,17 @@
-gitops
-======
+# gitops
 
 This repo contains all the infrastructure-as-code stuff for deploying and managing Chris & Meg's server and IoT setup.
 
 # Getting Started
 
-You will need to have [Ansible installed](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) to use this repo.
+You will need to have [Ansible installed](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) to use this repo,
+as well as [Helm](https://helm.sh/docs/intro/install/).
 
 NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL (Please see the [How To section](#windows-subsystem-for-linux-install-method) for more information).
 
 In addition, you will also need the following libraries for Python:
-* kubernetes: `pip3 install kubernetes`
+
+- kubernetes: `pip3 install kubernetes`
 
 Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
@@ -35,8 +36,8 @@ Ansible playbook to then add your account to it!
 ### Windows Subsystem For Linux Install Method
 
 - Install VirtualBox - Vagrant doesn't support all versions of VirtualBox, as of writing this it only accepts the following:
-    4.0, 4.1, 4.2, 4.3, 5.0, 5.1, 5.2, 6.0, 6.1, 7.0
-As such I would recommend installing one of the supported versions from: https://www.virtualbox.org/wiki/Download_Old_Builds_7_0
+  4.0, 4.1, 4.2, 4.3, 5.0, 5.1, 5.2, 6.0, 6.1, 7.0
+  As such I would recommend installing one of the supported versions from: https://www.virtualbox.org/wiki/Download_Old_Builds_7_0
 
 - Install Vagrant using the Windows MSI and note the version (this is important for later)
 
@@ -48,44 +49,42 @@ As such I would recommend installing one of the supported versions from: https:/
         curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
         sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
         sudo apt-get update && sudo apt-get install vagrant
-    
+
 This will add the vagrant repo and install vagrant in WSL, note the version installed, it must match the Windows version you installed earlier
 
-- Allow WSL to use Virtualbox and tell it to store vagrant files in the parent folder 
-    Edit ~/.bashrc to include the following lines and save:
-        
+- Allow WSL to use Virtualbox and tell it to store vagrant files in the parent folder
+  Edit ~/.bashrc to include the following lines and save:
+
         export VAGRANT_WSL_ENABLE_WINDOWS_ACCESS="1"
         export VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH="/mnt/<Repo Parent Folder>/"
         export PATH="$PATH:/mnt/d/Programs/Virtualbox"
-        
+
 
 - Allow WSL to use file permissions properly
-    Edit /etc/wsl.conf and add:
-        
+  Edit /etc/wsl.conf and add:
+
         [automount]
         options = "metadata"
-        
 
-    **VAGRANT_WSL_ENABLE_WINDOWS_ACCESS:** Enables Vagrant to use Features that are installed on your Windows client and not within WSL. So for instance Virtualbox itself will then get used from the Windows Client installation and not presuming it is installed within your WSL.
-    **VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH:** Path to your user home directory from within WSL. Adjust the entry to your configuration (so username).
-    **PATH:** Add the Virtualbox installation path of Virtualbox to your PATH environment variable.
+
+  **VAGRANT_WSL_ENABLE_WINDOWS_ACCESS:** Enables Vagrant to use Features that are installed on your Windows client and not within WSL. So for instance Virtualbox itself will then get used from the Windows Client installation and not presuming it is installed within your WSL.
+  **VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH:** Path to your user home directory from within WSL. Adjust the entry to your configuration (so username).
+  **PATH:** Add the Virtualbox installation path of Virtualbox to your PATH environment variable.
 
 - **Version Check Vagrant**
-Inside WSL run: `vagrant -v`
-This should return the same version that you installed in Windows using the MSI above
+  Inside WSL run: `vagrant -v`
+  This should return the same version that you installed in Windows using the MSI above
 
 - **Install Vagrant virtualbox_WSL2 plugin**
-Inside WSL run: `vagrant plugin install virtualbox_WSL2`
+  Inside WSL run: `vagrant plugin install virtualbox_WSL2`
 
 - **Install Ansible in WSL**
-In WSL type: `sudo apt install ansible`
+  In WSL type: `sudo apt install ansible`
 
 - **Install ansible-galaxy requirements**
-In WSL run: `ansible-galaxy install -r requirements.yml`
+  In WSL run: `ansible-galaxy install -r requirements.yml`
 
 - **Install kubernetes**
-In WSL type: `sudo apt install python3-kubernetes`
+  In WSL type: `sudo apt install python3-kubernetes`
 
-Now it should all work!  You can now carry on from [here.](#getting-started)
-
-
+Now it should all work! You can now carry on from [here.](#getting-started)
