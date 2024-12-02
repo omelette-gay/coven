@@ -1,2 +1,5 @@
 - name: install kube-prometheus
   include_tasks: kube-prometheus.yml
+
+- name: install loki
+  include_tasks: loki.yml
