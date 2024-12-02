@@ -1,0 +1,21 @@
+- name: Add grafana repo
+  kubernetes.core.helm_repository:
+    name: grafana
+    repo_url: https://grafana.github.io/helm-charts
+
+- name: install loki
+  kubernetes.core.helm:
+    kubeconfig: "{{ kubeconfig }}"
+    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    name: loki
+    chart_ref: grafana/loki-stack
+    release_namespace: monitoring
+    create_namespace: true
+    force: true
+    set_values:
+      - value: loki.isDefault=false
+  register: loki_installed
+
+- name: restart Grafana
+  include_tasks: restart_grafana.yml
+  when: loki_installed.changed
