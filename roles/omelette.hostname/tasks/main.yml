@@ -1,0 +1,4 @@
+---
+- name: configure hostname
+  hostname:
+    name: "{{ hostname }}"

@@ -16,3 +16,6 @@ trusted_ipv4_networks:
 trusted_ipv6_networks: []
 
 kubeconfig_require_secure: false
+
+k3s_agent:
+  node_name: "{{ hostname }}"
