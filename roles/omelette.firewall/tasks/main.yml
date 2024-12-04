@@ -1,4 +1,10 @@
 ---
+- name: set firewall to use iptables so it is compatible with k8s
+  lineinfile:
+    path: /etc/firewalld/firewalld.conf
+    regexp: '^FirewallBackend='
+    line: FirewallBackend=iptables
+
 - name: allow SSH from trusted IPv4 networks
   firewalld:
     rich_rule: rule family="ipv4" source address="{{ item }}" service name="ssh" accept
