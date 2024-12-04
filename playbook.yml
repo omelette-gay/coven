@@ -3,10 +3,8 @@
 - hosts: all
   roles:
     - omelette.auto-updates
-    - omelette.firewall
     - omelette.users
     - xanmanning.k3s
-    - omelette.k3s-networking
     - omelette.kubeconfig
   become: true
 
