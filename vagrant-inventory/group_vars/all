@@ -9,12 +9,6 @@ admin_users:
 
 k3s_become: true
 
-trusted_ipv4_networks:
-  - 10.0.2.0/24
-  - 192.168.57.0/24
-
-trusted_ipv6_networks: []
-
 kubeconfig_require_secure: false
 
 k3s_agent:
