@@ -5,7 +5,7 @@ This repo contains all the infrastructure-as-code stuff for deploying and managi
 # Getting Started
 
 You will need to have [Ansible installed](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) to use this repo,
-as well as [Helm](https://helm.sh/docs/intro/install/).
+as well as [Helm](https://helm.sh/docs/intro/install/), and Helm Diff (run `helm plugin install https://github.com/databus23/helm-diff` once Helm is installed).
 
 NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL (Please see the [How To section](#windows-subsystem-for-linux-install-method) for more information).
 
@@ -15,6 +15,10 @@ In addition, you will also need the following libraries for Python:
 
 Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
+
+# Running on real infrastructure
+
+    ansible-playbook -i inventory playbook.yml
 
 # Testlab
 
@@ -59,13 +63,11 @@ This will add the vagrant repo and install vagrant in WSL, note the version inst
         export VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH="/mnt/<Repo Parent Folder>/"
         export PATH="$PATH:/mnt/d/Programs/Virtualbox"
 
-
 - Allow WSL to use file permissions properly
   Edit /etc/wsl.conf and add:
 
         [automount]
         options = "metadata"
-
 
   **VAGRANT_WSL_ENABLE_WINDOWS_ACCESS:** Enables Vagrant to use Features that are installed on your Windows client and not within WSL. So for instance Virtualbox itself will then get used from the Windows Client installation and not presuming it is installed within your WSL.
   **VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH:** Path to your user home directory from within WSL. Adjust the entry to your configuration (so username).

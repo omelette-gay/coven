@@ -1,2 +1,3 @@
 ---
 hostname: strix.xdc.omelette.gay
+ansible_ssh_host: strix.xdc.omelette.gay
