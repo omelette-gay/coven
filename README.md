@@ -20,6 +20,8 @@ these dependencies.
 
     ansible-playbook -i inventory playbook.yml
 
+In the event you are setting up new things from scratch, then read [the bootstrapping doc](./docs/bootstrapping.md)
+
 # Testlab
 
 To provision a VM which tests out our Ansible scripts and deployments, you will need [Vagrant](https://www.vagrantup.com/)
