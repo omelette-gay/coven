@@ -27,7 +27,7 @@ This is our primary (and currently only) k8s cluster.
 
 #### Hosts
 
-- _weatherwax_: Hosted network TBC.
+- _strix_: hosted in external datacentre [Hetzner FSN1-DC15](https://docs.hetzner.com/general/others/data-centers-and-connection/)
 
 ## Networks
 
@@ -47,3 +47,8 @@ Currently, there is no DNS configured, and janus is configured on the root as it
 - _janus_: Main router (Roman god who can look both ways)
 - _emleymoor_: Wi-fi access point/switch in Chris's office (primary TV transmitter for Yorkshire)
 - _winterhill_: Wi-fi access point in main bedroom (primary TV transmitter for Manchester)
+
+### External data centres
+
+Devices which are hosted on external networks, rather than networks which we manage are classed as in an
+external datacentre, and named in the subdomain `xdc.omelette.gay`.

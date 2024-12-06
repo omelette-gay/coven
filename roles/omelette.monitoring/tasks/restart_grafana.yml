@@ -9,7 +9,7 @@
     content: "{{ kubeconfig | to_yaml }}"
 
 - name: do rolling restart of Grafana
-  shell: /bin/bash -c "kubectl {% if kubeconfig_require_secure == false %}--insecure-skip-tls-verify{% endif %} rollout restart deployment kube-prometheus-grafana -n monitoring"
+  shell: /bin/bash -c "kubectl {% if kubeconfig_require_secure|default(true) == false %}--insecure-skip-tls-verify{% endif %} rollout restart deployment kube-prometheus-grafana -n monitoring"
   environment:
     KUBECONFIG: kubeconfig_tempfile.path
 
