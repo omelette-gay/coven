@@ -1,0 +1,37 @@
+- name: Add keycloak repo
+  kubernetes.core.helm_repository:
+    name: codecentric
+    repo_url: https://codecentric.github.io/helm-charts
+
+- name: install keycloak
+  kubernetes.core.helm:
+    kubeconfig: "{{ kubeconfig }}"
+    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    name: keycloak
+    chart_ref: codecentric/keycloak
+    release_namespace: keycloak
+    create_namespace: true
+    release_values:
+      serviceMonitor:
+        enabled: true
+      extraServiceMonitor:
+        enabled: true
+      extraEnv: |
+        - name: PROXY_ADDRESS_FORWARDING
+          value: "true"
+        - name: KEYCLOAK_STATISTICS
+          value: all
+      ingress:
+        enabled: true
+        rules:
+          - host: "{{ keycloak_host }}"
+            paths:
+              - path: /
+                pathType: Prefix
+        console:
+          enabled: true
+          rules:
+            - host: "{{ keycloak_host }}"
+              paths:
+                - path: /auth/admin
+                  pathType: Prefix

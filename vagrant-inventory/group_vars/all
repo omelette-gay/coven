@@ -13,3 +13,5 @@ kubeconfig_require_secure: false
 
 k3s_agent:
   node_name: "{{ hostname }}"
+
+keycloak_host: auth.coven.local
