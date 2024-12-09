@@ -36,4 +36,5 @@
   roles:
 #    - omelette.monitoring
     - omelette.sso
+    - omelette.vault
     - omelette.factorio

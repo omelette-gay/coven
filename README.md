@@ -31,6 +31,13 @@ running `vagrant up`. `vagrant ssh` will then give you a shell on the host machi
 Once the VM is created with `vagrant up` you will need to run: `ansible-playbook -i vagrant-inventory playbook.yml`.
 This will run Ansible against the test lab to configure it.
 
+If you want to access Keycloak and Vault locally, then add the following to `/etc/hosts`
+
+```
+192.168.57.100 auth.coven.local
+192.168.57.100 vault.coven.local
+```
+
 # How To
 
 ### Configure admin users

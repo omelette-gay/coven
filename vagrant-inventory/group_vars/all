@@ -15,3 +15,4 @@ k3s_agent:
   node_name: "{{ hostname }}"
 
 keycloak_host: auth.coven.local
+vault_host: vault.coven.local
