@@ -2,10 +2,10 @@
 # this block defines roles which get run against the host machines which form part of our k8s cluster
 - hosts: all
   roles:
-#    - omelette.hostname
-#    - omelette.auto-updates
-#    - omelette.users
-#    - xanmanning.k3s
+    - omelette.hostname
+    - omelette.auto-updates
+    - omelette.users
+    - xanmanning.k3s
     - omelette.kubeconfig
   become: true
 
@@ -34,7 +34,7 @@
             client-key-data: "{{ hostvars[groups.all[0]].kubeconfig_client_key_data }}"
 
   roles:
-#    - omelette.monitoring
+    - omelette.monitoring
     - omelette.sso
     - omelette.vault
     - omelette.factorio

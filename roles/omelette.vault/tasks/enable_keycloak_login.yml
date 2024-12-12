@@ -1,0 +1,97 @@
+- name: create Vault admin role in Keycloak
+  community.general.keycloak_role:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_username: "{{ keycloak_username }}"
+    auth_password: "{{ keycloak_password }}"
+    auth_realm: master
+    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    realm: "{{ keycloak_realm }}"
+    name: "{{ vault_keycloak_admin_role }}"
+  register: keycloak_vault_admin_role
+
+- name: associate vault-admin role with admins group in Keycloak
+  community.general.keycloak_realm_rolemapping:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_username: "{{ keycloak_username }}"
+    auth_password: "{{ keycloak_password }}"
+    auth_realm: master
+    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    realm: "{{ keycloak_realm }}"
+    group_name: "{{ keycloak_admin_group }}"
+    roles:
+      - id: "{{ keycloak_vault_admin_role.end_state.id }}"
+        name: "{{ vault_keycloak_admin_role }}"
+
+- name: create Keycloak client for Vault
+  community.general.keycloak_client:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_username: "{{ keycloak_username }}"
+    auth_password: "{{ keycloak_password }}"
+    auth_realm: master
+    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    client_id: "{{ vault_keycloak_client_name }}"
+    realm: "{{ keycloak_realm }}"
+    protocol: openid-connect
+    standard_flow_enabled: true
+    public_client: false
+    root_url: "https://{{ vault_host }}"
+    redirect_uris:
+      - "https://{{ vault_host }}/ui/vault/auth/keycloak/oidc/callback"
+    protocol_mappers:
+      - name: realm roles
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-realm-role-mapper
+        consentRequired: false
+        config:
+          claim.name: roles
+          multivalued: true
+          userinfo.token.claim: true
+          access.token.claim: true
+
+  register: keycloak_vault_client
+
+- name: fetch Vault client secret from Keycloak
+  community.general.keycloak_clientsecret_info:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_username: "{{ keycloak_username }}"
+    auth_password: "{{ keycloak_password }}"
+    auth_realm: master
+    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    id: "{{ keycloak_vault_client.end_state.id }}"
+    realm: "{{ keycloak_realm }}"
+  no_log: true
+  register: keycloak_vault_client_secret
+
+- name: add Keycloak as auth method for Vault
+  hashivault_auth_method:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    method_type: oidc
+    mount_point: "{{ vault_keycloak_mount_point }}"
+
+- name: configure Keycloak auth method for Vault
+  hashivault_oidc_auth_method_config:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    mount_point: "{{ vault_keycloak_mount_point }}"
+    oidc_discovery_url: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
+    oidc_client_id: "{{ keycloak_vault_client.end_state.clientId }}"
+    oidc_client_secret: "{{ keycloak_vault_client_secret.clientsecret_info.value }}"
+
+- name: allow users with the Keycloak vault-admins role to assume roles with the admin policy in Vault
+  hashivault_oidc_auth_role:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    mount_point: "{{ vault_keycloak_mount_point }}"
+    name: "{{ vault_keycloak_auth_admin_role }}"
+    user_claim: preferred_username
+    # ensure that only tokens issued for vault can be used to log in
+    bound_audiences: "{{ vault_keycloak_client_name }}"
+    # ensure only users with vault-admin Keycloak role can access this Vault role
+    bound_claims:
+      roles: "{{ vault_keycloak_admin_role }}"
+    token_policies:
+      - "{{ vault_admin_policy_name }}"
+    allowed_redirect_uris: "https://{{ vault_host }}/ui/vault/auth/keycloak/oidc/callback"
+
+#- name: ensure Keycloak management credentials exist in Vault

@@ -15,4 +15,13 @@ k3s_agent:
   node_name: "{{ hostname }}"
 
 keycloak_host: auth.coven.local
+keycloak_url: "http://{{ keycloak_host }}/auth"
+
 vault_host: vault.coven.local
+vault_url: "http://{{ vault_host }}"
+
+k8s_hostaliases:
+    - ip: 192.168.57.100
+      hostnames:
+        - "{{ keycloak_host }}"
+        - "{{ vault_host }}"

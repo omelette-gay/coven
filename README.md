@@ -5,18 +5,26 @@ This repo contains all the infrastructure-as-code stuff for deploying and managi
 # Getting Started
 
 You will need to have [Ansible installed](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) to use this repo,
-as well as [Helm](https://helm.sh/docs/intro/install/), and Helm Diff (run `helm plugin install https://github.com/databus23/helm-diff` once Helm is installed).
+as well as [Helm](https://helm.sh/docs/intro/install/), Helm Diff (run `helm plugin install https://github.com/databus23/helm-diff` once Helm is installed)
+and [Vault](https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install).
 
 NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL (Please see the [How To section](#windows-subsystem-for-linux-install-method) for more information).
 
 In addition, you will also need the following libraries for Python:
 
 - kubernetes: `pip3 install kubernetes`
+- ansible-modules-hashivault: `pip3 install ansible-modules-hashivault`
 
 Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
 
 # Running on real infrastructure
+
+You will first need to log in to Vault to access the secrets needed for deployment (unless you are bootstrapping!)
+
+    vault login TBC
+
+Now you can run the playbook:
 
     ansible-playbook -i inventory playbook.yml
 

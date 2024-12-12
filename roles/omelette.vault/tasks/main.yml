@@ -1,29 +1,8 @@
-- name: Add hashicorp repo
-  kubernetes.core.helm_repository:
-    name: hashicorp
-    repo_url: https://helm.releases.hashicorp.com
-
 - name: install Vault
-  kubernetes.core.helm:
-    kubeconfig: "{{ kubeconfig }}"
-    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
-    name: vault
-    chart_ref: hashicorp/vault
-    release_namespace: vault
-    create_namespace: true
-    release_values:
-      global:
-        serverTelemetry:
-          prometheusOperator: true
-      server:
-        ingress:
-          enabled: true
-          hosts:
-            - host: "{{ vault_host }}"
-      ui:
-        enabled: true
-      serverTelemetry:
-        serviceMonitor:
-          enabled: true
-        prometheusRules:
-          enabled: true
+  include_tasks: install.yml
+
+- name: configure Vault policies
+  include_tasks: policies.yml
+
+- name: enable login with Keycloak
+  include_tasks: enable_keycloak_login.yml

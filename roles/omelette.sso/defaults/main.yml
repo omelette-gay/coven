@@ -1,0 +1,9 @@
+keycloak_url: "https://{{ keycloak_host }}/auth"
+keycloak_realm: omelette.gay
+
+keycloak_vault_secret_path: secret/data/keycloak_admin
+
+keycloak_username: "{{ lookup('hashi_vault', keycloak_vault_secret_path, url=vault_url).username }}"
+keycloak_password: "{{ lookup('hashi_vault', keycloak_vault_secret_path, url=vault_url).password }}"
+
+keycloak_admin_group: admins

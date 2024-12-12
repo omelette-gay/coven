@@ -1,0 +1,9 @@
+- name: configure admin policy for Vault
+  hashivault_policy:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    name: "{{ vault_admin_policy_name }}"
+    rules: |-
+      path "*" {
+        capabilities = ["sudo", "read", "create", "update", "delete", "list", "patch"]
+      }
