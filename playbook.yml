@@ -4,7 +4,7 @@
   roles:
     - omelette.hostname
     - omelette.auto-updates
-    - omelette.users
+    - omelette.ssh-users
     - xanmanning.k3s
     - omelette.kubeconfig
   become: true

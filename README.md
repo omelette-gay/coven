@@ -42,6 +42,8 @@ If you want to access Keycloak and Vault locally, then add the following to `/et
     192.168.57.100 auth.coven.local
     192.168.57.100 vault.coven.local
 
+You can then access both at http://auth.coven.local and http://vault.coven.local once deployed.
+
 On first run, see [the bootstrapping doc](./docs/bootstrapping.md) for information on first deploying this, remembering
 to specify the inventory as `vagrant-inventory`. Following this, you can specify the following:
 
@@ -50,6 +52,11 @@ to specify the inventory as `vagrant-inventory`. Following this, you can specify
     ansible-playbook -i vagrant-inventory playbook.yml
 
 # How To
+
+## Log in to the Vault UI
+
+Go to the [Vault login page](http://vault.coven.omelette.gay) and select method "OIDC", role "admin" and under more options
+set mount path to "keycloak".
 
 ## Configure users for SSH
 
