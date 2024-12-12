@@ -23,7 +23,7 @@ On first run, you will error the first time you need to interact with Vault. You
 UI and run through the init sequence, storing the initial secrets and make a copy of your root token, then
 unsealing Vault.
 
-You can now log in using your root token, e.g., if in Vagrant: `vault login -address http://vault.coven.local` and continue the deploy.
+You can now log in using your root token, e.g., if in Vagrant: `vault login -address http://vault.coven.local` and continue the deploy by re-running Ansible.
 
 Once you are in and can confirm you can sign in to Vault using Keycloak, now revoke the root token: `vault token revoke -address https://vault.coven.local -self`.
 

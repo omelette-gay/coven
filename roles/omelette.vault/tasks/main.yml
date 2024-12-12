@@ -11,7 +11,7 @@
   hashivault_secret_engine:
     url: "{{ vault_url }}"
     verify: "{{ kubeconfig_require_secure|default(true) }}"
-    name: kv
+    name: "{{ vault_kv_mountpoint }}"
     backend: kv
     options:
       version: 2

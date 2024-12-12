@@ -64,6 +64,11 @@ There is a group var called `ssh_users` which consists of usernames and SSH keys
 to add a new user and the SSH keys that user can connect from. An existing SSH user will first need to run the
 Ansible playbook to then add your account to it!
 
+## Stopping crashes on Mac
+
+When trying to read secrets from Vault, Python will regularly crash. You can avoid this by running `export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
+before running Ansible.
+
 ## Windows Subsystem For Linux Install Method
 
 - Install VirtualBox - Vagrant doesn't support all versions of VirtualBox, as of writing this it only accepts the following:
