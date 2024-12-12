@@ -22,7 +22,8 @@ these dependencies.
 
 You will first need to log in to Vault to access the secrets needed for deployment (unless you are bootstrapping!)
 
-    vault login TBC
+    export VAULT_ADDR=https://vault.coven.omelette.gay
+    vault login -method=oidc -path=keycloak role=admin
 
 Now you can run the playbook:
 
@@ -36,25 +37,27 @@ To provision a VM which tests out our Ansible scripts and deployments, you will 
 and Ansible installed. Note that on Windows, this must be installed under WSL. You can then start the testlab by
 running `vagrant up`. `vagrant ssh` will then give you a shell on the host machine.
 
-Once the VM is created with `vagrant up` you will need to run: `ansible-playbook -i vagrant-inventory playbook.yml`.
-This will run Ansible against the test lab to configure it.
-
 If you want to access Keycloak and Vault locally, then add the following to `/etc/hosts`
 
-```
-192.168.57.100 auth.coven.local
-192.168.57.100 vault.coven.local
-```
+    192.168.57.100 auth.coven.local
+    192.168.57.100 vault.coven.local
+
+On first run, see [the bootstrapping doc](./docs/bootstrapping.md) for information on first deploying this, remembering
+to specify the inventory as `vagrant-inventory`. Following this, you can specify the following:
+
+    export VAULT_ADDR=http://vault.coven.local
+    vault login -method=oidc -path=keycloak role=admin
+    ansible-playbook -i vagrant-inventory playbook.yml
 
 # How To
 
-### Configure admin users
+## Configure users for SSH
 
-There is a group var called `admin_users` which consists of usernames and SSH keys. You can configure this group var
-to add a new user and the SSH keys that user can connect from. An existing admin user will first need to run the
+There is a group var called `ssh_users` which consists of usernames and SSH keys which can sudo. You can configure this group var
+to add a new user and the SSH keys that user can connect from. An existing SSH user will first need to run the
 Ansible playbook to then add your account to it!
 
-### Windows Subsystem For Linux Install Method
+## Windows Subsystem For Linux Install Method
 
 - Install VirtualBox - Vagrant doesn't support all versions of VirtualBox, as of writing this it only accepts the following:
   4.0, 4.1, 4.2, 4.3, 5.0, 5.1, 5.2, 6.0, 6.1, 7.0

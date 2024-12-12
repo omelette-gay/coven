@@ -37,6 +37,7 @@
     root_url: "https://{{ vault_host }}"
     redirect_uris:
       - "https://{{ vault_host }}/ui/vault/auth/keycloak/oidc/callback"
+      - http://localhost:8250/oidc/callback # for CLI login
     protocol_mappers:
       - name: realm roles
         protocol: openid-connect
@@ -92,6 +93,8 @@
       roles: "{{ vault_keycloak_admin_role }}"
     token_policies:
       - "{{ vault_admin_policy_name }}"
-    allowed_redirect_uris: "https://{{ vault_host }}/ui/vault/auth/keycloak/oidc/callback"
+    allowed_redirect_uris:
+      - "https://{{ vault_host }}/ui/vault/auth/keycloak/oidc/callback"
+      - http://localhost:8250/oidc/callback # for CLI login
 
 #- name: ensure Keycloak management credentials exist in Vault
