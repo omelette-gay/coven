@@ -35,3 +35,24 @@ factorio_servers:
         external: false
       map_gen_settings:
         starting_area: 2
+  - server_id: intnerds
+    config:
+      hostNetworkEnabled: false
+      image:
+        tag: stable
+      service:
+        port: 31496
+        ipFamilyPolicy: PreferDualStack
+      factorioServer:
+        save_name: "internationalnerds"
+        enable_space_age: false
+      serverPassword:
+        game_password: merojo # TODO - use the `passwordSecret` value for this in future, needs Vault and external secrets set up though
+      server_settings:
+        name: International Nerds Group
+        description: Joh, Roy and Meg being nerdy together
+        visibility:
+          lan: false
+        non_blocking_saving: true
+      rcon:
+        external: false
