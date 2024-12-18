@@ -10,3 +10,27 @@ k3s_become: true
 
 k3s_agent:
   node_name: "{{ hostname }}"
+
+factorio_servers:
+  - server_id: girlsclub
+    config:
+      hostNetworkEnabled: false
+      image:
+        tag: stable
+      service:
+        ipFamilyPolicy: PreferDualStack
+      factorioServer:
+        save_name: "girls-club"
+        enable_space_age: false
+      serverPassword:
+        game_password: bananaphone # TODO - use the `passwordSecret` value for this in future, needs Vault and external secrets set up though
+      server_settings:
+        name: Girls Club
+        description: Just doing girls things
+        visibility:
+          lan: false
+        non_blocking_saving: true
+      rcon:
+        external: false
+      map_gen_settings:
+        starting_area: 2
