@@ -1,3 +1,4 @@
+keycloak_host: "auth.{{ cluster_domain }}"
 keycloak_url: "https://{{ keycloak_host }}/auth"
 keycloak_realm: omelette.gay
 

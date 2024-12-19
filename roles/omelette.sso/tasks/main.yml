@@ -54,6 +54,11 @@
     realm: "{{ keycloak_realm }}"
     enabled: true
     user_managed_access_allowed: true
+    smtp_server:
+      from: "keycloak@{{ cluster_domain }}"
+      host: "{{ smtp_relay.host|default(omit) }}"
+      port: "{{ smtp_relay.port|default(omit) }}"
+      ssl: "{{ smtp_relay.ssl|default(omit) }}"
 
 - name: create admin group for omelette.gay in Keycloak
   community.general.keycloak_group:

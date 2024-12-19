@@ -1,3 +1,4 @@
+vault_host: "vault.{{ cluster_domain }}"
 vault_url: "https://{{ vault_host }}"
 vault_admin_policy_name: admin
 vault_keycloak_admin_role: vault-admin
