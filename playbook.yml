@@ -34,6 +34,7 @@
             client-key-data: "{{ hostvars[groups.all[0]].kubeconfig_client_key_data }}"
 
   roles:
+    - omelette.cert-manager
     - omelette.monitoring
     - omelette.sso
     - omelette.vault

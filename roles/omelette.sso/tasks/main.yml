@@ -29,6 +29,9 @@
         {% endif %}
       ingress:
         enabled: true
+        annotations:
+          traefik.ingress.kubernetes.io/router.tls: "true"
+          traefik.ingress.kubernetes.io/router.tls.certresolver: "{{ certmanager_traefik_certresolver }}"
         rules:
           - host: "{{ keycloak_host }}"
             paths:
@@ -36,6 +39,9 @@
                 pathType: Prefix
         console:
           enabled: true
+          annotations:
+            traefik.ingress.kubernetes.io/router.tls: "true"
+            traefik.ingress.kubernetes.io/router.tls.certresolver: "{{ certmanager_traefik_certresolver }}"
           rules:
             - host: "{{ keycloak_host }}"
               paths:
