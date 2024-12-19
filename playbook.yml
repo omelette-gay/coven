@@ -33,6 +33,14 @@
             client-certificate-data: "{{ hostvars[groups.all[0]].kubeconfig_client_cert_data }}"
             client-key-data: "{{ hostvars[groups.all[0]].kubeconfig_client_key_data }}"
 
+  module_defaults:
+    group/kubernetes.core.k8s:
+      kubeconfig: "{{ kubeconfig }}"
+      validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    group/kubernetes.core.helm:
+      kubeconfig: "{{ kubeconfig }}"
+      validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+
   roles:
     - omelette.cert-manager
     - omelette.monitoring

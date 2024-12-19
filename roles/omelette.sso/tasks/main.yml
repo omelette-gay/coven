@@ -5,8 +5,6 @@
 
 - name: install keycloak
   kubernetes.core.helm:
-    kubeconfig: "{{ kubeconfig }}"
-    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
     name: keycloak
     chart_ref: codecentric/keycloak
     release_namespace: keycloak

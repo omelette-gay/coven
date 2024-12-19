@@ -5,8 +5,6 @@
 
 - name: install loki
   kubernetes.core.helm:
-    kubeconfig: "{{ kubeconfig }}"
-    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
     name: loki
     chart_ref: grafana/loki-stack
     release_namespace: monitoring

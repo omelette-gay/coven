@@ -1,7 +1,5 @@
 - name: configure Traefik to redirect all http traffic to https, and configure Let's Encrypt
   kubernetes.core.k8s:
-    kubeconfig: "{{ kubeconfig }}"
-    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
     name: traefik
     namespace: kube-system
     definition:

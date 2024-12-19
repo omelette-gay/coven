@@ -5,8 +5,6 @@
 
 - name: install kube-prometheus
   kubernetes.core.helm:
-    kubeconfig: "{{ kubeconfig }}"
-    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
     name: kube-prometheus
     chart_ref: prometheus-community/kube-prometheus-stack
     release_namespace: monitoring
