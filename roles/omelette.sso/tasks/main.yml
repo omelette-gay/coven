@@ -1,0 +1,71 @@
+- name: Add keycloak repo
+  kubernetes.core.helm_repository:
+    name: codecentric
+    repo_url: https://codecentric.github.io/helm-charts
+
+- name: install keycloak
+  kubernetes.core.helm:
+    kubeconfig: "{{ kubeconfig }}"
+    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    name: keycloak
+    chart_ref: codecentric/keycloak
+    release_namespace: keycloak
+    create_namespace: true
+    release_values:
+      serviceMonitor:
+        enabled: true
+      extraServiceMonitor:
+        enabled: true
+      extraEnv: |
+        - name: PROXY_ADDRESS_FORWARDING
+          value: "true"
+        - name: KEYCLOAK_STATISTICS
+          value: all
+        {% if bootstrap_keycloak|default(false) %}
+        - name: KEYCLOAK_USER
+          value: {{ keycloak_username }}
+        - name: KEYCLOAK_PASSWORD
+          value: {{ keycloak_password }}
+        {% endif %}
+      ingress:
+        enabled: true
+        rules:
+          - host: "{{ keycloak_host }}"
+            paths:
+              - path: /
+                pathType: Prefix
+        console:
+          enabled: true
+          rules:
+            - host: "{{ keycloak_host }}"
+              paths:
+                - path: /auth/admin
+                  pathType: Prefix
+    wait: true
+
+- name: create omelette.gay realm in Keycloak
+  community.general.keycloak_realm:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_username: "{{ keycloak_username }}"
+    auth_password: "{{ keycloak_password }}"
+    auth_realm: master
+    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    id: omelette-gay
+    realm: "{{ keycloak_realm }}"
+    enabled: true
+    user_managed_access_allowed: true
+    smtp_server:
+      from: "keycloak@{{ cluster_domain }}"
+      host: "{{ smtp_relay.host|default(omit) }}"
+      port: "{{ smtp_relay.port|default(omit) }}"
+      ssl: "{{ smtp_relay.ssl|default(omit) }}"
+
+- name: create admin group for omelette.gay in Keycloak
+  community.general.keycloak_group:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_username: "{{ keycloak_username }}"
+    auth_password: "{{ keycloak_password }}"
+    auth_realm: master
+    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    name: "{{ keycloak_admin_group }}"
+    realm: "{{ keycloak_realm }}"

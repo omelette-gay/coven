@@ -5,18 +5,27 @@ This repo contains all the infrastructure-as-code stuff for deploying and managi
 # Getting Started
 
 You will need to have [Ansible installed](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) to use this repo,
-as well as [Helm](https://helm.sh/docs/intro/install/), and Helm Diff (run `helm plugin install https://github.com/databus23/helm-diff` once Helm is installed).
+as well as [Helm](https://helm.sh/docs/intro/install/), Helm Diff (run `helm plugin install https://github.com/databus23/helm-diff` once Helm is installed)
+and [Vault](https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install).
 
 NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL (Please see the [How To section](#windows-subsystem-for-linux-install-method) for more information).
 
 In addition, you will also need the following libraries for Python:
 
 - kubernetes: `pip3 install kubernetes`
+- ansible-modules-hashivault: `pip3 install ansible-modules-hashivault`
 
 Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
 
 # Running on real infrastructure
+
+You will first need to log in to Vault to access the secrets needed for deployment (unless you are bootstrapping!)
+
+    export VAULT_ADDR=https://vault.coven.omelette.gay
+    vault login -method=oidc -path=keycloak role=admin
+
+Now you can run the playbook:
 
     ansible-playbook -i inventory playbook.yml
 
@@ -28,18 +37,39 @@ To provision a VM which tests out our Ansible scripts and deployments, you will 
 and Ansible installed. Note that on Windows, this must be installed under WSL. You can then start the testlab by
 running `vagrant up`. `vagrant ssh` will then give you a shell on the host machine.
 
-Once the VM is created with `vagrant up` you will need to run: `ansible-playbook -i vagrant-inventory playbook.yml`.
-This will run Ansible against the test lab to configure it.
+If you want to access Keycloak and Vault locally, then add the following to `/etc/hosts`
+
+    192.168.57.100 auth.coven.local
+    192.168.57.100 vault.coven.local
+
+You can then access both at http://auth.coven.local and http://vault.coven.local once deployed.
+
+On first run, see [the bootstrapping doc](./docs/bootstrapping.md) for information on first deploying this, remembering
+to specify the inventory as `vagrant-inventory`. Following this, you can specify the following:
+
+    export VAULT_ADDR=http://vault.coven.local
+    vault login -method=oidc -path=keycloak role=admin
+    ansible-playbook -i vagrant-inventory playbook.yml
 
 # How To
 
-### Configure admin users
+## Log in to the Vault UI
 
-There is a group var called `admin_users` which consists of usernames and SSH keys. You can configure this group var
-to add a new user and the SSH keys that user can connect from. An existing admin user will first need to run the
+Go to the [Vault login page](http://vault.coven.omelette.gay) and select method "OIDC", role "admin" and under more options
+set mount path to "keycloak".
+
+## Configure users for SSH
+
+There is a group var called `ssh_users` which consists of usernames and SSH keys which can sudo. You can configure this group var
+to add a new user and the SSH keys that user can connect from. An existing SSH user will first need to run the
 Ansible playbook to then add your account to it!
 
-### Windows Subsystem For Linux Install Method
+## Stopping crashes on Mac
+
+When trying to read secrets from Vault, Python will regularly crash. You can avoid this by running `export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
+before running Ansible.
+
+## Windows Subsystem For Linux Install Method
 
 - Install VirtualBox - Vagrant doesn't support all versions of VirtualBox, as of writing this it only accepts the following:
   4.0, 4.1, 4.2, 4.3, 5.0, 5.1, 5.2, 6.0, 6.1, 7.0

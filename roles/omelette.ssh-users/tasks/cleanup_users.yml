@@ -14,7 +14,7 @@
       dict2items |
       json_query('[?to_number(value[1]) >= `1000`]') |
       rejectattr('key', '==', "nobody") |
-      rejectattr('key', 'in', admin_users.keys() | list) |
+      rejectattr('key', 'in', ssh_users.keys() | list) |
       map(attribute='key') |
       list
     }}

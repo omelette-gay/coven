@@ -1,7 +1,7 @@
 ---
-- name: add admin users
+- name: add SSH users
   include_tasks: configure_user.yml
-  loop: "{{ query('dict', admin_users) }}"
+  loop: "{{ query('dict', ssh_users) }}"
   loop_control:
     label: "{{ user.key }}"
     loop_var: user
