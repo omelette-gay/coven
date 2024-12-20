@@ -5,8 +5,6 @@
 
 - name: install Vault
   kubernetes.core.helm:
-    kubeconfig: "{{ kubeconfig }}"
-    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
     name: vault
     chart_ref: hashicorp/vault
     release_namespace: vault

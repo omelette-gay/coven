@@ -1,8 +1,6 @@
 ---
 - name: install factorio-server-charts
   kubernetes.core.helm:
-    kubeconfig: "{{ kubeconfig }}"
-    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
     name: "{{ item.server_id }}"
     chart_ref: factorio/factorio-server-charts
     release_namespace: "factorio-{{ item.server_id }}"
