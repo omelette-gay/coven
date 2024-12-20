@@ -20,7 +20,10 @@
           enabled: true
           hosts:
             - host: "{{ vault_host }}"
-        hostAliases: "{{ k8s_hostaliases|default([]) }}"
+          annotations:
+            traefik.ingress.kubernetes.io/router.tls: "true"
+            traefik.ingress.kubernetes.io/router.tls.certresolver: "{{ certmanager_traefik_certresolver }}"
+        hostAliases: "{{ k8s_hostaliases|default(omit) }}"
       ui:
         enabled: true
       serverTelemetry:

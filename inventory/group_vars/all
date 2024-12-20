@@ -20,7 +20,9 @@ k3s_agent:
 smtp_relay:
   host: asuka.pling.org.uk
   port: 587
-  ssl: true
+
+# get real TLS certificates from Let's Encrypt
+certmanager_acme_server: https://acme-v02.api.letsencrypt.org/directory
 
 factorio_servers:
   - server_id: girlsclub
