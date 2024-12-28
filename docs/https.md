@@ -8,14 +8,6 @@ to the right service based on this (each ingress usually registers a hostname an
 
 To finetune the Traefik configuration for a specific ingress, Traefik will look at the annotations on the Ingress
 object in k8s and alter its configuration accordingly. [The list of annotations that can be added to an Ingress is in the Traefik documentation](https://doc.traefik.io/traefik/routing/providers/kubernetes-ingress/).
-
-As a quick workaround, Traefik is set to automatically request Let's Encrypt certificates for services it knows about
-when they are first registered, if the annotation `traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt`
-is added to an ingress. However, this is not recommended in production settings as Traefik does not persist requested
-certificates when restarted, which can lead to requesting a lot of certificates all at once and rate-limiting issues
-from Let's Encrypt. The "proper" solution is to create a secret in k8s containing a TLS certificate and then
-[on the Ingress object specifying that this is the certificate to use for TLS](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls).
-
 Traefik can also be globally configured, and we do this to tell it to redirect all http traffic to https. ([See the omelette.cert-manager role](../roles/omelette.cert-manager/tasks/main.yml) for where this configuration is done.)
 
 Rather than creating and managing certificates ourselves, we can use [cert-manager](https://cert-manager.io/) to do this.
