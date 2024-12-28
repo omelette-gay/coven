@@ -18,9 +18,10 @@
           enabled: true
           hosts:
             - host: "{{ vault_host }}"
-          annotations:
-            traefik.ingress.kubernetes.io/router.tls: "{{ kubeconfig_require_secure|default(true)|string }}"
-            traefik.ingress.kubernetes.io/router.tls.certresolver: "{{ certmanager_traefik_certresolver }}"
+          tls:
+            - hosts:
+                - "{{ vault_host }}"
+              secretName: vault-tls
         hostAliases: "{{ k8s_hostaliases|default(omit) }}"
       ui:
         enabled: true
