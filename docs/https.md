@@ -8,7 +8,9 @@ to the right service based on this (each ingress usually registers a hostname an
 
 To finetune the Traefik configuration for a specific ingress, Traefik will look at the annotations on the Ingress
 object in k8s and alter its configuration accordingly. [The list of annotations that can be added to an Ingress is in the Traefik documentation](https://doc.traefik.io/traefik/routing/providers/kubernetes-ingress/).
-Traefik can also be globally configured, and we do this to tell it to redirect all http traffic to https. ([See the omelette.cert-manager role](../roles/omelette.cert-manager/tasks/main.yml) for where this configuration is done.)
+
+One annotation we can add is `traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd`
+which will redirect all http traffic to https.
 
 Rather than creating and managing certificates ourselves, we can use [cert-manager](https://cert-manager.io/) to do this.
 For each certificate we want, we can then instead an annotation to the ingress of `cert-manager.io/cluster-issuer: letsencrypt`

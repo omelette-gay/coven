@@ -1,16 +1,11 @@
-- name: apply Traefik global configuration overrides
+- name: create a middleware for redirecting to https
   kubernetes.core.k8s:
-    name: traefik
+    name: redirect-https
     namespace: kube-system
     definition:
-      apiVersion: helm.cattle.io/v1
-      kind: HelmChartConfig
+      apiVersion: traefik.containo.us/v1alpha1
+      kind: Middleware
       spec:
-        valuesContent: |-
-          ports:
-            websecure:
-              tls:
-                enabled: true
-            web:
-              redirectTo:
-                port: websecure
+        redirectScheme:
+          scheme: https
+          permanent: true
