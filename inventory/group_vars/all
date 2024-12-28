@@ -29,7 +29,7 @@ factorio_servers:
         save_name: "girls-club"
         enable_space_age: false
       serverPassword:
-        game_password: bananaphone # TODO - use the `passwordSecret` value for this in future, needs Vault and external secrets set up though
+        passwordSecret: "game-password"
       server_settings:
         name: Girls Club
         description: Just doing girls things
@@ -52,7 +52,7 @@ factorio_servers:
         save_name: "internationalnerds"
         enable_space_age: false
       serverPassword:
-        game_password: merojo # TODO - use the `passwordSecret` value for this in future, needs Vault and external secrets set up though
+        passwordSecret: "game-password"
       server_settings:
         name: International Nerds Group
         description: Joh, Roy and Meg being nerdy together

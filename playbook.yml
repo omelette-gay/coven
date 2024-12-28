@@ -51,5 +51,5 @@
     - omelette.cert-manager
     - omelette.monitoring
     - omelette.sso
-    - omelette.vault
+    - omelette.secrets
     - omelette.factorio
