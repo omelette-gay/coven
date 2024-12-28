@@ -10,14 +10,6 @@ ssh_users:
     - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCpxoMRqG8RsXin1g8i66ZJ3qdDW01d50yFib/+Ezp84N4r5u5R434BXXjwQs1EHa6htwkLgzry6fbeZMLia0bNN5T56mMqM3vj2ECwerfWEEVILRawuUToMmlptOMGvDQ4t+JHdGOTOukKEhf9CR1E1nWzVWLm8DaPtUWqVCDirOS60IKmpQ5OlfNiM2Csxm8q2kENTlvPmb+TWxc96Mq5wXMn8vNvT8CnAduUAmndKnBmD37qjpTfDX+vYvzTkwKdLeFdTftmG8hJd7aJxBRz6n8419nVHEIqI5BPjbeYAJi88sSNKKQySySmd4hFnzclrqzuU7DSxWqnb6OSWNLKsYar8NOSwspAN7Sa03JVgPxIkJf+TNRCD/xcdu5bsDiEQROou5LtDL9DnSnHnvvB5UXudmxljHJd0suHaxB0BO4HDkytf4ko9L9uQOu1GR85urxd2Yul9q34GC9UXhuIu3LcOXZVGRg9gQccnygnxOQGnUv4ZLkKwYJwrLO1m1M= megc@Meg-Laptop
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDK53E6MVX9cWTFse2PpekENWOi9ev1z3mJkZ7ZMmtaL megc@Meg-Desktop
 
-k3s_become: true
-
-k3s_server:
-  secrets-encryption: true
-
-k3s_agent:
-  node_name: "{{ hostname }}"
-
 smtp_relay:
   host: asuka.pling.org.uk
   port: 587

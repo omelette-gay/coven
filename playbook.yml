@@ -5,7 +5,13 @@
     - omelette.hostname
     - omelette.auto-updates
     - omelette.ssh-users
-    - xanmanning.k3s
+    - role: xanmanning.k3s
+      vars:
+        k3s_become: true
+        k3s_server:
+          secrets-encryption: true
+        k3s_agent:
+          node_name: "{{ hostname }}"
     - omelette.kubeconfig
   become: true
 
