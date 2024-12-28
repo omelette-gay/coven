@@ -1,8 +1,8 @@
 - name: install Vault
-  include_tasks: install.yml
+  include_tasks: install_vault.yml
 
 - name: configure Vault policies
-  include_tasks: policies.yml
+  include_tasks: vault_policies.yml
 
 - name: enable login with Keycloak
   include_tasks: enable_keycloak_login.yml
