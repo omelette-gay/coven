@@ -6,3 +6,4 @@ vault_keycloak_client_name: vault
 vault_keycloak_auth_admin_role: admin
 vault_keycloak_mount_point: keycloak
 vault_kv_mountpoint: secret
+vault_k8s_controller_url: "https://{{ hostvars[groups.all[0]].ansible_ssh_host }}:6443"

@@ -1,1 +1,2 @@
 factorio_servers: []
+factorio_k8s_service_account: "secret-reader"

@@ -13,6 +13,7 @@ cluster_domain: coven.local
 
 keycloak_url: "http://{{ keycloak_host }}/auth"
 vault_url: "http://{{ vault_host }}"
+vault_k8s_controller_url: "https://10.0.2.15:6443"
 
 k8s_hostaliases:
   - ip: 192.168.57.100
@@ -23,3 +24,20 @@ k8s_hostaliases:
 smtp_relay:
   host: asuka.pling.org.uk
   port: 587
+
+factorio_servers:
+  - server_id: testlab
+    config:
+      hostNetworkEnabled: false
+      image:
+        tag: stable
+      factorioServer:
+        enable_space_age: false
+      server_settings:
+        name: Test Lab
+        description: Just doing test things
+        visibility:
+          lan: false
+        non_blocking_saving: true
+      serverPassword:
+        passwordSecret: "game-password"
