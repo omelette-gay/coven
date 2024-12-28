@@ -28,7 +28,7 @@
       ingress:
         enabled: true
         annotations:
-          traefik.ingress.kubernetes.io/router.tls: "true"
+          traefik.ingress.kubernetes.io/router.tls: "{{ kubeconfig_require_secure|default(true)|string }}"
           traefik.ingress.kubernetes.io/router.tls.certresolver: "{{ certmanager_traefik_certresolver }}"
         rules:
           - host: "{{ keycloak_host }}"
@@ -38,7 +38,7 @@
         console:
           enabled: true
           annotations:
-            traefik.ingress.kubernetes.io/router.tls: "true"
+            traefik.ingress.kubernetes.io/router.tls: "{{ kubeconfig_require_secure|default(true)|string }}"
             traefik.ingress.kubernetes.io/router.tls.certresolver: "{{ certmanager_traefik_certresolver }}"
           rules:
             - host: "{{ keycloak_host }}"

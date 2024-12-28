@@ -24,3 +24,7 @@ k8s_hostaliases:
     hostnames:
       - "{{ keycloak_host }}"
       - "{{ vault_host }}"
+
+smtp_relay:
+  host: asuka.pling.org.uk
+  port: 587
