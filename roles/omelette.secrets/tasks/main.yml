@@ -18,3 +18,6 @@
 
 - name: install External Secrets Operator
   include_tasks: install_external_secrets_operator.yml
+
+- name: allow k8s service accounts to login to vault
+  include_tasks: enable_k8s_service_account_login.yml
