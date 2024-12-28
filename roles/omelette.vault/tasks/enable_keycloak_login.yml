@@ -95,3 +95,4 @@
     allowed_redirect_uris:
       - "https://{{ vault_host }}/ui/vault/auth/keycloak/oidc/callback"
       - http://localhost:8250/oidc/callback # for CLI login
+    token_max_ttl: 28800
