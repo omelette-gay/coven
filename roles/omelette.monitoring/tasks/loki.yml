@@ -9,9 +9,9 @@
     chart_ref: grafana/loki-stack
     release_namespace: monitoring
     create_namespace: true
-    force: true
-    set_values:
-      - value: loki.isDefault=false
+    release_values:
+      loki:
+        isDefault: false
   register: loki_installed
 
 - name: restart Grafana
