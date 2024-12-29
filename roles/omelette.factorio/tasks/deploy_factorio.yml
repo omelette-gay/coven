@@ -1,4 +1,14 @@
 ---
+# this must be done first because it creates the namesapces - it'll crash because the secrets don't exist
+# so we don't initially wait for it
+- name: install factorio-server-charts
+  kubernetes.core.helm:
+    name: "{{ item.server_id }}"
+    chart_ref: factorio/factorio-server-charts
+    release_namespace: "factorio-{{ item.server_id }}"
+    create_namespace: true
+    release_values: "{{ item.config }}"
+
 - name: Create k8s service account for reading secrets
   kubernetes.core.k8s:
     name: "{{ factorio_k8s_service_account }}"
@@ -72,11 +82,3 @@
               key: "factorio/{{ item.server_id }}"
               property: game_password
   when: item.config.serverPassword.passwordSecret is defined
-        
-- name: install factorio-server-charts
-  kubernetes.core.helm:
-    name: "{{ item.server_id }}"
-    chart_ref: factorio/factorio-server-charts
-    release_namespace: "factorio-{{ item.server_id }}"
-    create_namespace: true
-    release_values: "{{ item.config }}"
