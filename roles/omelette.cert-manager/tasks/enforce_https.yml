@@ -1,0 +1,11 @@
+- name: create a middleware for redirecting to https
+  kubernetes.core.k8s:
+    name: redirect-https
+    namespace: kube-system
+    definition:
+      apiVersion: traefik.containo.us/v1alpha1
+      kind: Middleware
+      spec:
+        redirectScheme:
+          scheme: https
+          permanent: true

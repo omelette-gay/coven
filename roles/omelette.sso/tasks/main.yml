@@ -27,24 +27,32 @@
         {% endif %}
       ingress:
         enabled: true
-        annotations:
-          traefik.ingress.kubernetes.io/router.tls: "{{ kubeconfig_require_secure|default(true)|string }}"
-          traefik.ingress.kubernetes.io/router.tls.certresolver: "{{ certmanager_traefik_certresolver }}"
         rules:
           - host: "{{ keycloak_host }}"
             paths:
               - path: /
                 pathType: Prefix
+        annotations:
+          cert-manager.io/cluster-issuer: "{{ certmanager_acme_issuer }}"
+          traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd
+        tls:
+          - hosts:
+              - "{{ keycloak_host }}"
+            secretName: keycloak-tls
         console:
           enabled: true
-          annotations:
-            traefik.ingress.kubernetes.io/router.tls: "{{ kubeconfig_require_secure|default(true)|string }}"
-            traefik.ingress.kubernetes.io/router.tls.certresolver: "{{ certmanager_traefik_certresolver }}"
           rules:
             - host: "{{ keycloak_host }}"
               paths:
                 - path: /auth/admin
                   pathType: Prefix
+          annotations:
+            cert-manager.io/cluster-issuer: "{{ certmanager_acme_issuer }}"
+            traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd
+          tls:
+            - hosts:
+                - "{{ keycloak_host }}"
+              secretName: keycloak-tls
     wait: true
 
 - name: create omelette.gay realm in Keycloak
