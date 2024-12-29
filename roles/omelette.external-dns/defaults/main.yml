@@ -1,0 +1,3 @@
+external_dns_k8s_namespace: external-dns
+external_dns_hetzner_k8s_secret_name: hetzner
+external_dns_hetzner_vault_secret_name: gitops/hetzner

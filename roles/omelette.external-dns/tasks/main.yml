@@ -1,0 +1,3 @@
+- name: install External DNS operator for Hetzner
+  include_tasks: install_hetzner_external_dns.yml
+  when: not cluster_domain.endswith(".local")
