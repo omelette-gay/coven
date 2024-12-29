@@ -27,3 +27,6 @@
   loop: "{{ vault_k8s_secrets }}"
   loop_control:
     label: "{{ vault_k8s_secret.vault_secret_name }} => {{ vault_k8s_secret.k8s_namespace }}/{{ vault_k8s_secret.k8s_secret_name }}"
+
+- name: allow Vault to issue k8s credentials
+  include_tasks: enable_k8s_credential_issuing.yml
