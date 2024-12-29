@@ -20,7 +20,7 @@
             - host: "{{ vault_host }}"
           annotations:
             cert-manager.io/cluster-issuer: "{{ certmanager_acme_issuer }}"
-            traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd
+            traefik.ingress.kubernetes.io/router.middlewares: "{% if kubeconfig_require_secure|default(true) %}kube-system-redirect-https@kubernetescrd{% else %}{{ omit }}{% endif %}"
           tls:
             - hosts:
                 - "{{ vault_host }}"
