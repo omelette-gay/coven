@@ -50,3 +50,8 @@ Once the OS has been installed, we have a blank system where we can then SSH in 
 On first install, we need to tell Ansible to SSH in using `root` so run that first Ansible command as:
 
     ANSIBLE_REMOTE_USER=root ansible-playbook playbook.yml -i inventory -l my-new-server 
+
+## External API keys
+
+You will need to [create an API token](https://docs.hetzner.com/dns-console/dns/general/api-access-token/) for DNS in Hetzner
+and store this in Vault under the `gitops/hetzner` secret in the key `api_key`.

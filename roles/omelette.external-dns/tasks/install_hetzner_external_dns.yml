@@ -1,0 +1,60 @@
+- name: Add external-dns repo
+  kubernetes.core.helm_repository:
+    name: external-dns
+    repo_url: https://kubernetes-sigs.github.io/external-dns/
+
+- name: install External DNS operator with Hetzner sync
+  kubernetes.core.helm:
+    name: hetzner
+    chart_ref: external-dns/external-dns
+    release_namespace: "{{ external_dns_k8s_namespace }}"
+    create_namespace: true
+    release_values:
+      provider:
+        name: webhook
+        webhook:
+          image:
+            repository: ghcr.io/mconfalonieri/external-dns-hetzner-webhook
+            tag: latest
+          env:
+            - name: HETZNER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ external_dns_hetzner_k8s_secret_name }}"
+                  key: api_key
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http-wh-metrics
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http-wh-metrics
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+
+      serviceMonitor:
+        enabled: true
+
+      txtOwnerId: "{{ cluster_domain }}"
+
+- name: create secret from Vault with Hetzner API key
+  include_role:
+    name: omelette.secrets
+    tasks_from: create_k8s_secret
+  vars:
+    vault_k8s_secret:
+      vault_secret_name: "{{ external_dns_hetzner_vault_secret_name }}"
+      k8s_secret_name: "{{ external_dns_hetzner_k8s_secret_name }}"
+      k8s_namespace: "{{ external_dns_k8s_namespace }}"
+      k8s_service_account_name: "{{ external_dns_hetzner_k8s_secret_name }}-secret-reader"
+      vault_role_name: "{{ external_dns_hetzner_k8s_secret_name }}-{{ external_dns_hetzner_k8s_secret_name }}"
+
+- name: create records which are not managed by External DNS Operator
+  community.dns.hetzner_dns_record_sets:
+    hetzner_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
+    zone_name: "{{ item.zone_name }}"
+    record_sets: "{{ item.records }}"
+  loop: "{{ external_dns_extra_records }}"
