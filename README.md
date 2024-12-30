@@ -20,10 +20,10 @@ these dependencies.
 
 # Running on real infrastructure
 
-You will first need to log in to Vault to access the secrets needed for deployment (unless you are bootstrapping!)
+You will first need to log in to Vault to access the secrets needed for deployment (unless you are bootstrapping!).
+This will also log you in to allow you to use kubectl locally.
 
-    export VAULT_ADDR=https://vault.coven.omelette.gay
-    vault login -method=oidc -path=keycloak role=admin
+    ./login.sh --coven
 
 Now you can run the playbook:
 
@@ -49,8 +49,7 @@ You can then access both at http://auth.coven.local and http://vault.coven.local
 On first run, see [the bootstrapping doc](./docs/bootstrapping.md) for information on first deploying this, remembering
 to specify the inventory as `vagrant-inventory`. Following this, you can specify the following:
 
-    export VAULT_ADDR=http://vault.coven.local
-    vault login -method=oidc -path=keycloak role=admin
+    ./login.sh --local
     ansible-playbook -i vagrant-inventory playbook.yml
 
 # How To
