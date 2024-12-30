@@ -1,78 +1,6 @@
 ---
-- name: Create k8s service account for reading secrets
-  kubernetes.core.k8s:
-    name: "{{ factorio_k8s_service_account }}"
-    namespace: "factorio-{{ item.server_id }}"
-    definition:
-      apiVersion: v1
-      kind: ServiceAccount
-  when: item.config.serverPassword.passwordSecret is defined
-
-- name: configure Factorio secret reader policy for Vault
-  hashivault_policy:
-    url: "{{ vault_url }}"
-    verify: "{{ kubeconfig_require_secure|default(true) }}"
-    name: "factorio-{{ item.server_id }}"
-    rules: |-
-      path "secret/data/factorio/{{ item.server_id }}" {
-        capabilities = ["read"]
-      }
-  when: item.config.serverPassword.passwordSecret is defined
-
-- name: Create vault role for reading secrets
-  hashivault_k8s_auth_role:
-    url: "{{ vault_url }}"
-    verify: "{{ kubeconfig_require_secure|default(true) }}"
-    name: "factorio-{{ item.server_id }}"
-    policies:
-      - "factorio-{{ item.server_id }}"
-    bound_service_account_names:
-      - "{{ factorio_k8s_service_account }}"
-    bound_service_account_namespaces:
-      - "factorio-{{ item.server_id }}"
-  when: item.config.serverPassword.passwordSecret is defined
-
-- name: Create secret store for Factorio server password
-  kubernetes.core.k8s:
-    name: vault-secret-store
-    namespace: "factorio-{{ item.server_id }}"
-    definition:      
-      apiVersion: external-secrets.io/v1beta1
-      kind: SecretStore
-      spec:
-        provider:
-          vault:
-            server: "http://vault.vault.svc.cluster.local:8200"
-            path: "secret"
-            version: "v2"
-            auth:
-              kubernetes:
-                role: "factorio-{{ item.server_id }}"
-                serviceAccountRef:
-                  name: "{{ factorio_k8s_service_account }}"
-  when: item.config.serverPassword.passwordSecret is defined
-
-- name: Create k8s secret from Vault
-  kubernetes.core.k8s:
-    name: vault-game-password
-    namespace: "factorio-{{ item.server_id }}"
-    definition:
-      apiVersion: external-secrets.io/v1beta1
-      kind: ExternalSecret
-      spec:
-        refreshInterval: "1h"
-        secretStoreRef:
-          name: vault-secret-store
-          kind: SecretStore
-        target:
-          name: "{{ item.config.serverPassword.passwordSecret }}"
-        data:
-          - secretKey: game_password
-            remoteRef:
-              key: "factorio/{{ item.server_id }}"
-              property: game_password
-  when: item.config.serverPassword.passwordSecret is defined
-        
+# this must be done first because it creates the namesapces - it'll crash because the secrets don't exist
+# so we don't initially wait for it
 - name: install factorio-server-charts
   kubernetes.core.helm:
     name: "{{ item.server_id }}"
@@ -80,3 +8,16 @@
     release_namespace: "factorio-{{ item.server_id }}"
     create_namespace: true
     release_values: "{{ item.config }}"
+
+- name: create secret from Vault for game password
+  include_role:
+    name: omelette.secrets
+    tasks_from: create_k8s_secret
+  vars:
+    vault_k8s_secret:
+      vault_secret_name: "factorio/{{ item.server_id }}"
+      k8s_secret_name: "{{ item.config.serverPassword.passwordSecret }}"
+      k8s_namespace: "factorio-{{ item.server_id }}"
+      k8s_service_account_name: "{{ factorio_k8s_service_account }}"
+      vault_role_name: "factorio-{{ item.server_id }}"
+  when: item.config.serverPassword.passwordSecret is defined

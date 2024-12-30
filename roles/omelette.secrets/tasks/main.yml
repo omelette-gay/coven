@@ -21,3 +21,9 @@
 
 - name: allow k8s service accounts to login to vault
   include_tasks: enable_k8s_service_account_login.yml
+
+- name: create k8s secrets from Vault
+  include_tasks: create_k8s_secret.yml
+  loop: "{{ vault_k8s_secrets }}"
+  loop_control:
+    label: "{{ vault_k8s_secret.vault_secret_name }} => {{ vault_k8s_secret.k8s_namespace }}/{{ vault_k8s_secret.k8s_secret_name }}"
