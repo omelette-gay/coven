@@ -54,6 +54,12 @@ to specify the inventory as `vagrant-inventory`. Following this, you can specify
 
 # How To
 
+## Restarting Vault after a deploy
+
+Our Vault is not configured to "auto-unseal", so on first boot, it requires unseal codes (which are stored offline) to
+be entered into it. This means that after running Ansible, if that changes Vault, you will need to manually cause
+Vault to restart it (otherwise it'll break itself in the middle of a run). Run `kubectl -n vault delete pod vault-0`.
+
 ## Log in to the Vault UI
 
 Go to the [Vault login page](http://vault.coven.omelette.gay) and select method "OIDC", role "admin" and under more options
