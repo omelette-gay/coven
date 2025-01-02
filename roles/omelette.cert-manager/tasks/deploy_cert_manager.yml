@@ -13,6 +13,10 @@
     release_values:
       crds:
         enabled: true
+      prometheus:
+        enabled: true
+        podmonitor:
+          enabled: true
 
 - name: configure Let's Encrypt for cert-manager
   kubernetes.core.k8s:
