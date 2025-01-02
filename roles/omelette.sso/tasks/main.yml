@@ -12,7 +12,7 @@
     release_values:
       serviceMonitor:
         enabled: true
-      extraServiceMonitor:
+      prometheusRule:
         enabled: true
       extraEnv: |
         - name: PROXY_ADDRESS_FORWARDING
@@ -25,6 +25,8 @@
         - name: KEYCLOAK_PASSWORD
           value: {{ keycloak_password }}
         {% endif %}
+
+      # expose Keycloak to the public Internet
       ingress:
         enabled: true
         rules:
