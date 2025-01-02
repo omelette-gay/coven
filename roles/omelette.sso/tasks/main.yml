@@ -1,12 +1,12 @@
-- name: Add keycloak repo
+- name: Add codecentric repo
   kubernetes.core.helm_repository:
     name: codecentric
     repo_url: https://codecentric.github.io/helm-charts
 
-- name: install keycloak
+- name: install Keycloak
   kubernetes.core.helm:
     name: keycloak
-    chart_ref: codecentric/keycloak
+    chart_ref: codecentric/keycloakx
     release_namespace: keycloak
     create_namespace: true
     release_values:
@@ -14,15 +14,24 @@
         enabled: true
       prometheusRule:
         enabled: true
+
+      command:
+        - "/opt/keycloak/bin/kc.sh"
+        - "start"
+        - "--http-port=8080"
+        - "--hostname-strict=false"
       extraEnv: |
-        - name: PROXY_ADDRESS_FORWARDING
+        - name: JAVA_OPTS_APPEND
+          value: >-
+            -Djgroups.dns.query=keycloak-keycloakx-headless
+        - name: KC_PROXY
+          value: "edge"
+        - name: KC_HTTP_ENABLED
           value: "true"
-        - name: KEYCLOAK_STATISTICS
-          value: all
         {% if bootstrap_keycloak|default(false) %}
-        - name: KEYCLOAK_USER
+        - name: KEYCLOAK_ADMIN
           value: {{ keycloak_username }}
-        - name: KEYCLOAK_PASSWORD
+        - name: KEYCLOAK_ADMIN_PASSWORD
           value: {{ keycloak_password }}
         {% endif %}
 
@@ -32,7 +41,7 @@
         rules:
           - host: "{{ keycloak_host }}"
             paths:
-              - path: /
+              - path: /auth/
                 pathType: Prefix
         annotations:
           cert-manager.io/cluster-issuer: "{{ certmanager_acme_issuer }}"
@@ -41,20 +50,6 @@
           - hosts:
               - "{{ keycloak_host }}"
             secretName: keycloak-tls
-        console:
-          enabled: true
-          rules:
-            - host: "{{ keycloak_host }}"
-              paths:
-                - path: /auth/admin
-                  pathType: Prefix
-          annotations:
-            cert-manager.io/cluster-issuer: "{{ certmanager_acme_issuer }}"
-            traefik.ingress.kubernetes.io/router.middlewares: "{% if kubeconfig_require_secure|default(true) %}kube-system-redirect-https@kubernetescrd{% else %}{{ omit }}{% endif %}"
-          tls:
-            - hosts:
-                - "{{ keycloak_host }}"
-              secretName: keycloak-tls
     wait: true
 
 - name: create omelette.gay realm in Keycloak
