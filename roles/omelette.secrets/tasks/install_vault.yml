@@ -25,6 +25,29 @@
             - hosts:
                 - "{{ vault_host }}"
               secretName: vault-tls
+        standalone:
+          config: |-
+            ui = true
+
+            listener "tcp" {
+              tls_disable = 1
+              address = "[::]:8200"
+              cluster_address = "[::]:8201"
+              
+              # Enable unauthenticated metrics access (necessary for Prometheus Operator)
+              telemetry {
+                unauthenticated_metrics_access = "true"
+              }
+            }
+            
+            telemetry {
+              prometheus_retention_time = "30s",
+              disable_hostname = true
+            }
+  
+            storage "file" {
+              path = "/vault/data"
+            }
         hostAliases: "{{ k8s_hostaliases|default(omit) }}"
       ui:
         enabled: true
