@@ -15,7 +15,7 @@
         enabled: true
       prometheus:
         enabled: true
-        podmonitor:
+        servicemonitor:
           enabled: true
 
 - name: configure Let's Encrypt for cert-manager
