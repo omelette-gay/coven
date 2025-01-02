@@ -16,3 +16,5 @@ vault_k8s_controller_url: "https://{{ hostvars[groups.all[0]].ansible_ssh_host }
 #     k8s_service_account_name: secret-reader
 #     vault_role_name: myapp
 vault_k8s_secrets: []
+
+traefik_blockpath_plugin_verson: v0.2.1

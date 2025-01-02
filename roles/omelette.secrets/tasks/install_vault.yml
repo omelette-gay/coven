@@ -3,6 +3,19 @@
     name: hashicorp
     repo_url: https://helm.releases.hashicorp.com
 
+- name: block Vault metrics endpoint from web
+  kubernetes.core.k8s:
+    name: block-metrics-path
+    namespace: vault
+    definition:
+      apiVersion: traefik.containo.us/v1alpha1
+      kind: Middleware
+      spec:
+        plugin:
+          plugin-blockpath:
+            Regex:
+              - ^/v1/sys/metrics(.*)
+
 - name: install Vault
   kubernetes.core.helm:
     name: vault
@@ -20,7 +33,7 @@
             - host: "{{ vault_host }}"
           annotations:
             cert-manager.io/cluster-issuer: "{{ certmanager_acme_issuer }}"
-            traefik.ingress.kubernetes.io/router.middlewares: "{% if kubeconfig_require_secure|default(true) %}kube-system-redirect-https@kubernetescrd{% else %}{{ omit }}{% endif %}"
+            traefik.ingress.kubernetes.io/router.middlewares: "{% if kubeconfig_require_secure|default(true) %}kube-system-redirect-https@kubernetescrd,{% endif %}vault-block-metrics-path@kubernetescrd"
           tls:
             - hosts:
                 - "{{ vault_host }}"

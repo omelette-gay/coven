@@ -7,6 +7,12 @@
       kind: HelmChartConfig
       spec:
         valuesContent: |-
+          experimental:
+            plugins:
+              plugin-blockpath:
+                moduleName: github.com/traefik/plugin-blockpath
+                version: {{ traefik_blockpath_plugin_verson }}
+          
           metrics:
             prometheus:
               enabled: true
