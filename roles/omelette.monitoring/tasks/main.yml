@@ -6,3 +6,6 @@
 
 - name: install loki
   include_tasks: loki.yml
+
+- name: install promtail
+  include_tasks: promtail.yml

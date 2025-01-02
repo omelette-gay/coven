@@ -3,19 +3,96 @@
     name: grafana
     repo_url: https://grafana.github.io/helm-charts
 
-- name: install loki
+- name: install Loki
   kubernetes.core.helm:
     name: loki
-    chart_ref: grafana/loki-stack
+    chart_ref: grafana/loki
     release_namespace: monitoring
     create_namespace: true
     release_values:
       loki:
-        isDefault: false
+        # define database versions (if new ones come out, they can be specified with an epoch here)
+        schemaConfig:
+          configs:
+            - from: "2025-01-01"
+              store: tsdb
+              object_store: s3
+              schema: v13
+              index:
+                prefix: loki_index_
+                period: 24h
+
+        # trust all connections inside the cluster
+        auth_enabled: false
+
+        # force the system to be okay with only a single replica
+        commonConfig:
+          replication_factor: 1
+
+      monitoring:
+        dashboards:
+          enabled: true
+        rules:
+          enabled: true
         serviceMonitor:
           enabled: true
-  register: loki_installed
+
+      # Enable minio for storage
+      minio:
+        enabled: true
+
+      # deploy only a single instance
+      deploymentMode: SingleBinary
+      singleBinary:
+        replicas: 1
+
+      # Zero out replica counts of other deployment modes
+      backend:
+        replicas: 0
+      read:
+        replicas: 0
+      write:
+        replicas: 0
+      ingester:
+        replicas: 0
+      querier:
+        replicas: 0
+      queryFrontend:
+        replicas: 0
+      queryScheduler:
+        replicas: 0
+      distributor:
+        replicas: 0
+      compactor:
+        replicas: 0
+      indexGateway:
+        replicas: 0
+      bloomCompactor:
+        replicas: 0
+      bloomGateway:
+        replicas: 0
+
+- name: install Loki data source
+  kubernetes.core.k8s:
+    name: "loki-data-source"
+    namespace: monitoring
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        labels:
+          grafana_datasource: "1"
+      data:
+        loki-stack-datasource.yaml: |-
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              access: proxy
+              url: http://loki-gateway
+              version: 1
+  register: loki_datasource
 
 - name: restart Grafana
   include_tasks: restart_grafana.yml
-  when: loki_installed.changed
+  when: loki_datasource.changed

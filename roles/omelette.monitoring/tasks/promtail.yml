@@ -1,0 +1,14 @@
+- name: Add grafana repo
+  kubernetes.core.helm_repository:
+    name: grafana
+    repo_url: https://grafana.github.io/helm-charts
+
+- name: install promtail
+  kubernetes.core.helm:
+    name: promtail
+    chart_ref: grafana/promtail
+    release_namespace: monitoring
+    create_namespace: true
+    release_values:
+      clients:
+        - http://loki-gateway/loki/api/v1/push
