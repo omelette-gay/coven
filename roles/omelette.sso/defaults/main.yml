@@ -10,3 +10,4 @@ keycloak_password: "{{ lookup('hashivault', keycloak_vault_secret_path, 'passwor
 keycloak_admin_group: admins
 
 keycloak_db_credentials_secret: keycloak-db-creds
+keycloak_metrics_spi_version: 7.0.0

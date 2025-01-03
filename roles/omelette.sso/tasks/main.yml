@@ -41,6 +41,19 @@
         prometheusRule:
           enabled: true
 
+- name: block Keycloak metrics endpoint from web
+  kubernetes.core.k8s:
+    name: block-metrics-path
+    namespace: keycloak
+    definition:
+      apiVersion: traefik.containo.us/v1alpha1
+      kind: Middleware
+      spec:
+        plugin:
+          plugin-blockpath:
+            Regex:
+              - ^/auth/realms/([^/]*)/metrics(.*)
+
 - name: install Keycloak
   kubernetes.core.helm:
     name: keycloak
@@ -48,11 +61,6 @@
     release_namespace: keycloak
     create_namespace: true
     release_values:
-      serviceMonitor:
-        enabled: true
-      prometheusRule:
-        enabled: true
-
       command:
         - "/opt/keycloak/bin/kc.sh"
         - "start"
@@ -64,8 +72,6 @@
             -Djgroups.dns.query=keycloak-keycloakx-headless
         - name: KC_PROXY
           value: "edge"
-        - name: KC_HTTP_ENABLED
-          value: "true"
         {% if bootstrap_keycloak|default(false) %}
         - name: KEYCLOAK_ADMIN
           value: {{ keycloak_username }}
@@ -85,7 +91,47 @@
         existingSecret: "{{ keycloak_db_credentials_secret }}"
         existingSecretKey: "password"
 
+      # configure monitoring for Keycloak
+      serviceMonitor:
+        enabled: true
+      prometheusRule:
+        enabled: true
+
+      # use the extra metrics-spi-provider plugin to expose realm metrics for Keycloak
+      extraServiceMonitor:
+        enabled: true
+      service:
+        extraPorts:
+          - name: http-internal
+            port: 9000
+            targetPort: http-internal
+      extraInitContainers: |
+        - name: metrics-spi-provider
+          image: alpine:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+          args:
+            - -c
+            - |
+              echo "Downloading metrics-spi-provider"
+              wget -O /providers/keycloak-metrics-spi.jar https://github.com/aerogear/keycloak-metrics-spi/releases/download/{{ keycloak_metrics_spi_version }}/keycloak-metrics-spi-{{ keycloak_metrics_spi_version }}.jar
+          volumeMounts:
+            - name: providers
+              mountPath: /providers
+      extraVolumeMounts: |
+        - name: providers
+          mountPath: /opt/keycloak/providers
+      extraVolumes: |
+        - name: providers
+          emptyDir: {}
+
       # expose Keycloak to the public Internet
+      proxy:
+        enabled: true
+        mode: xforwarded
+        http:
+          enabled: true
       ingress:
         enabled: true
         rules:
@@ -95,7 +141,7 @@
                 pathType: Prefix
         annotations:
           cert-manager.io/cluster-issuer: "{{ certmanager_acme_issuer }}"
-          traefik.ingress.kubernetes.io/router.middlewares: "{% if kubeconfig_require_secure|default(true) %}kube-system-redirect-https@kubernetescrd{% else %}{{ omit }}{% endif %}"
+          traefik.ingress.kubernetes.io/router.middlewares: "{% if kubeconfig_require_secure|default(true) %}kube-system-redirect-https@kubernetescrd,{% endif %}keycloak-block-metrics-path@kubernetescrd"
         tls:
           - hosts:
               - "{{ keycloak_host }}"
