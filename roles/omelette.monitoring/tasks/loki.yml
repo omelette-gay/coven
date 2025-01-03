@@ -71,6 +71,7 @@
         replicas: 0
       bloomGateway:
         replicas: 0
+  notify: restart Grafana
 
 - name: install Loki data source
   kubernetes.core.k8s:
@@ -91,8 +92,4 @@
               access: proxy
               url: http://loki-gateway
               version: 1
-  register: loki_datasource
-
-- name: restart Grafana
-  include_tasks: restart_grafana.yml
-  when: loki_datasource.changed
+  notify: restart Grafana

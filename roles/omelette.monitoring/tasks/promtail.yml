@@ -3,7 +3,7 @@
     name: grafana
     repo_url: https://grafana.github.io/helm-charts
 
-- name: install promtail
+- name: install Promtail to send all k8s logs to Loki
   kubernetes.core.helm:
     name: promtail
     chart_ref: grafana/promtail
