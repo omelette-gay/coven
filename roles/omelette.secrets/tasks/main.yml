@@ -7,6 +7,9 @@
 - name: enable login with Keycloak
   include_tasks: enable_keycloak_login.yml
 
+- name: create credentials for automated management of Keyclock
+  include_tasks: create_keycloak_automation_credentials.yml
+
 - name: enable KV secrets engine
   hashivault_secret_engine:
     url: "{{ vault_url }}"

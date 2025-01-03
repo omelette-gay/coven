@@ -5,6 +5,7 @@ keycloak_realm: omelette.gay
 keycloak_vault_secret_path: gitops/keycloak-master-credentials
 
 keycloak_username: "{{ lookup('hashivault', keycloak_vault_secret_path, 'username', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
+keycloak_automation_username: ansible-automation
 keycloak_password: "{{ lookup('hashivault', keycloak_vault_secret_path, 'password', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
 
 keycloak_admin_group: admins
