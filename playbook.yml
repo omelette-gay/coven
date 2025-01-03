@@ -46,6 +46,12 @@
     group/kubernetes.core.helm:
       kubeconfig: "{{ kubeconfig }}"
       validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    group/community.general.keycloak:
+      auth_keycloak_url: "{{ keycloak_url }}"
+      auth_username: "{{ keycloak_username }}"
+      auth_password: "{{ keycloak_password }}"
+      auth_realm: master
+      validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
 
   roles:
     - omelette.monitoring

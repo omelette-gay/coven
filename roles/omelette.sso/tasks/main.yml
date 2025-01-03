@@ -150,11 +150,6 @@
 
 - name: create omelette.gay realm in Keycloak
   community.general.keycloak_realm:
-    auth_keycloak_url: "{{ keycloak_url }}"
-    auth_username: "{{ keycloak_username }}"
-    auth_password: "{{ keycloak_password }}"
-    auth_realm: master
-    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
     id: omelette-gay
     realm: "{{ keycloak_realm }}"
     enabled: true
@@ -167,10 +162,5 @@
 
 - name: create admin group for omelette.gay in Keycloak
   community.general.keycloak_group:
-    auth_keycloak_url: "{{ keycloak_url }}"
-    auth_username: "{{ keycloak_username }}"
-    auth_password: "{{ keycloak_password }}"
-    auth_realm: master
-    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
     name: "{{ keycloak_admin_group }}"
     realm: "{{ keycloak_realm }}"
