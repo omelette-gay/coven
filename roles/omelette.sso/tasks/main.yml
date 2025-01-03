@@ -65,7 +65,7 @@
         - "/opt/keycloak/bin/kc.sh"
         - "start"
         - "--http-port=8080"
-        - "--hostname-strict=false"
+        - "--hostname={{ keycloak_url }}"
       extraEnv: |
         - name: JAVA_OPTS_APPEND
           value: >-
@@ -140,8 +140,8 @@
               - path: /auth/
                 pathType: Prefix
         annotations:
-          cert-manager.io/cluster-issuer: "{{ certmanager_acme_issuer }}"
-          traefik.ingress.kubernetes.io/router.middlewares: "{% if kubeconfig_require_secure|default(true) %}kube-system-redirect-https@kubernetescrd,{% endif %}keycloak-block-metrics-path@kubernetescrd"
+          cert-manager.io/cluster-issuer: "{{ certmanager_default_issuer }}"
+          traefik.ingress.kubernetes.io/router.middlewares: "kube-system-redirect-https@kubernetescrd,keycloak-block-metrics-path@kubernetescrd"
         tls:
           - hosts:
               - "{{ keycloak_host }}"

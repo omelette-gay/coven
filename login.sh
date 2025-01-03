@@ -5,7 +5,8 @@ set -e
 if [ "$1" == "--coven" ] ; then
   export VAULT_ADDR=https://vault.coven.omelette.gay
 elif [ "$1" == "--local" ] ; then
-  export VAULT_ADDR=http://vault.coven.local
+  export VAULT_ADDR=https://vault.coven.local
+  export VAULT_SKIP_VERIFY=1
 else
   echo "usage: $0 [--coven|--local]"
   exit 1
