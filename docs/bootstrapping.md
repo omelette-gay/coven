@@ -27,13 +27,6 @@ You can now log in using your root token, e.g., if in Vagrant: `vault login -add
 
 Once you are in and can confirm you can sign in to Vault using Keycloak, now revoke the root token: `vault token revoke -address https://vault.coven.local -self`.
 
-The final step is to create a user in Keycloak's master realm to enable automation. Make sure you are in the master realm
-and add a user in Keycloak. Once created, under role mappings, ensure this new user is assigned the "admin" role.
-Finally, generate a secure password and do not set it as "temporary" and then set this password in the Credentials tab.
-
-In Vault, now create a secret called "gitops/keycloak-master-credentials" with two pieces of data in it, one called
-"username" which has the name of the user you just created, and the other called "password" which contains the password.
-
 In future runs, you will not need to specify the extra vars when running ansible.
 
 ## Deploying to physical hardware on Hetzner
