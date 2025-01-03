@@ -12,6 +12,8 @@
     release_values:
       loki:
         isDefault: false
+        serviceMonitor:
+          enabled: true
   register: loki_installed
 
 - name: restart Grafana
