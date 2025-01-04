@@ -11,15 +11,8 @@ kubeconfig_require_secure: false
 
 cluster_domain: coven.local
 
-keycloak_url: "http://{{ keycloak_host }}/auth"
-vault_url: "http://{{ vault_host }}"
 vault_k8s_controller_url: "https://10.0.2.15:6443"
-
-k8s_hostaliases:
-  - ip: 192.168.57.100
-    hostnames:
-      - "{{ keycloak_host }}"
-      - "{{ vault_host }}"
+certmanager_default_issuer: vault
 
 smtp_relay:
   host: asuka.pling.org.uk

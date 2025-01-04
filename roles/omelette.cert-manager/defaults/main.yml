@@ -1,3 +1,3 @@
 certmanager_acme_account_email: acme@{{ cluster_domain }}
 certmanager_acme_server: https://acme-staging-v02.api.letsencrypt.org/directory
-certmanager_acme_issuer: letsencrypt
+certmanager_default_issuer: letsencrypt

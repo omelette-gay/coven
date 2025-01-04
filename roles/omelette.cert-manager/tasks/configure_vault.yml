@@ -1,0 +1,54 @@
+- name: create service account for cert manager to talk to Vault
+  kubernetes.core.k8s:
+    name: vault-issuer
+    namespace: cert-manager
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+
+- name: create role to allow tokens to be issued for the vault-issuer service account
+  kubernetes.core.k8s:
+    name: vault-issuer
+    namespace: cert-manager
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      rules:
+        - apiGroups: [""]
+          resources: ["serviceaccounts/token"]
+          resourceNames: ["vault-issuer"]
+          verbs: ["create"]
+
+- name: allow cert-manager to access the role
+  kubernetes.core.k8s:
+    name: vault-issuer
+    namespace: cert-manager
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      subjects:
+        - kind: ServiceAccount
+          name: cert-manager
+          namespace: cert-manager
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: vault-issuer
+
+- name: configure Vault for cert-manager
+  kubernetes.core.k8s:
+    name: vault
+    namespace: cert-manager
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      spec:
+        vault:
+          server: "http://vault.vault.svc.cluster.local:8200"
+          path: pki/sign/coven
+          auth:
+            kubernetes:
+              role: cert-manager
+              mountPath: /v1/auth/kubernetes
+              serviceAccountRef:
+                name: vault-issuer

@@ -17,21 +17,3 @@
         enabled: true
         servicemonitor:
           enabled: true
-
-- name: configure Let's Encrypt for cert-manager
-  kubernetes.core.k8s:
-    name: "{{ certmanager_acme_issuer }}"
-    namespace: cert-manager
-    definition:
-      apiVersion: cert-manager.io/v1
-      kind: ClusterIssuer
-      spec:
-        acme:
-          email: "{{ certmanager_acme_account_email }}"
-          server: "{{ certmanager_acme_server }}"
-          privateKeySecretRef:
-            name: "{{ certmanager_acme_issuer }}-private-key"
-          solvers:
-            - http01:
-                ingress:
-                  class: traefik

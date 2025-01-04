@@ -32,8 +32,8 @@
           hosts:
             - host: "{{ vault_host }}"
           annotations:
-            cert-manager.io/cluster-issuer: "{{ certmanager_acme_issuer }}"
-            traefik.ingress.kubernetes.io/router.middlewares: "{% if kubeconfig_require_secure|default(true) %}kube-system-redirect-https@kubernetescrd,{% endif %}vault-block-metrics-path@kubernetescrd"
+            cert-manager.io/cluster-issuer: "{{ certmanager_default_issuer }}"
+            traefik.ingress.kubernetes.io/router.middlewares: "kube-system-redirect-https@kubernetescrd,vault-block-metrics-path@kubernetescrd"
           tls:
             - hosts:
                 - "{{ vault_host }}"
@@ -61,7 +61,6 @@
             storage "file" {
               path = "/vault/data"
             }
-        hostAliases: "{{ k8s_hostaliases|default(omit) }}"
       ui:
         enabled: true
       serverTelemetry:

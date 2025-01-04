@@ -3,3 +3,9 @@
 
 - name: deploy Cert Manager
   include_tasks: deploy_cert_manager.yml
+
+- name: configure Let's Encrypt
+  include_tasks: configure_lets_encrypt.yml
+
+- name: configure Vault issuing
+  include_tasks: configure_vault.yml

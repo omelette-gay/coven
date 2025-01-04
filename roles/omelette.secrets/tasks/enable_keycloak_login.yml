@@ -55,6 +55,7 @@
     verify: "{{ kubeconfig_require_secure|default(true) }}"
     mount_point: "{{ vault_keycloak_mount_point }}"
     oidc_discovery_url: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
+    oidc_discovery_ca_pem: "{% if certmanager_default_issuer == 'vault' %}{{ lookup('hashivault', 'cert/ca', 'certificate', mount_point='pki', url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
     oidc_client_id: "{{ keycloak_vault_client.end_state.clientId }}"
     oidc_client_secret: "{{ keycloak_vault_client_secret.clientsecret_info.value }}"
 
