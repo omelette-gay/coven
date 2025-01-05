@@ -10,9 +10,22 @@
     release_namespace: monitoring
     create_namespace: true
     release_values:
+      grafana:
+        ingress:
+          enabled: true
+          hosts:
+            - "{{ grafana_host }}"
+          annotations:
+            cert-manager.io/cluster-issuer: "{{ certmanager_default_issuer }}"
+            traefik.ingress.kubernetes.io/router.middlewares: "kube-system-redirect-https@kubernetescrd"
+          tls:
+            - hosts:
+                - "{{ grafana_host }}"
+              secretName: grafana-tls
       prometheus:
         prometheusSpec:
           # look for Prometheus monitoring config installed by other Helm charts
           ruleSelectorNilUsesHelmValues: false
           podMonitorSelectorNilUsesHelmValues: false
           serviceMonitorSelectorNilUsesHelmValues: false
+    wait: true

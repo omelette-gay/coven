@@ -1,0 +1,1 @@
+grafana_host: "monitoring.{{ cluster_domain }}"
