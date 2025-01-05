@@ -3,6 +3,59 @@
     name: prometheus-community
     repo_url: https://prometheus-community.github.io/helm-charts
 
+- name: create Keycloak client for Grafana
+  community.general.keycloak_client:
+    client_id: "{{ grafana_keycloak_client_name }}"
+    realm: "{{ keycloak_realm }}"
+    protocol: openid-connect
+    standard_flow_enabled: true
+    public_client: false
+    root_url: "https://{{ grafana_host }}"
+    redirect_uris:
+      - "https://{{ grafana_host }}/login/generic_oauth"
+    protocol_mappers:
+      - name: realm roles
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-realm-role-mapper
+        consentRequired: false
+        config:
+          claim.name: roles
+          multivalued: true
+          userinfo.token.claim: true
+          access.token.claim: true
+  register: keycloak_grafana_client
+
+- name: create Grafana admin role in Keycloak
+  community.general.keycloak_role:
+    realm: "{{ keycloak_realm }}"
+    name: "{{ grafana_keycloak_admin_role }}"
+  register: keycloak_grafana_admin_role
+
+- name: associate Grafana-admin role with admins group in Keycloak
+  community.general.keycloak_realm_rolemapping:
+    realm: "{{ keycloak_realm }}"
+    group_name: "{{ keycloak_admin_group }}"
+    roles:
+      - id: "{{ keycloak_grafana_admin_role.end_state.id }}"
+        name: "{{ grafana_keycloak_admin_role }}"
+
+- name: fetch Grafana client secret from Keycloak
+  community.general.keycloak_clientsecret_info:
+    id: "{{ keycloak_grafana_client.end_state.id }}"
+    realm: "{{ keycloak_realm }}"
+  no_log: true
+  register: keycloak_grafana_client_secret
+
+- name: create grafana secret
+  kubernetes.core.k8s:
+    name: grafana-keycloak-creds
+    namespace: monitoring
+    definition:
+      apiVersion: v1
+      kind: Secret
+      data: 
+        keycloak_client_secret: "{{ keycloak_grafana_client_secret.clientsecret_info.value|b64encode }}"
+
 - name: install kube-prometheus
   kubernetes.core.helm:
     name: kube-prometheus
@@ -11,6 +64,37 @@
     create_namespace: true
     release_values:
       grafana:
+        envFromSecrets:
+          - name: grafana-keycloak-creds
+        grafana.ini:
+          server:
+            domain: "https://{{ grafana_host }}/"
+            root_url: "https://{{ grafana_host }}/"
+          auth.generic_oauth:
+            enabled: true
+            name: SSO
+            allow_sign_up: true
+            client_id: "{{ keycloak_grafana_client.end_state.clientId }}"
+            client_secret: $__env{keycloak_client_secret}
+            scopes: openid profile email roles
+            auth_url: "{{ keycloak_url }}/realms/{{ keycloak_realm }}/protocol/openid-connect/auth"
+            token_url: "{{ keycloak_url }}/realms/{{ keycloak_realm }}/protocol/openid-connect/token"
+            api_url: "{{ keycloak_url }}/realms/{{ keycloak_realm }}/protocol/openid-connect/userinfo"
+            signout_redirect_url: "{{ keycloak_url }}/realms/{{ keycloak_realm }}/protocol/openid-connect/logout"
+            role_attribute_strict: true
+            role_attribute_path: "(contains(roles[], '{{ grafana_keycloak_admin_role }}') && 'GrafanaAdmin')"
+            allow_assign_grafana_admin: true
+            email_attribute_path: email
+            name_attribute_path: preferred_username
+            login_attribute_path: preferred_username
+            tls_skip_verify_insecure: "{{ not kubeconfig_require_secure|default(true) }}"
+          security:
+            disable_initial_admin_creation: true
+            cookie_secure: true
+          auth:
+            disable_login_form: true   
+            oauth_auto_login: false 
+        
         ingress:
           enabled: true
           hosts:
@@ -22,6 +106,9 @@
             - hosts:
                 - "{{ grafana_host }}"
               secretName: grafana-tls
+
+        hostAliases: "{{ k8s_hostaliases|default(omit) }}"
+
       prometheus:
         prometheusSpec:
           # look for Prometheus monitoring config installed by other Helm charts
