@@ -14,6 +14,11 @@ cluster_domain: coven.local
 vault_k8s_controller_url: "https://10.0.2.15:6443"
 certmanager_default_issuer: vault
 
+k8s_hostaliases:
+  - ip: 192.168.57.100
+    hostnames:
+      - "{{ keycloak_host }}"
+
 smtp_relay:
   host: asuka.pling.org.uk
   port: 587

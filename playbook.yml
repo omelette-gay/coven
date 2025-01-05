@@ -54,8 +54,8 @@
       validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
 
   roles:
-    - omelette.cert-manager
     - omelette.monitoring
+    - omelette.cert-manager
     - omelette.sso
     - omelette.secrets
     - omelette.external-dns

@@ -3,6 +3,12 @@
     name: hashicorp
     repo_url: https://helm.releases.hashicorp.com
 
+- name: Create Vault namespace
+  kubernetes.core.k8s:
+    name: vault
+    api_version: v1
+    kind: Namespace
+
 - name: block Vault metrics endpoint from web
   kubernetes.core.k8s:
     name: block-metrics-path
@@ -61,6 +67,7 @@
             storage "file" {
               path = "/vault/data"
             }
+        hostAliases: "{{ k8s_hostaliases|default(omit) }}"
       ui:
         enabled: true
       serverTelemetry:

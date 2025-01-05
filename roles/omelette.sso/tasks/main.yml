@@ -3,6 +3,12 @@
     name: codecentric
     repo_url: https://codecentric.github.io/helm-charts
 
+- name: Create Keycloak namespace
+  kubernetes.core.k8s:
+    name: keycloak
+    api_version: v1
+    kind: Namespace
+
 - name: create database secret if it doesn't exist
   kubernetes.core.k8s:
     name: "{{ keycloak_db_credentials_secret }}"
@@ -14,7 +20,7 @@
         admin_password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
         password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
         replication_password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
-  when: query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name=keycloak_db_credentials_secret, namespace='keycloak')|length == 0
+  when: query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name=keycloak_db_credentials_secret, namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))|length == 0
 
 - name: install database for Keycloak
   kubernetes.core.helm:
@@ -28,7 +34,7 @@
           auth:
             username: keycloak
             database: keycloak
-            password: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name=keycloak_db_credentials_secret, namespace='keycloak')[0].data.password|b64decode }}"
+            password: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name=keycloak_db_credentials_secret, namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure)[0].data.password|default(true)|b64decode }}"
             existingSecret: "{{ keycloak_db_credentials_secret }}"
             secretKeys:
               adminPasswordKey: admin_password
