@@ -1,0 +1,53 @@
+- name: Add prometheus-community repo
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_url: https://prometheus-community.github.io/helm-charts
+
+- name: Set up SSO
+  include_tasks: configure_grafana_sso.yml
+  when: bootstrap_keycloak|default(false) == false
+
+- name: install kube-prometheus
+  kubernetes.core.helm:
+    name: kube-prometheus
+    chart_ref: prometheus-community/kube-prometheus-stack
+    release_namespace: monitoring
+    create_namespace: true
+    release_values:
+      grafana:
+        envFromSecrets:
+          - name: grafana-keycloak-creds
+            optional: true
+        grafana.ini:
+          server:
+            domain: "https://{{ grafana_host }}/"
+            root_url: "https://{{ grafana_host }}/"
+          auth.generic_oauth: "{{ grafana_generic_oauth_config|default(omit) }}"
+          security:
+            disable_initial_admin_creation: true
+            cookie_secure: true
+          auth:
+            disable_login_form: true   
+            oauth_auto_login: false 
+        
+        ingress:
+          enabled: true
+          hosts:
+            - "{{ grafana_host }}"
+          annotations:
+            cert-manager.io/cluster-issuer: "{{ certmanager_default_issuer }}"
+            traefik.ingress.kubernetes.io/router.middlewares: "kube-system-redirect-https@kubernetescrd"
+          tls:
+            - hosts:
+                - "{{ grafana_host }}"
+              secretName: grafana-tls
+
+        hostAliases: "{{ k8s_hostaliases|default(omit) }}"
+
+      prometheus:
+        prometheusSpec:
+          # look for Prometheus monitoring config installed by other Helm charts
+          ruleSelectorNilUsesHelmValues: false
+          podMonitorSelectorNilUsesHelmValues: false
+          serviceMonitorSelectorNilUsesHelmValues: false
+    wait: true
