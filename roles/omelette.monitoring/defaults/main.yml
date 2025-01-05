@@ -1,0 +1,3 @@
+grafana_host: "monitoring.{{ cluster_domain }}"
+grafana_keycloak_client_name: grafana
+grafana_keycloak_admin_role: grafana-admin

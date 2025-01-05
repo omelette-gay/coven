@@ -1,8 +1,8 @@
 - name: install kube-prometheus
-  include_tasks: kube-prometheus.yml
+  include_tasks: install_kube-prometheus.yml
 
 - name: override k3s configuration to expose Prometheus metrics for Traefik
-  include_tasks: traefik-monitoring.yml
+  include_tasks: traefik_monitoring.yml
 
 - name: install loki
   include_tasks: loki.yml
