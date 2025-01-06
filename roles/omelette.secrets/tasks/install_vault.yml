@@ -76,3 +76,4 @@
         prometheusRules:
           enabled: true
     wait: true
+  notify: restart Grafana
