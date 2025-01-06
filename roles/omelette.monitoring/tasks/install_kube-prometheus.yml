@@ -27,6 +27,10 @@
           auth:
             disable_login_form: true   
             oauth_auto_login: false
+          smtp:
+            enabled: true
+            host: "{{ smtp_relay.host }}:{{ smtp_relay.port }}"
+            from_address: "grafana@{{ cluster_domain }}"
         envFromSecrets:
           - name: grafana-keycloak-creds
             optional: true
