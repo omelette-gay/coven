@@ -17,6 +17,9 @@ smtp_relay:
 # get real TLS certificates from Let's Encrypt
 certmanager_acme_server: https://acme-v02.api.letsencrypt.org/directory
 
+# read Discord webhook from Vault when not bootstrapping
+grafana_discord_webhook_url: "{% if not bootstrap_keycloak|default(false) %}{{ lookup('hashivault', 'gitops/grafana-discord-notifier', 'webhook_url', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
+
 external_dns_extra_records:
   - zone_name: omelette.gay
     records:

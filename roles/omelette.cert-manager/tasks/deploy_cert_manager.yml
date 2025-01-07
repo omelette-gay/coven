@@ -17,3 +17,4 @@
         enabled: true
         servicemonitor:
           enabled: true
+  notify: restart Grafana

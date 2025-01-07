@@ -1,0 +1,25 @@
+- name: configure Discord notifier for Grafana
+  kubernetes.core.k8s:
+    name: "grafana-discord-notifier"
+    namespace: monitoring
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        labels:
+          grafana_alert: "1"
+      stringData:
+        discord-notifier.yaml: |-
+          apiVersion: 1
+          contactPoints:
+            - name: Discord
+              receivers:
+                - uid: discord
+                  type: discord
+                  settings:
+                    avatar_url: https://{{ grafana_host }}/public/img/grafana_icon.svg
+                    url: {{ grafana_discord_webhook_url }}
+                    use_discord_username: true
+                  disableResolveMessage: false
+  notify: restart Grafana
+  when: grafana_discord_webhook_url is defined

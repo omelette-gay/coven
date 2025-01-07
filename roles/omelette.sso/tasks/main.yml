@@ -153,6 +153,7 @@
               - "{{ keycloak_host }}"
             secretName: keycloak-tls
     wait: true
+  notify: restart Grafana
 
 - name: create omelette.gay realm in Keycloak
   community.general.keycloak_realm:

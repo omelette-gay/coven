@@ -15,9 +15,7 @@
     create_namespace: true
     release_values:
       grafana:
-        envFromSecrets:
-          - name: grafana-keycloak-creds
-            optional: true
+        # configure Grafana
         grafana.ini:
           server:
             domain: "https://{{ grafana_host }}/"
@@ -28,8 +26,39 @@
             cookie_secure: true
           auth:
             disable_login_form: true   
-            oauth_auto_login: false 
-        
+            oauth_auto_login: false
+          smtp:
+            enabled: true
+            host: "{{ smtp_relay.host }}:{{ smtp_relay.port }}"
+            from_address: "grafana@{{ cluster_domain }}"
+        envFromSecrets:
+          - name: grafana-keycloak-creds
+            optional: true
+
+        # auto-discover resources installed into the cluster
+        # this has to be done at boot
+        sidecar:
+          alerts:
+            enabled: true
+            searchNamespace: ALL
+            skipReload: true
+            initAlerts: true
+          dashboards:
+            enabled: true
+            searchNamespace: ALL
+            skipReload: true
+          datasources:
+            enabled: true
+            searchNamespace: ALL
+            skipReload: true
+            initDatasources: true
+          notifiers:
+            enabled: true
+            searchNamespace: ALL
+            skipReload: true
+            initNotifiers: true
+
+        # expose Grafana to the web
         ingress:
           enabled: true
           hosts:
@@ -51,3 +80,4 @@
           podMonitorSelectorNilUsesHelmValues: false
           serviceMonitorSelectorNilUsesHelmValues: false
     wait: true
+  notify: restart Grafana

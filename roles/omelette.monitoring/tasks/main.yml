@@ -1,6 +1,9 @@
 - name: install kube-prometheus
   include_tasks: install_kube-prometheus.yml
 
+- name: configure Discord alerting for Grafana
+  include_tasks: configure_grafana_discord_alerts.yml
+
 - name: override k3s configuration to expose Prometheus metrics for Traefik
   include_tasks: traefik_monitoring.yml
 
