@@ -49,6 +49,9 @@
     verify: "{{ kubeconfig_require_secure|default(true) }}"
     method_type: oidc
     mount_point: "{{ vault_keycloak_mount_point }}"
+    config:
+      default_lease_ttl: 8h
+      max_lease_ttl: 8h
 
 - name: configure Keycloak auth method for Vault
   hashivault_oidc_auth_method_config:
@@ -71,12 +74,9 @@
     bound_audiences: "{{ vault_keycloak_client_name }}"
     # ensure only users with Vault admin Keycloak role can access this Vault role
     bound_claims:
-      roles:
-       - "{{ vault_keycloak_admin_role }}"
+      roles: "{{ vault_keycloak_admin_role }}"
     token_policies:
       - "{{ vault_admin_policy_name }}"
     allowed_redirect_uris:
       - "https://{{ vault_host }}/ui/vault/auth/keycloak/oidc/callback"
       - http://localhost:8250/oidc/callback # for CLI login
-    token_ttl: 28800
-    token_max_ttl: 28800
