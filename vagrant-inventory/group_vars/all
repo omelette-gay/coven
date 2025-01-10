@@ -26,16 +26,10 @@ smtp_relay:
 factorio_servers:
   - server_id: testlab
     config:
-      hostNetworkEnabled: false
-      image:
-        tag: stable
       factorioServer:
         enable_space_age: false
       server_settings:
         name: Test Lab
         description: Just doing test things
-        visibility:
-          lan: false
-        non_blocking_saving: true
       serverPassword:
         passwordSecret: "game-password"

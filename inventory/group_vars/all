@@ -63,12 +63,10 @@ external_dns_extra_records:
 
 factorio_servers:
   - server_id: girlsclub
+    dns:
+      zone: omelette.gay
+      hostname: omelette.gay
     config:
-      hostNetworkEnabled: false
-      image:
-        tag: stable
-      service:
-        ipFamilyPolicy: PreferDualStack
       factorioServer:
         save_name: "girls-club"
         enable_space_age: false
@@ -77,21 +75,10 @@ factorio_servers:
       server_settings:
         name: Girls Club
         description: Just doing girls things
-        visibility:
-          lan: false
-        non_blocking_saving: true
-      rcon:
-        external: false
-      map_gen_settings:
-        starting_area: 2
   - server_id: intnerds
     config:
-      hostNetworkEnabled: false
-      image:
-        tag: stable
       service:
         port: 31496
-        ipFamilyPolicy: PreferDualStack
       factorioServer:
         save_name: "internationalnerds"
         enable_space_age: false
@@ -100,8 +87,3 @@ factorio_servers:
       server_settings:
         name: International Nerds Group
         description: Joh, Roy and Meg being nerdy together
-        visibility:
-          lan: false
-        non_blocking_saving: true
-      rcon:
-        external: false
