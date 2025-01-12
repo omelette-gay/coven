@@ -22,4 +22,33 @@
                     use_discord_username: true
                   disableResolveMessage: false
   notify: restart Grafana
-  when: grafana_discord_webhook_url is defined
+
+- name: create Discord webhook URL secret
+  kubernetes.core.k8s:
+    name: discord-alerting-webhook
+    namespace: monitoring
+    definition:
+      apiVersion: v1
+      kind: Secret
+      data:
+        webhook_url: "{{ grafana_discord_webhook_url|b64encode }}"
+  notify: restart Grafana
+
+- name: configure Discord notifier for Alertmanager
+  kubernetes.core.k8s:
+    name: "alertmanager-discord-notifier"
+    namespace: monitoring
+    definition:
+      apiVersion: monitoring.coreos.com/v1alpha1
+      kind: AlertmanagerConfig
+      spec:
+        route:
+          groupBy: ['namespace', 'alertname']
+          receiver: discord-receiver
+          repeatInterval: 7d
+        receivers:
+          - name: discord-receiver
+            discordConfigs:
+              - apiURL:
+                  name: discord-alerting-webhook
+                  key: webhook_url
