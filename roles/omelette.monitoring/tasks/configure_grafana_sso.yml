@@ -9,9 +9,9 @@
     redirect_uris:
       - "https://{{ grafana_host }}/login/generic_oauth"
     protocol_mappers:
-      - name: realm roles
+      - name: client roles
         protocol: openid-connect
-        protocolMapper: oidc-usermodel-realm-role-mapper
+        protocolMapper: oidc-usermodel-client-role-mapper
         consentRequired: false
         config:
           claim.name: roles
@@ -24,15 +24,16 @@
   community.general.keycloak_role:
     realm: "{{ keycloak_realm }}"
     name: "{{ grafana_keycloak_admin_role }}"
+    client_id: "{{ grafana_keycloak_client_name }}"
   register: keycloak_grafana_admin_role
 
 - name: associate Grafana-admin role with admins group in Keycloak
-  community.general.keycloak_realm_rolemapping:
+  community.general.keycloak_client_rolemapping:
     realm: "{{ keycloak_realm }}"
     group_name: "{{ keycloak_admin_group }}"
+    client_id: "{{ grafana_keycloak_client_name }}"
     roles:
-      - id: "{{ keycloak_grafana_admin_role.end_state.id }}"
-        name: "{{ grafana_keycloak_admin_role }}"
+      - name: "{{ grafana_keycloak_admin_role }}"
 
 - name: fetch Grafana client secret from Keycloak
   community.general.keycloak_clientsecret_info:

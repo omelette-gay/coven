@@ -1,17 +1,3 @@
-- name: create Vault admin role in Keycloak
-  community.general.keycloak_role:
-    realm: "{{ keycloak_realm }}"
-    name: "{{ vault_keycloak_admin_role }}"
-  register: keycloak_vault_admin_role
-
-- name: associate vault-admin role with admins group in Keycloak
-  community.general.keycloak_realm_rolemapping:
-    realm: "{{ keycloak_realm }}"
-    group_name: "{{ keycloak_admin_group }}"
-    roles:
-      - id: "{{ keycloak_vault_admin_role.end_state.id }}"
-        name: "{{ vault_keycloak_admin_role }}"
-
 - name: create Keycloak client for Vault
   community.general.keycloak_client:
     client_id: "{{ vault_keycloak_client_name }}"
@@ -24,9 +10,9 @@
       - "https://{{ vault_host }}/ui/vault/auth/keycloak/oidc/callback"
       - http://localhost:8250/oidc/callback # for CLI login
     protocol_mappers:
-      - name: realm roles
+      - name: client roles
         protocol: openid-connect
-        protocolMapper: oidc-usermodel-realm-role-mapper
+        protocolMapper: oidc-usermodel-client-role-mapper
         consentRequired: false
         config:
           claim.name: roles
@@ -34,6 +20,21 @@
           userinfo.token.claim: true
           access.token.claim: true
   register: keycloak_vault_client
+
+- name: create Vault admin role in Keycloak
+  community.general.keycloak_role:
+    realm: "{{ keycloak_realm }}"
+    name: "{{ vault_keycloak_admin_role }}"
+    client_id: "{{ vault_keycloak_client_name }}"
+  register: keycloak_vault_admin_role
+
+- name: associate Vault admin role with admins group in Keycloak
+  community.general.keycloak_client_rolemapping:
+    realm: "{{ keycloak_realm }}"
+    group_name: "{{ keycloak_admin_group }}"
+    client_id: "{{ vault_keycloak_client_name }}"
+    roles:
+      - name: "{{ vault_keycloak_admin_role }}"
 
 - name: fetch Vault client secret from Keycloak
   community.general.keycloak_clientsecret_info:
@@ -48,6 +49,9 @@
     verify: "{{ kubeconfig_require_secure|default(true) }}"
     method_type: oidc
     mount_point: "{{ vault_keycloak_mount_point }}"
+    config:
+      default_lease_ttl: 8h
+      max_lease_ttl: 8h
 
 - name: configure Keycloak auth method for Vault
   hashivault_oidc_auth_method_config:
@@ -68,7 +72,7 @@
     user_claim: preferred_username
     # ensure that only tokens issued for vault can be used to log in
     bound_audiences: "{{ vault_keycloak_client_name }}"
-    # ensure only users with vault-admin Keycloak role can access this Vault role
+    # ensure only users with Vault admin Keycloak role can access this Vault role
     bound_claims:
       roles: "{{ vault_keycloak_admin_role }}"
     token_policies:
@@ -76,4 +80,3 @@
     allowed_redirect_uris:
       - "https://{{ vault_host }}/ui/vault/auth/keycloak/oidc/callback"
       - http://localhost:8250/oidc/callback # for CLI login
-    token_max_ttl: 28800
