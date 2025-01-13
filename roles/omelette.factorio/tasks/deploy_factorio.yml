@@ -3,11 +3,11 @@
 # so we don't initially wait for it
 - name: install factorio-server-charts
   kubernetes.core.helm:
-    name: "{{ item.server_id }}"
+    name: "{{ factorio_server.server_id }}"
     chart_ref: factorio/factorio-server-charts
-    release_namespace: "factorio-{{ item.server_id }}"
+    release_namespace: "factorio-{{ factorio_server.server_id }}"
     create_namespace: true
-    release_values: "{{ item.config }}"
+    release_values: "{{ factorio_default_config|combine(factorio_server.config, recursive=true) }}"
 
 - name: create secret from Vault for game password
   include_role:
@@ -15,9 +15,19 @@
     tasks_from: create_k8s_secret
   vars:
     vault_k8s_secret:
-      vault_secret_name: "factorio/{{ item.server_id }}"
-      k8s_secret_name: "{{ item.config.serverPassword.passwordSecret }}"
-      k8s_namespace: "factorio-{{ item.server_id }}"
+      vault_secret_name: "factorio/{{ factorio_server.server_id }}"
+      k8s_secret_name: "{{ factorio_server.config.serverPassword.passwordSecret }}"
+      k8s_namespace: "factorio-{{ factorio_server.server_id }}"
       k8s_service_account_name: "{{ factorio_k8s_service_account }}"
-      vault_role_name: "factorio-{{ item.server_id }}"
-  when: item.config.serverPassword.passwordSecret is defined
+      vault_role_name: "factorio-{{ factorio_server.server_id }}"
+  when: factorio_server.config.serverPassword.passwordSecret is defined
+
+- name: create SRV record at to advertise this Factorio instance
+  community.dns.hetzner_dns_record:
+    hetzner_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
+    state: present
+    zone_name: "{{ factorio_server.dns.zone }}"
+    record: "_factorio._udp.{{ factorio_server.dns.hostname }}"
+    type: SRV
+    value: "0 0 {{ factorio_server.config.service.port|default(31497) }} factorio-svc.{{ factorio_server.dns.hostname }}."
+  when: factorio_server.dns is defined
