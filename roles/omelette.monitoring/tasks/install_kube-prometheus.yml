@@ -79,5 +79,16 @@
           ruleSelectorNilUsesHelmValues: false
           podMonitorSelectorNilUsesHelmValues: false
           serviceMonitorSelectorNilUsesHelmValues: false
+
+      alertmanager:
+        config:
+          global:
+            smtp_smarthost: "{{ smtp_relay.host }}:{{ smtp_relay.port }}"
+            smtp_from: "alertmanager@{{ cluster_domain }}"
+        # stop adding namespace restriction when installing alerting rules
+        alertmanagerSpec:
+          alertmanagerConfigMatcherStrategy:
+            type: None
+
     wait: true
   notify: restart Grafana
