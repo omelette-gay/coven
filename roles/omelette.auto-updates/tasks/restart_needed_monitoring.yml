@@ -1,0 +1,26 @@
+---
+- name: install needs-restarting
+  dnf:
+    name: yum-utils
+
+- name: install needs-restarting-exporter systemd timer
+  copy:
+    src: needs-restarting-exporter.timer
+    dest: /etc/systemd/system/needs-restarting-exporter.timer
+    owner: root
+    group: root
+  register: install_needs_restarting_systemd
+
+- name: install needs-restarting-exporter systemd unit
+  copy:
+    src: needs-restarting-exporter.service
+    dest: /etc/systemd/system/needs-restarting-exporter.service
+    owner: root
+    group: root
+
+- name: enable needs-restarting systemd unit
+  systemd_service:
+    name: needs-restarting-exporter.timer
+    state: started
+    enabled: true
+    daemon_reload: "{{ install_needs_restarting_systemd.changed }}"
