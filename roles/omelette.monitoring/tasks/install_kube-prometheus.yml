@@ -80,6 +80,18 @@
           podMonitorSelectorNilUsesHelmValues: false
           serviceMonitorSelectorNilUsesHelmValues: false
 
+      # lock down node exporter from the web
+      prometheus-node-exporter:
+        kubeRBACProxy:
+          enabled: true
+        prometheus:
+          monitor:
+            scheme: https
+            bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+            tlsConfig:
+              caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              insecureSkipVerify: true
+
       alertmanager:
         config:
           global:
