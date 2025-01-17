@@ -14,3 +14,6 @@
     path:  /etc/dnf/automatic.conf
     regexp: '^apply_updates ='
     line: 'apply_updates = yes'
+
+- name: add monitoring for when system restarts are needed
+  include_tasks: restart_needed_monitoring.yml

@@ -92,6 +92,15 @@
               caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
               insecureSkipVerify: true
 
+        # collect textfiles from the host
+        extraArgs:
+          - --collector.textfile.directory=/run/node-exporter
+        extraHostVolumeMounts:
+          - name: textfiles
+            hostPath: /run/node-exporter
+            mountPath: /run/node-exporter
+            readOnly: true
+
       alertmanager:
         config:
           global:
@@ -101,6 +110,21 @@
         alertmanagerSpec:
           alertmanagerConfigMatcherStrategy:
             type: None
+
+      additionalPrometheusRulesMap:
+        needs-restarting:
+          groups:
+            - name: needs-restarting
+              rules:
+                - alert: NodeNeedsRestarting
+                  expr: node_reboot_required == 1
+                  for: 1h
+                  annotations:
+                    summary: Host OS indicates that node requires restart
+                    description: The host OS is indicating that the node requires a restart as currently running components have been updated but the currently running version is not the latest.
+                  labels:
+                    severity: warning
+
 
     wait: true
   notify: restart Grafana
