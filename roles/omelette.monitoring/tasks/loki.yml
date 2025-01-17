@@ -29,6 +29,20 @@
         commonConfig:
           replication_factor: 1
 
+        # enable retention
+        limits_config:
+          retention_period: 1y
+        compactor:
+          working_directory: /var/loki/data/retention
+          compaction_interval: 10m
+          retention_enabled: true
+          retention_delete_delay: 2h
+          retention_delete_worker_count: 100
+          delete_request_store: s3
+      memberlist:
+        service:
+          publishNotReadyAddresses: true
+
       # enabling monitoring
       monitoring:
         dashboards:
@@ -66,6 +80,13 @@
       deploymentMode: SingleBinary
       singleBinary:
         replicas: 1
+        # include a /tmp dir which is required for the compactor
+        extraVolumeMounts:
+          - name: temporary
+            mountPath: /tmp
+        extraVolumes:
+          - name: temporary
+            emptyDir: {}
 
       # Zero out replica counts of other deployment modes
       backend:
