@@ -80,6 +80,144 @@
           podMonitorSelectorNilUsesHelmValues: false
           serviceMonitorSelectorNilUsesHelmValues: false
 
+      # fix kube-prometheus-stack to work for k3s where everything is exposed together
+      # https://github.com/k3s-io/k3s/issues/3619#issuecomment-1991598167
+      kubeApiServer:
+        serviceMonitor:
+          metricRelabelings:
+            - action: drop
+              regex: (apiserver_request_duration_seconds_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket|apiserver_request_sli_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: "etcd_request_duration_seconds_bucket"
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (scheduler_plugin_execution_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (workqueue_work_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+
+      kubelet:
+        serviceMonitor:
+          cAdvisorRelabelings:
+            - action: replace
+              sourceLabels: [ __metrics_path__ ]
+              targetLabel: metrics_path
+            - action: replace
+              targetLabel: instance
+              sourceLabels:
+                - "node"
+          relabelings:
+            - action: replace
+              sourceLabels: [ __metrics_path__ ]
+              targetLabel: metrics_path
+          metricRelabelings:
+            - action: drop
+              regex: (apiserver_request_duration_seconds_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket|apiserver_request_sli_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: "etcd_request_duration_seconds_bucket"
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (scheduler_plugin_execution_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (workqueue_work_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+
+      kubeControllerManager:
+        endpoints: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+        serviceMonitor:
+          https: true
+          insecureSkipVerify: true
+          metricRelabelings:
+            - action: drop
+              regex: (apiserver_request_duration_seconds_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket|apiserver_request_sli_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: "etcd_request_duration_seconds_bucket"
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (scheduler_plugin_execution_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (workqueue_work_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+
+      # whilst we are single node, there is no etcd, so we skip this part - but it is defined upstream
+
+      kubeScheduler:
+        endpoints: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+        serviceMonitor:
+          https: true
+          insecureSkipVerify: true
+          metricRelabelings:
+            - action: drop
+              regex: (apiserver_request_duration_seconds_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket|apiserver_request_sli_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: "etcd_request_duration_seconds_bucket"
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (scheduler_plugin_execution_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (workqueue_work_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+
+      kubeProxy:
+        endpoints: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+        service:
+          selector:
+            k8s-app: kube-proxy
+        serviceMonitor:
+          metricRelabelings:
+            - action: drop
+              regex: (apiserver_request_duration_seconds_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket|apiserver_request_sli_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: "etcd_request_duration_seconds_bucket"
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (scheduler_plugin_execution_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (workqueue_work_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+
+      coreDns:
+        serviceMonitor:
+          metricRelabelings:
+            - action: drop
+              regex: (apiserver_request_duration_seconds_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket|apiserver_request_sli_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: "etcd_request_duration_seconds_bucket"
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (scheduler_plugin_execution_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (workqueue_work_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+
+      kubeDns:
+        serviceMonitor:
+          metricRelabelings:
+            - action: drop
+              regex: (apiserver_request_duration_seconds_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket|apiserver_request_sli_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: "etcd_request_duration_seconds_bucket"
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (scheduler_plugin_execution_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+            - action: drop
+              regex: (workqueue_work_duration_seconds_bucket)
+              sourceLabels: [ __name__ ]
+
       # lock down node exporter from the web
       prometheus-node-exporter:
         kubeRBACProxy:
