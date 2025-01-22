@@ -6,7 +6,7 @@ This repo contains all the infrastructure-as-code stuff for deploying and managi
 
 NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL (Please see the [How To section](#windows-subsystem-for-linux-install-method) for more information).
 
-You will need to have the following installed:
+You will need to have the following installed (in your WSL environment if on Windows):
  
 - Ansible: `sudo pip3 install ansible --break-system-packages`
 - [Helm](https://helm.sh/docs/intro/install/)
@@ -36,15 +36,19 @@ In the event you are setting up new things from scratch, then read [the bootstra
 To provision a VM which tests out our Ansible scripts and deployments, you will need [Vagrant](https://www.vagrantup.com/) installed,
 as well as the other pre-requisites defined above.
 
-Note that on Windows, this must be installed under WSL. You can then start the testlab by running `vagrant up`.
-`vagrant ssh` will then give you a shell on the host machine.
+**Note that on Windows, Vagrant must be installed on the Windows side**, as it runs under Hyper-V. Everything other than
+Vagrant then runs in WSL. VirtualBox and WSL2 do not run side-by-side. On Windows, as Vagrant must run as admin to
+control Hyper-V, there is a helper script in the repo called `./vagrant.ps1` which you can use in WSL to run Vagrant
+as admin in Windows, so below you can run `./vagrant.ps1 up` etc to start the VM, without having to leave WSL yourself.
 
-If you want to access Keycloak and Vault locally, then add the following to `/etc/hosts`
+You can then start the testlab by running `vagrant up`. On Windows you must then `vagrant reload` (`./vagrant.ps1 reload`)
+to complete the configuration of the new static IP network. `vagrant ssh` will then give you a shell on the host machine.
+
+If you want to access Keycloak, Vault and Grafana locally, then add the following to `/etc/hosts` (or `C:\Windows\system32\drivers\etc\hosts`).
 
     192.168.57.100 auth.coven.local
     192.168.57.100 vault.coven.local
-
-You can then access both at http://auth.coven.local and http://vault.coven.local once deployed.
+    192.168.57.100 monitoring.coven.local
 
 On first run, see [the bootstrapping doc](./docs/bootstrapping.md) for information on first deploying this, remembering
 to specify the inventory as `vagrant-inventory`. Following this, you can specify the following:
@@ -79,39 +83,12 @@ There is a group var called `ssh_users` which consists of usernames and SSH keys
 to add a new user and the SSH keys that user can connect from. An existing SSH user will first need to run the
 Ansible playbook to then add your account to it!
 
-## Windows Subsystem For Linux Install Method
+## Fix file permissions in WSL
 
-1. Install VirtualBox
-2. Install WSL, if you are unsure how here is a good guide: https://www.thewindowsclub.com/wsl-is-not-working-or-starting-in-windows-11
-3. Check that you can open Ubuntu (WSL) in Terminal or VSCode
-4. In the WSL run:
-
-        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-        sudo apt-get update && sudo apt-get install vagrant
-
-    This will add the vagrant repo and install vagrant in WSL, note the version installed, it must match the Windows version you installed earlier
-
-5. Allow WSL to use Virtualbox and tell it to store vagrant files in the parent folder
-   Edit ~/.bashrc to include the following lines and save:
-
-        export VAGRANT_WSL_ENABLE_WINDOWS_ACCESS="1"
-        export VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH="/mnt/<Repo Parent Folder>/"
-        export PATH="$PATH:/mnt/<Path to VirtualBox install>"
-
-   You will then need to reload your terminal
-
-6. Allow WSL to use file permissions properly
-    Edit /etc/wsl.conf and add:
+You will need to edit WSL's config to let permissions to be read correctly. Edit /etc/wsl.conf and add:
 
         [automount]
         options = "metadata"
 
-    **VAGRANT_WSL_ENABLE_WINDOWS_ACCESS:** Enables Vagrant to use Features that are installed on your Windows client and not within WSL. So for instance Virtualbox itself will then get used from the Windows Client installation and not presuming it is installed within your WSL.
-    **VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH:** Path to your user home directory from within WSL. Adjust the entry to your configuration (so username).
-    **PATH:** Add the Virtualbox installation path of Virtualbox to your PATH environment variable.
-
-7. **Install Vagrant virtualbox_WSL2 plugin**
-   Inside WSL run: `vagrant plugin install virtualbox_WSL2`
-
-Now it should all work! You can now carry on from [here.](#getting-started)
+If you get an insecure file permission error when running Ansible to SSH in, then
+`chmod 600 .vagrant/machines/default/hyperv/private_key` to correct the permissions to a secure default.
