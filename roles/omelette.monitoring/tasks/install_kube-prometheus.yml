@@ -262,6 +262,14 @@
                     description: The host OS is indicating that the node requires a restart as currently running components have been updated but the currently running version is not the latest.
                   labels:
                     severity: warning
+                - alert: VaultIsSealed
+                  expr: vault_core_unsealed != 1
+                  for: 1m
+                  annotations:
+                    summary: Vault is not unsealed
+                    description: Vault is not reporting that it is unsealed. It may need unsealing or there is another issue affecting Vault.
+                  labels:
+                    severity: critical
 
 
     wait: true
