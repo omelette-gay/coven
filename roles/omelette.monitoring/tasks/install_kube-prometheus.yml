@@ -263,7 +263,7 @@
                   labels:
                     severity: warning
                 - alert: VaultIsSealed
-                  expr: vault_core_unsealed != 1
+                  expr: vault_core_unsealed != 1 or absent(vault_core_unsealed) == 1
                   for: 1m
                   annotations:
                     summary: Vault is not unsealed
