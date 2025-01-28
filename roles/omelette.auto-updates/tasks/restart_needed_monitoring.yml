@@ -3,13 +3,21 @@
   dnf:
     name: yum-utils
 
+- name: install needs-restarting-exporter script
+  copy:
+    src: needs-restarting-exporter.sh
+    dest: /usr/local/bin/needs-restarting-exporter
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: install needs-restarting-exporter systemd timer
   copy:
     src: needs-restarting-exporter.timer
     dest: /etc/systemd/system/needs-restarting-exporter.timer
     owner: root
     group: root
-  register: install_needs_restarting_systemd
+  register: install_needs_restarting_timer
 
 - name: install needs-restarting-exporter systemd unit
   copy:
@@ -17,10 +25,11 @@
     dest: /etc/systemd/system/needs-restarting-exporter.service
     owner: root
     group: root
+  register: install_needs_restarting_unit
 
 - name: enable needs-restarting systemd unit
   systemd_service:
     name: needs-restarting-exporter.timer
     state: started
     enabled: true
-    daemon_reload: "{{ install_needs_restarting_systemd.changed }}"
+    daemon_reload: "{{ install_needs_restarting_timer.changed or install_needs_restarting_unit.changed }}"
