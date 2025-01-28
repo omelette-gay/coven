@@ -3,4 +3,4 @@ Description=needs-restarting-exporter.timer
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c 'mkdir -p /run/node-exporter; echo "# HELP node_reboot_required Node reboot is required for software updates." >/run/node-exporter/needs-restarting.prom; echo "# TYPE node_reboot_required gauge" >>/run/node-exporter/needs-restarting.prom; needs-restarting -r >/dev/null 2>&1; echo "node_reboot_required $?" >>/run/node-exporter/needs-restarting.prom'
+ExecStart=/usr/local/bin/needs-restarting-exporter /run/node-exporter/needs-restarting.prom
