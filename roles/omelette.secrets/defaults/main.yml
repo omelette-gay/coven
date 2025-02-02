@@ -8,6 +8,7 @@ vault_keycloak_mount_point: keycloak
 vault_kv_mountpoint: secret
 vault_k8s_controller_url: "https://{{ hostvars[groups.all[0]].ansible_ssh_host }}:6443"
 vault_pki_cluster_issuer_name: coven
+vault_github_mountpoint: github
 
 # secrets to sync from Vault to k8s, format:
 # vault_k8s_secrets:

@@ -1,0 +1,17 @@
+- name: enable Github as auth method for Vault
+  hashivault_auth_method:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    method_type: oidc
+    mount_point: "{{ vault_github_mountpoint }}"
+    config:
+      default_lease_ttl: 1h
+      max_lease_ttl: 1h
+
+- name: configure Keycloak auth method for Vault
+  hashivault_oidc_auth_method_config:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    mount_point: "{{ vault_github_mountpoint }}"
+    oidc_discovery_url: "https://token.actions.githubusercontent.com"
+    bound_issuer: "https://token.actions.githubusercontent.com"
