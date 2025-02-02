@@ -66,4 +66,5 @@
     - omelette.sso
     - omelette.secrets
     - omelette.external-dns
+    - omelette.apps
     - omelette.factorio

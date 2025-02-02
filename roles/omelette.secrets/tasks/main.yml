@@ -23,6 +23,7 @@
   include_tasks: create_k8s_secret.yml
   loop: "{{ vault_k8s_secrets }}"
   loop_control:
+    loop_var: vault_k8s_secret
     label: "{{ vault_k8s_secret.vault_secret_name }} => {{ vault_k8s_secret.k8s_namespace }}/{{ vault_k8s_secret.k8s_secret_name }}"
 
 - name: configure Vault policies

@@ -106,3 +106,19 @@ factorio_servers:
     dns:
       hostname: chegsworld.omelette.gay
       zone: omelette.gay
+
+k8s_github_deployment_roles:
+  - github_repo: cnorthwood/chriss-weight-tracker
+    k8s_namespace: weight-tracker
+    role_name: weight-tracker
+    vault_secrets:
+      - vault_secret_name: weight-tracker/chriss-fitbit
+        k8s_secret_name: chris-fitbit
+        k8s_namespace: weight-tracker
+        k8s_service_account_name: weight-tracker-chriss-fitbit-secret
+        vault_role_name: weight-tracker-secrets
+      - vault_secret_name: weight-tracker/google-service-account
+        k8s_secret_name: google-service-account
+        k8s_namespace: weight-tracker
+        k8s_service_account_name: weight-tracker
+        vault_role_name: weight-tracker-google-secret

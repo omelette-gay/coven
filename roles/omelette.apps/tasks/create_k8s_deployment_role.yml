@@ -1,0 +1,55 @@
+- name: create a namespace
+  kubernetes.core.k8s:
+    name: "{{ k8s_github_deployment_role.k8s_namespace }}"
+    kind: Namespace
+    api_version: v1
+
+- name: create an admin role in Vault for the deployment namespace
+  hashivault_write:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    mount_point: kubernetes
+    secret: "roles/github-{{ k8s_github_deployment_role.role_name }}"
+    data:
+      kubernetes_role_name: cluster-admin
+      kubernetes_role_type: ClusterRole
+      allowed_kubernetes_namespaces:
+        - "{{ k8s_github_deployment_role.k8s_namespace }}"
+    update: true
+
+- name: create a policy to allow k8s credentials to be issued for this role
+  hashivault_policy:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    name: "github-{{ k8s_github_deployment_role.role_name }}"
+    rules: |-
+      path "kubernetes/creds/github-{{ k8s_github_deployment_role.role_name }}" {
+        capabilities = ["update"]
+      }
+
+- name: allow the GitHub repo to assume this role
+  hashivault_write:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    mount_point: "auth/{{ vault_github_mountpoint }}"
+    secret: "role/github-{{ k8s_github_deployment_role.role_name }}"
+    data:
+      role_type: jwt
+      user_claim: actor
+      bound_audiences:
+        - https://github.com/{{ k8s_github_deployment_role.github_repo.split("/")[0] }}
+      bound_claims:
+        repository:
+          - "{{ k8s_github_deployment_role.github_repo }}"
+      policies:
+        - "github-{{ k8s_github_deployment_role.role_name }}"
+    update: true
+
+- name: create k8s secret syncs for this app
+  include_role:
+    name: omelette.secrets
+    tasks_from: create_k8s_secret
+  loop: "{{ vault_k8s_secrets }}"
+  loop_control:
+    loop_var: vault_k8s_secret
+    label: "{{ vault_k8s_secret.vault_secret_name }} => {{ vault_k8s_secret.k8s_namespace }}/{{ vault_k8s_secret.k8s_secret_name }}"
