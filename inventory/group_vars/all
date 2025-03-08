@@ -70,12 +70,12 @@ factorio_servers:
     config:
       factorioServer:
         save_name: "girls-club"
-        enable_space_age: false
+        enable_space_age: true
       serverPassword:
         passwordSecret: "game-password"
       server_settings:
-        name: Girls Club
-        description: Just doing girls things
+        name: Girls go Space
+        description: Just doing girls things, in space
   - server_id: intnerds
     config:
       service:
