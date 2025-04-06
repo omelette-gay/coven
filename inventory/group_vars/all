@@ -88,3 +88,15 @@ factorio_servers:
       server_settings:
         name: International Nerds Group
         description: Joh, Roy and Meg being nerdy together
+  - server_id: chegsworld
+    config:
+      service:
+        port: 31495
+      factorioServer:
+        save_name: "chegsworld"
+        enable_space_age: true
+      serverPassword:
+        passwordSecret: "game-password"
+      server_settings:
+        name: Chegs World
+        description: Making a factory a home
