@@ -88,6 +88,9 @@ factorio_servers:
       server_settings:
         name: International Nerds Group
         description: Joh, Roy and Meg being nerdy together
+    dns:
+      hostname: intnerds.omelette.gay
+      zone: omelette.gay
   - server_id: chegsworld
     config:
       service:
@@ -100,3 +103,6 @@ factorio_servers:
       server_settings:
         name: Chegs World
         description: Making a factory a home
+    dns:
+      hostname: chegsworld.omelette.gay
+      zone: omelette.gay
