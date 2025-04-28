@@ -23,6 +23,7 @@
   include_tasks: create_k8s_secret.yml
   loop: "{{ vault_k8s_secrets }}"
   loop_control:
+    loop_var: vault_k8s_secret
     label: "{{ vault_k8s_secret.vault_secret_name }} => {{ vault_k8s_secret.k8s_namespace }}/{{ vault_k8s_secret.k8s_secret_name }}"
 
 - name: configure Vault policies
@@ -31,9 +32,11 @@
 - name: enable login with Keycloak
   include_tasks: enable_keycloak_login.yml
 
+- name: enable login with GitHub
+  include_tasks: enable_github_auth.yml
+
 - name: create credentials for automated management of Keyclock
   include_tasks: create_keycloak_automation_credentials.yml
 
 - name: allow Vault to issue k8s credentials
   include_tasks: enable_k8s_credential_issuing.yml
-
