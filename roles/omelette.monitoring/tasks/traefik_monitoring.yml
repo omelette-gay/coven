@@ -7,6 +7,10 @@
       kind: HelmChartConfig
       spec:
         valuesContent: |-
+          additionalArguments:
+            - "--api.dashboard=true"
+            - "--api.insecure=true"
+          
           experimental:
             plugins:
               plugin-blockpath:
