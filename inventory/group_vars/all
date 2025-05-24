@@ -123,4 +123,4 @@ k8s_github_deployment_roles:
         k8s_service_account_name: weight-tracker
         vault_role_name: weight-tracker-google-secret
 
-planka_hostname: planka.omelette.gay
+planka_hostname: boards.omelette.gay
