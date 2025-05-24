@@ -4,16 +4,18 @@ This repo contains all the infrastructure-as-code stuff for deploying and managi
 
 # Getting Started
 
-NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL (Please see the [How To section](#windows-subsystem-for-linux-install-method) for more information).
+NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL.
 
 You will need to have the following installed (in your WSL environment if on Windows):
  
+- Pip3 and Jmespath: `sudo apt install python3-pip python3-jmespath`
 - Ansible: `sudo pip3 install ansible --break-system-packages`
 - [Helm](https://helm.sh/docs/intro/install/)
 - Helm Diff: `helm plugin install https://github.com/databus23/helm-diff`
 - [Vault](https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install)
 - kubernetes for Python: `sudo pip3 install kubernetes --break-system-packages`
 - ansible-modules-hashivault: `sudo pip3 install ansible-modules-hashivault --break-system-packages`
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
 
 Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.

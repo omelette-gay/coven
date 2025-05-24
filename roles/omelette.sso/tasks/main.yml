@@ -80,9 +80,9 @@
           value: "edge"
         {% if bootstrap_keycloak|default(false) %}
         - name: KEYCLOAK_ADMIN
-          value: {{ keycloak_username }}
+          value: "{{ keycloak_username }}"
         - name: KEYCLOAK_ADMIN_PASSWORD
-          value: {{ keycloak_password }}
+          value: "{{ keycloak_password }}"
         {% endif %}
 
       dbchecker:
@@ -106,11 +106,6 @@
       # use the extra metrics-spi-provider plugin to expose realm metrics for Keycloak
       extraServiceMonitor:
         enabled: true
-      service:
-        extraPorts:
-          - name: http-internal
-            port: 9000
-            targetPort: http-internal
       extraInitContainers: |
         - name: metrics-spi-provider
           image: alpine:latest
