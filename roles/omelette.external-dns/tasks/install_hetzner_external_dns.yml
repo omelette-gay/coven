@@ -1,12 +1,9 @@
-- name: Add external-dns repo
-  kubernetes.core.helm_repository:
-    name: external-dns
-    repo_url: https://kubernetes-sigs.github.io/external-dns/
-
 - name: install External DNS operator with Hetzner sync
   kubernetes.core.helm:
     name: hetzner
-    chart_ref: external-dns/external-dns
+    chart_ref: external-dns
+    chart_repo_url: "{{ lookup('helm_chart', 'external-dns').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'external-dns').version }}"
     release_namespace: "{{ external_dns_k8s_namespace }}"
     create_namespace: true
     release_values:

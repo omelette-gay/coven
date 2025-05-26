@@ -1,8 +1,3 @@
-- name: Add prometheus-community repo
-  kubernetes.core.helm_repository:
-    name: prometheus-community
-    repo_url: https://prometheus-community.github.io/helm-charts
-
 - name: Set up SSO
   include_tasks: configure_grafana_sso.yml
   when: bootstrap_keycloak|default(false) == false
@@ -10,7 +5,9 @@
 - name: install kube-prometheus
   kubernetes.core.helm:
     name: kube-prometheus
-    chart_ref: prometheus-community/kube-prometheus-stack
+    chart_ref: kube-prometheus-stack
+    chart_repo_url: "{{ lookup('helm_chart', 'kube-prometheus-stack').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'kube-prometheus-stack').version }}"
     release_namespace: monitoring
     create_namespace: true
     release_values:

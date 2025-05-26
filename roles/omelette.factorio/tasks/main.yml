@@ -1,9 +1,4 @@
 ---
-- name: Add factorio-server-charts repo
-  kubernetes.core.helm_repository:
-    name: factorio
-    repo_url: https://sqljames.github.io/factorio-server-charts
-
 - name: deploy Factorio instance
   include_tasks: deploy_factorio.yml
   loop: "{{ factorio_servers }}"

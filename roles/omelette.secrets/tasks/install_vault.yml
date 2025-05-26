@@ -1,8 +1,3 @@
-- name: Add hashicorp repo
-  kubernetes.core.helm_repository:
-    name: hashicorp
-    repo_url: https://helm.releases.hashicorp.com
-
 - name: Create Vault namespace
   kubernetes.core.k8s:
     name: vault
@@ -25,7 +20,9 @@
 - name: install Vault
   kubernetes.core.helm:
     name: vault
-    chart_ref: hashicorp/vault
+    chart_ref: vault
+    chart_repo_url: "{{ lookup('helm_chart', 'vault').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'vault').version }}"
     release_namespace: vault
     create_namespace: true
     release_values:
