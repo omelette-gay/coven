@@ -1,12 +1,9 @@
-- name: Add grafana repo
-  kubernetes.core.helm_repository:
-    name: grafana
-    repo_url: https://grafana.github.io/helm-charts
-
 - name: install Promtail to send all k8s logs to Loki
   kubernetes.core.helm:
     name: promtail
-    chart_ref: grafana/promtail
+    chart_ref: promtail
+    chart_repo_url: "{{ lookup('helm_chart', 'promtail').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'promtail').version }}"
     release_namespace: monitoring
     create_namespace: true
     release_values:

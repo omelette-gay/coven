@@ -4,7 +4,9 @@
 - name: install factorio-server-charts
   kubernetes.core.helm:
     name: "{{ factorio_server.server_id }}"
-    chart_ref: factorio/factorio-server-charts
+    chart_ref: factorio-server-charts
+    chart_repo_url: "{{ lookup('helm_chart', 'factorio-server-charts').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'factorio-server-charts').version }}"
     release_namespace: "factorio-{{ factorio_server.server_id }}"
     create_namespace: true
     release_values: "{{ factorio_default_config|combine(factorio_server.config, recursive=true) }}"

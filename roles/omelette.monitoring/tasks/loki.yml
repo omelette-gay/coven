@@ -1,12 +1,9 @@
-- name: Add grafana repo
-  kubernetes.core.helm_repository:
-    name: grafana
-    repo_url: https://grafana.github.io/helm-charts
-
 - name: install Loki
   kubernetes.core.helm:
     name: loki
-    chart_ref: grafana/loki
+    chart_ref: loki
+    chart_repo_url: "{{ lookup('helm_chart', 'loki').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'loki').version }}"
     release_namespace: monitoring
     create_namespace: true
     release_values:

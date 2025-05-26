@@ -1,9 +1,4 @@
 ---
-- name: Add Planka repo
-  kubernetes.core.helm_repository:
-    name: planka
-    repo_url: http://plankanban.github.io/planka
-
 - name: Create Planka k8s Namespace
   kubernetes.core.k8s:
     name: "{{ planka_k8s_namespace }}"
@@ -113,7 +108,9 @@
 - name: Install Planka
   kubernetes.core.helm:
     name: planka
-    chart_ref: planka/planka
+    chart_ref: planka
+    chart_repo_url: "{{ lookup('helm_chart', 'planka').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'planka').version }}"
     release_namespace: "{{ planka_k8s_namespace }}"
     release_values:
       existingSecretkeySecret: "{{ planka_k8s_secret_key_name }}"
