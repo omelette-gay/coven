@@ -94,3 +94,12 @@ You will need to edit WSL's config to let permissions to be read correctly. Edit
 
 If you get an insecure file permission error when running Ansible to SSH in, then
 `chmod 600 .vagrant/machines/default/hyperv/private_key` to correct the permissions to a secure default.
+
+## Linux tab completion for kubectl objects
+
+First make sure that Bash-Completion is installed: `sudo apt install bash-completion`
+
+Once Base-Completion is installed you'll need to run the following to enable kubectl autocompletion in bash for the entire system:
+
+    kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
+    sudo chmod a+r /etc/bash_completion.d/kubectl

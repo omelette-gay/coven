@@ -61,6 +61,7 @@
           multivalued: true
           userinfo.token.claim: true
           access.token.claim: true
+          usermodel.clientRoleMapping.clientId: "{{ planka_keycloak_client_name }}"
   register: keycloak_planka_client
 
 - name: create Planka admin role in Keycloak
@@ -96,6 +97,19 @@
         clientId: "{{ keycloak_planka_client.end_state.clientId|b64encode }}"
         clientSecret: "{{ keycloak_planka_client_secret.clientsecret_info.value|b64encode }}"
 
+- name: create Planka Postgres database secret if it doesn't exist
+  kubernetes.core.k8s:
+    name: "{{ planka_db_credentials_secret }}"
+    namespace: "{{ planka_k8s_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      data:
+        admin_password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
+        password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
+        replication_password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
+  when: query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name=planka_db_credentials_secret, namespace=planka_k8s_namespace, kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))|length == 0
+
 - name: Install Planka
   kubernetes.core.helm:
     name: planka
@@ -123,6 +137,20 @@
         issuerUrl: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
         scopes:
           - openid
-          - profile
-          - email
-          - groups
+        admin:
+          roles:
+            - "{{ planka_keycloak_admin_role }}"
+      postgresql:
+        auth:
+          password: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name=planka_db_credentials_secret, namespace=planka_k8s_namespace, kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.password|b64decode }}"
+          existingSecret: "{{ planka_db_credentials_secret }}"
+          secretKeys:
+            adminPasswordKey: admin_password
+            userPasswordKey: password
+            replicationPasswordKey: replication_password
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+          prometheusRule:
+            enabled: true

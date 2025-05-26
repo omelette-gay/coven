@@ -19,6 +19,7 @@
           multivalued: true
           userinfo.token.claim: true
           access.token.claim: true
+          usermodel.clientRoleMapping.clientId: "{{ vault_keycloak_client_name }}"
   register: keycloak_vault_client
 
 - name: create Vault admin role in Keycloak
