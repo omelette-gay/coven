@@ -25,13 +25,13 @@
           livenessProbe:
             httpGet:
               path: /health
-              port: 8080
+              port: http-webhook
             initialDelaySeconds: 10
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /ready
-              port: 8080
+              port: http-webhook
             initialDelaySeconds: 10
             timeoutSeconds: 5
 

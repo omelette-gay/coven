@@ -22,7 +22,7 @@
       vault_role_name: "factorio-{{ factorio_server.server_id }}"
   when: factorio_server.config.serverPassword.passwordSecret is defined
 
-- name: create SRV record at to advertise this Factorio instance
+- name: create SRV record to advertise this Factorio instance
   community.dns.hetzner_dns_record:
     hetzner_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
     state: present

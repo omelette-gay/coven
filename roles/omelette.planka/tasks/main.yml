@@ -1,0 +1,156 @@
+---
+- name: Add Planka repo
+  kubernetes.core.helm_repository:
+    name: planka
+    repo_url: http://plankanban.github.io/planka
+
+- name: Create Planka k8s Namespace
+  kubernetes.core.k8s:
+    name: "{{ planka_k8s_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: check if secret exists in Vault with Secret Key for Planka
+  hashivault_read:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    secret: "{{ planka_vault_secret_key_name }}"
+    version: 2
+  ignore_errors: true
+  register: planka_secret_key
+
+- name: create secret in Vault for Planka secret key
+  hashivault_secret:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    secret: "{{ planka_vault_secret_key_name }}"
+    data:
+      key: "{{ lookup('community.general.random_string', length=45) }}"
+  when: planka_secret_key.failed
+
+- name: create secret from Vault for Planka secret key
+  include_role:
+    name: omelette.secrets
+    tasks_from: create_k8s_secret
+  vars:
+    vault_k8s_secret:
+      vault_secret_name: "{{ planka_vault_secret_key_name }}"
+      k8s_secret_name: "{{ planka_k8s_secret_key_name }}"
+      k8s_namespace: "{{ planka_k8s_namespace }}"
+      k8s_service_account_name: planka-secret-key
+      vault_role_name: planka-secret-key
+
+- name: create Keycloak client for Planka
+  community.general.keycloak_client:
+    client_id: "{{ planka_keycloak_client_name }}"
+    realm: "{{ keycloak_realm }}"
+    protocol: openid-connect
+    standard_flow_enabled: true
+    public_client: false
+    root_url: "https://{{ planka_hostname }}"
+    redirect_uris:
+      - "https://{{ planka_hostname }}/oidc-callback"
+    protocol_mappers:
+      - name: client roles
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-client-role-mapper
+        consentRequired: false
+        config:
+          claim.name: groups
+          multivalued: true
+          userinfo.token.claim: true
+          access.token.claim: true
+          usermodel.clientRoleMapping.clientId: "{{ planka_keycloak_client_name }}"
+  register: keycloak_planka_client
+
+- name: create Planka admin role in Keycloak
+  community.general.keycloak_role:
+    realm: "{{ keycloak_realm }}"
+    name: "{{ planka_keycloak_admin_role }}"
+    client_id: "{{ planka_keycloak_client_name }}"
+  register: keycloak_planka_admin_role
+
+- name: associate Planka admin role with admins group in Keycloak
+  community.general.keycloak_client_rolemapping:
+    realm: "{{ keycloak_realm }}"
+    group_name: "{{ keycloak_admin_group }}"
+    client_id: "{{ planka_keycloak_client_name }}"
+    roles:
+      - name: "{{ planka_keycloak_admin_role }}"
+
+- name: fetch Planka client secret from Keycloak
+  community.general.keycloak_clientsecret_info:
+    id: "{{ keycloak_planka_client.end_state.id }}"
+    realm: "{{ keycloak_realm }}"
+  no_log: true
+  register: keycloak_planka_client_secret
+
+- name: create Planka SSO secret
+  kubernetes.core.k8s:
+    name: "{{ planka_k8s_sso_secrets_name }}"
+    namespace: "{{ planka_k8s_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      data:
+        clientId: "{{ keycloak_planka_client.end_state.clientId|b64encode }}"
+        clientSecret: "{{ keycloak_planka_client_secret.clientsecret_info.value|b64encode }}"
+
+- name: create Planka Postgres database secret if it doesn't exist
+  kubernetes.core.k8s:
+    name: "{{ planka_db_credentials_secret }}"
+    namespace: "{{ planka_k8s_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      data:
+        admin_password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
+        password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
+        replication_password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
+  when: query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name=planka_db_credentials_secret, namespace=planka_k8s_namespace, kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))|length == 0
+
+- name: Install Planka
+  kubernetes.core.helm:
+    name: planka
+    chart_ref: planka/planka
+    release_namespace: "{{ planka_k8s_namespace }}"
+    release_values:
+      existingSecretkeySecret: "{{ planka_k8s_secret_key_name }}"
+      ingress:
+        enabled: true
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd
+          cert-manager.io/cluster-issuer: letsencrypt
+        hosts:
+          - host: "{{ planka_hostname }}"
+            paths:
+              - path: /
+                pathType: ImplementationSpecific
+        tls:
+          - secretName: planka-tls
+            hosts:
+              - "{{ planka_hostname }}"
+      oidc:
+        enabled: true
+        existingSecret: "{{ planka_k8s_sso_secrets_name }}"
+        issuerUrl: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
+        scopes:
+          - openid
+        admin:
+          roles:
+            - "{{ planka_keycloak_admin_role }}"
+      postgresql:
+        auth:
+          password: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name=planka_db_credentials_secret, namespace=planka_k8s_namespace, kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.password|b64decode }}"
+          existingSecret: "{{ planka_db_credentials_secret }}"
+          secretKeys:
+            adminPasswordKey: admin_password
+            userPasswordKey: password
+            replicationPasswordKey: replication_password
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+          prometheusRule:
+            enabled: true

@@ -1,0 +1,9 @@
+planka_k8s_namespace: planka
+planka_k8s_secret_key_name: planka-secret-key
+planka_vault_secret_key_name: planka/secret-key
+planka_k8s_sso_secrets_name: planka-sso
+planka_vault_sso_secrets_name: planka/sso
+planka_keycloak_client_name: planka
+planka_keycloak_admin_role: admin
+planka_hostname: planka.coven.local
+planka_db_credentials_secret: db-credentials

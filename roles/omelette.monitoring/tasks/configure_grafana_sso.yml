@@ -18,6 +18,7 @@
           multivalued: true
           userinfo.token.claim: true
           access.token.claim: true
+          usermodel.clientRoleMapping.clientId: "{{ grafana_keycloak_client_name }}"
   register: keycloak_grafana_client
 
 - name: create Grafana admin role in Keycloak
