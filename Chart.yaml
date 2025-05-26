@@ -1,0 +1,39 @@
+apiVersion: v2
+name: gitops
+version: 0.0.1
+description: This is not a real Helm chart - it only exists so Dependabot can update it, the versions are then read by Ansible to make sure the versions we're deploying are stable.
+type: application
+dependencies:
+  - name: cert-manager
+    version: 1.17.2
+    repository: https://charts.jetstack.io
+  - name: external-dns
+    version: 0.17.0
+    repository: https://kubernetes-sigs.github.io/external-dns/
+  - name: external-secrets
+    version: 0.17.0
+    repository: https://charts.external-secrets.io
+  - name: factorio
+    version: 2.5.2
+    repository: https://sqljames.github.io/factorio-server-charts
+  - name: keycloakx
+    version: 7.0.1
+    repository: https://codecentric.github.io/helm-charts
+  - name: kube-prometheus-stack
+    version: 72.6.3
+    repository: https://prometheus-community.github.io/helm-charts
+  - name: loki
+    version: 6.30.0
+    repository: https://grafana.github.io/helm-charts
+  - name: postgresql
+    version: 16.7.4
+    repository: oci://registry-1.docker.io/bitnamicharts/
+  - name: promtail
+    version: 6.16.6
+    repository: https://grafana.github.io/helm-charts
+  - name: planka
+    version: 1.0.1
+    repository: http://plankanban.github.io/planka
+  - name: vault
+    version: 0.30.0
+    repository: https://helm.releases.hashicorp.com
