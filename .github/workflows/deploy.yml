@@ -6,6 +6,7 @@ on:
       - main
 jobs:
   deploy:
+    name: Deploy to cluster
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,9 +29,14 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo -e "${{secrets.SSH_KEY}}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo -e "${{secrets.SSH_KNOWN_HOSTS}}" > ~/.ssh/known_hosts
 
-      - name: trust remote servers
-        run: echo -e "${{secrets.SSH_KNOWN_HOSTS}}" > ~/.ssh/known_hosts
+      - name: install dependencies
+        run: |
+          pip3 install ansible-modules-hashivault kubernetes
+          helm plugin install https://github.com/databus23/helm-diff
+          ansible-galaxy install -r requirements.yml
 
       - name: run Ansible
         run: ansible-playbook -u github -i inventory playbook.yml
