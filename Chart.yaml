@@ -8,7 +8,7 @@ dependencies:
     version: 1.17.2
     repository: https://charts.jetstack.io/
   - name: external-dns
-    version: 0.17.0
+    version: 1.16.1
     repository: https://kubernetes-sigs.github.io/external-dns/
   - name: external-secrets
     version: 0.17.0
