@@ -21,7 +21,7 @@ jobs:
           url: https://vault.coven.omelette.gay
           method: jwt
           path: github
-          role: gitops-ansible
+          role: gitops
           exportToken: true
 
       - name: provision SSH key
