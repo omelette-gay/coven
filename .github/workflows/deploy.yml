@@ -25,7 +25,9 @@ jobs:
           exportToken: true
 
       - name: provision SSH key
-        run: echo -e "${{secrets.SSH_KEY}}" > ~/.ssh/id_ed25519
+        run: |
+          mkdir -p ~/.ssh
+          echo -e "${{secrets.SSH_KEY}}" > ~/.ssh/id_ed25519
 
       - name: trust remote servers
         run: echo -e "${{secrets.SSH_KNOWN_HOSTS}}" > ~/.ssh/known_hosts
