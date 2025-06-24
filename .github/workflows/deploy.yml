@@ -12,6 +12,8 @@ jobs:
       contents: read
       id-token: write
     environment: coven
+    concurrency:
+      group: coven-deploy
     steps:
       - name: checkout code
         uses: actions/checkout@v4
