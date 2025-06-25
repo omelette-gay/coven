@@ -49,7 +49,7 @@
   include_role:
     name: omelette.secrets
     tasks_from: create_k8s_secret
-  loop: "{{ k8s_github_deployment_role.vault_secrets }}"
+  loop: "{{ k8s_github_deployment_role.vault_secrets|default([]) }}"
   loop_control:
     loop_var: vault_k8s_secret
     label: "{{ vault_k8s_secret.vault_secret_name }} => {{ vault_k8s_secret.k8s_namespace }}/{{ vault_k8s_secret.k8s_secret_name }}"
