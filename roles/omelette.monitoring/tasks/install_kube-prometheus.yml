@@ -11,6 +11,9 @@
     release_namespace: monitoring
     create_namespace: true
     release_values:
+      crds:
+        upgradeJob:
+          enabled: true
       grafana:
         # configure Grafana
         grafana.ini:
