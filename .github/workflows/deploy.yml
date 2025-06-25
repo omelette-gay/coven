@@ -1,0 +1,44 @@
+name: Deploy to Coven
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    name: Deploy to cluster
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment: coven
+    concurrency:
+      group: coven-deploy
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: login to Vault
+        uses: hashicorp/vault-action@v2
+        with:
+          url: https://vault.coven.omelette.gay
+          method: jwt
+          path: github
+          role: gitops
+          exportToken: true
+
+      - name: provision SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo -e "${{secrets.SSH_KEY}}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo -e "${{secrets.SSH_KNOWN_HOSTS}}" > ~/.ssh/known_hosts
+
+      - name: install dependencies
+        run: |
+          pip3 install ansible-modules-hashivault kubernetes
+          helm plugin install https://github.com/databus23/helm-diff
+          ansible-galaxy install -r requirements.yml
+
+      - name: run Ansible
+        run: ansible-playbook -u github -i inventory playbook.yml
