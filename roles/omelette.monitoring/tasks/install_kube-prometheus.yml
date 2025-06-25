@@ -35,8 +35,6 @@
         envFromSecrets:
           - name: grafana-keycloak-creds
             optional: true
-        persistence:
-          enabled: true
 
         # auto-discover resources installed into the cluster
         # this has to be done at boot
