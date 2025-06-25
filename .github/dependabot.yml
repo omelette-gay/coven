@@ -2,5 +2,6 @@ version: 2
 updates:
   - package-ecosystem: helm
     directory: "/"
+    open-pull-requests-limit: 100
     schedule:
       interval: weekly
