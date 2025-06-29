@@ -1,0 +1,67 @@
+- name: Create k8s service account for reading GHCR credentials
+  kubernetes.core.k8s:
+    name: "{{ vault_ghcr_creds_service_account_name }}"
+    namespace: "{{ k8s_github_deployment_role.k8s_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+
+- name: create Vault role for reading GHCR credentials
+  hashivault_k8s_auth_role:
+    url: "{{ vault_url }}"
+    verify: "{{ kubeconfig_require_secure|default(true) }}"
+    name: "{{ k8s_github_deployment_role.k8s_namespace }}-ghcr-creds"
+    policies:
+      - "{{ vault_ghcr_creds_policy }}"
+    bound_service_account_names:
+      - "{{ vault_ghcr_creds_service_account_name }}"
+    bound_service_account_namespaces:
+      - "{{ k8s_github_deployment_role.k8s_namespace }}"
+
+- name: create k8s SecretStore for reading GHCR credentials
+  kubernetes.core.k8s:
+    name: "{{ vault_ghcr_creds_store_name }}"
+    namespace: "{{ k8s_github_deployment_role.k8s_namespace }}"
+    definition:
+      apiVersion: external-secrets.io/v1
+      kind: SecretStore
+      spec:
+        provider:
+          vault:
+            server: "http://vault.vault.svc.cluster.local:8200"
+            path: "{{ vault_kv_mountpoint }}"
+            version: "v2"
+            auth:
+              kubernetes:
+                role: "{{ k8s_github_deployment_role.k8s_namespace }}-ghcr-creds"
+                serviceAccountRef:
+                  name: "{{ vault_ghcr_creds_service_account_name }}"
+
+- name: create the GHCR repo pulling credentials if enabled
+  kubernetes.core.k8s:
+    name: ghcr-credentials
+    namespace: "{{ k8s_github_deployment_role.k8s_namespace }}"
+    definition:
+      apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          name: "{{ vault_ghcr_creds_store_name }}"
+          kind: SecretStore
+        target:
+          name: "{{ k8s_github_deployment_role.ghcr_credentials_secret }}"
+          template:
+            type: kubernetes.io/dockerconfigjson
+            data:
+              .dockerconfigjson: >-
+                { "auths": { "ghcr.io": { "username": "{{ '{{' }} .registryUser {{ '}}' }}", "password":"{{ '{{' }} .password {{ '}}' }}", "auth": "{{ '{{' }} printf "%s:%s" .registryUser .password | b64enc {{ '}}' }}" } } }
+        data:
+          - secretKey: registryUser
+            remoteRef:
+              key: "{{ vault_ghcr_credentials_key }}"
+              property: user
+          - secretKey: password
+            remoteRef:
+              key: "{{ vault_ghcr_credentials_key }}"
+              property: password
