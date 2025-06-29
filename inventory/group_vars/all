@@ -127,5 +127,11 @@ k8s_github_deployment_roles:
   - github_repo: omelette-gay/wedding
     k8s_namespace: wedding
     role_name: wedding
+    vault_secrets:
+      - vault_secret_name: wedding/app
+        k8s_secret_name: wedding-app-secrets
+        k8s_namespace: wedding
+        k8s_service_account_name: wedding-app-secrets
+        vault_role_name: wedding-app-secrets
 
 planka_hostname: boards.omelette.gay
