@@ -53,3 +53,7 @@
   loop_control:
     loop_var: vault_k8s_secret
     label: "{{ vault_k8s_secret.vault_secret_name }} => {{ vault_k8s_secret.k8s_namespace }}/{{ vault_k8s_secret.k8s_secret_name }}"
+
+- name: sync GHCR credentials to namespace
+  include_tasks: sync_ghcr_creds_to_app.yml
+  when: k8s_github_deployment_role.ghcr_credentials_secret is defined

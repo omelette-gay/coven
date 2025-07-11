@@ -127,6 +127,7 @@ k8s_github_deployment_roles:
   - github_repo: omelette-gay/wedding
     k8s_namespace: wedding
     role_name: wedding
+    ghcr_credentials_secret: ghcr-credentials
     vault_secrets:
       - vault_secret_name: wedding/app
         k8s_secret_name: wedding-app-secrets
