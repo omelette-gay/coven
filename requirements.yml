@@ -2,7 +2,6 @@
 
 roles:
   - name: xanmanning.k3s
-    version: v3.4.4
 
 collections:
   - name: ansible.posix
