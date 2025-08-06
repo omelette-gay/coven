@@ -80,6 +80,7 @@
           ruleSelectorNilUsesHelmValues: false
           podMonitorSelectorNilUsesHelmValues: false
           serviceMonitorSelectorNilUsesHelmValues: false
+          probeSelectorNilUsesHelmValues: false
 
       # fix kube-prometheus-stack to work for k3s where everything is exposed together
       # https://github.com/k3s-io/k3s/issues/3619#issuecomment-1991598167
@@ -263,6 +264,10 @@
                     description: The host OS is indicating that the node requires a restart as currently running components have been updated but the currently running version is not the latest.
                   labels:
                     severity: warning
+        vault:
+          groups:
+            - name: vault
+              rules:
                 - alert: VaultIsSealed
                   expr: vault_core_unsealed != 1 or absent(vault_core_unsealed) == 1
                   for: 1m
@@ -271,7 +276,32 @@
                     description: Vault is not reporting that it is unsealed. It may need unsealing or there is another issue affecting Vault.
                   labels:
                     severity: critical
-
+        http-probes:
+          groups:
+            - name: http-probes
+              rules:
+                - alert: HttpProbeFailed
+                  expr: probe_success == 0
+                  for: 2m
+                  annotations:
+                    summary: HTTP probe failed
+                    description: Endpoint {{ "{{" }} $labels.instance {{ "}}" }} down
+                  labels:
+                    severity: error
 
     wait: true
   notify: restart Grafana
+
+- name: install blackbox-exporter for HTTP monitoring
+  kubernetes.core.helm:
+    name: blackbox-exporter
+    chart_ref: prometheus-blackbox-exporter
+    chart_repo_url: "{{ lookup('helm_chart', 'prometheus-blackbox-exporter').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'prometheus-blackbox-exporter').version }}"
+    release_namespace: monitoring
+    release_values:
+      serviceMonitor:
+        enabled: true
+        selfMonitor:
+          enabled: true
+    wait: true
