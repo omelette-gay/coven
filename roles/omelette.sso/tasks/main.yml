@@ -165,3 +165,21 @@
   community.general.keycloak_group:
     name: "{{ keycloak_admin_group }}"
     realm: "{{ keycloak_realm }}"
+
+- name: monitor Keycloak
+  kubernetes.core.k8s:
+    name: keycloak-https
+    namespace: keycloak
+    api_version: monitoring.coreos.com/v1
+    kind: Probe
+    definition:
+      spec:
+        interval: 60s
+        module: http_2xx
+        prober:
+          url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+          path: /probe
+        targets:
+          staticConfig:
+            static:
+              - "https://{{ keycloak_host }}/auth/realms/master/"

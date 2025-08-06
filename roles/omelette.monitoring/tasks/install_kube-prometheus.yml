@@ -305,3 +305,21 @@
         selfMonitor:
           enabled: true
     wait: true
+
+- name: monitor Grafana
+  kubernetes.core.k8s:
+    name: grafana-https
+    namespace: monitoring
+    api_version: monitoring.coreos.com/v1
+    kind: Probe
+    definition:
+      spec:
+        interval: 60s
+        module: http_2xx
+        prober:
+          url: blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+          path: /probe
+        targets:
+          staticConfig:
+            static:
+              - "https://{{ grafana_host }}/login"
