@@ -16,6 +16,9 @@ dependencies:
   - name: factorio-server-charts
     version: 2.5.2
     repository: https://sqljames.github.io/factorio-server-charts/
+  - name: helm-exporter
+    version: 1.2.16+77ad21d
+    repository: https://shanestarcher.com/helm-charts/
   - name: keycloakx
     version: 7.1.1
     repository: https://codecentric.github.io/helm-charts/
