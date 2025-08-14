@@ -264,6 +264,7 @@
                     description: The host OS is indicating that the node requires a restart as currently running components have been updated but the currently running version is not the latest.
                   labels:
                     severity: warning
+
         vault:
           groups:
             - name: vault
@@ -276,6 +277,7 @@
                     description: Vault is not reporting that it is unsealed. It may need unsealing or there is another issue affecting Vault.
                   labels:
                     severity: critical
+
         http-probes:
           groups:
             - name: http-probes
@@ -288,6 +290,21 @@
                     description: Endpoint {{ "{{" }} $labels.instance {{ "}}" }} down
                   labels:
                     severity: error
+
+        external-secrets:
+          groups:
+            - name: external-secrets
+              rules:
+                - alert: ExternalSecretSyncError
+                  description: |-
+                    The external secret {{ "{{" }} $labels.exported_namespace {{ "}}" }}/{{ "{{" }} $labels.name {{ "}}" }} failed to sync.
+                    Use this command to check the status:
+                    kubectl get externalsecret {{ "{{" }} $labels.name {{ "}}" }} -n {{ "{{" }} $labels.exported_namespace {{ "}}" }}
+                  summary: External secret failed to sync
+                  labels:
+                    severity: warning
+                  expr: externalsecret_status_condition{status="False"} == 1
+                  for: 5m
 
     wait: true
   notify: restart Grafana
