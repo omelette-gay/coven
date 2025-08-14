@@ -110,8 +110,25 @@ Options=
 WantedBy=multi-user.target
 ```
 
-Now `systemctl daemon-reload` and `systemctl enable mnt-c-WINDOWS.mount`, and in a Windows terminal, run `wsl --shutdown`.
-Next time you load your WSL instance it will now have file permissions correctly configured.
+And also `/etc/systemd/system/mnt-c-Program\x20Files.mount` (be careful of the `\` here, that will need escaping again in the shell).
+
+```
+[Unit]
+Description=remount Program Files allowing exec bits
+After=mnt-c.mount
+
+[Mount]
+What=C:/Program Files
+Where=/mnt/c/Program Files
+Type=drvfs
+Options=
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Now `systemctl daemon-reload` and `systemctl enable mnt-c-WINDOWS.mount`, `sudo systemctl enable 'mnt-c-Program\x20Files.mount'`
+and in a Windows terminal, run `wsl --shutdown`. Next time you load your WSL instance it will now have file permissions correctly configured.
 
 If you get an insecure file permission error when running Ansible to SSH in, then
 `chmod 600 .vagrant/machines/default/hyperv/private_key` to correct the permissions to a secure default.
