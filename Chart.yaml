@@ -7,6 +7,9 @@ dependencies:
   - name: cert-manager
     version: 1.18.2
     repository: https://charts.jetstack.io/
+  - name: cloudnative-pg
+    version: 0.26.0
+    repository: https://cloudnative-pg.github.io/charts
   - name: external-dns
     version: 1.18.0
     repository: https://kubernetes-sigs.github.io/external-dns/
