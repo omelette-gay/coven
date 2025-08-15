@@ -7,3 +7,9 @@ we'll need to be logged into the cluster and then create a port forward to our l
     kubectl -n kube-system port-forward deployments/traefik 8080:8080
 
 We can now visit http://localhost:8080/dashboard/ to view the dashboard.
+
+# Accessing the Longhorn console
+
+     kubectl -n longhorn-system port-forward svc/longhorn-frontend 8080:80
+
+You can now visit http://localhost:8080/ to view the Longhorn dashboard.

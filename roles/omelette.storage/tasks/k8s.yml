@@ -1,0 +1,26 @@
+- name: install Longhorn
+  kubernetes.core.helm:
+    name: longhorn
+    chart_ref: longhorn
+    chart_repo_url: "{{ lookup('helm_chart', 'longhorn').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'longhorn').version }}"
+    release_namespace: "{{ longhorn_k8s_namespace }}"
+    create_namespace: true
+    release_values:
+      defaultSettings:
+        concurrentAutomaticEngineUpgradePerNodeLimit: 3
+      persistence:
+        defaultClassReplicaCount: 2
+        defaultDataLocality: best-effort
+      metrics:
+        serviceMonitor:
+          enabled: true
+
+- name: make Longhorn the default storage class
+  kubernetes.core.k8s_json_patch:
+    kind: StorageClass
+    name: local-path
+    patch:
+      - op: replace
+        path: /metadata/annotations/storageclass.kubernetes.io~1is-default-class
+        value: "false"
