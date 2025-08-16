@@ -90,7 +90,45 @@ Ansible playbook to then add your account to it!
 You will need to edit WSL's config to let permissions to be read correctly. Edit /etc/wsl.conf and add:
 
         [automount]
-        options = "metadata"
+        options = "metadata,umask=022,fmask=111"
+
+This however will stop us executing some Windows files that we need to run Vagrant, to fix this, in your WSL
+environment, create a file `/etc/systemd/system/mnt-c-WINDOWS.mount`:
+
+```
+[Unit]
+Description=remount Windows allowing exec bits
+After=mnt-c.mount
+
+[Mount]
+What=C:/WINDOWS
+Where=/mnt/c/WINDOWS
+Type=drvfs
+Options=
+
+[Install]
+WantedBy=multi-user.target
+```
+
+And also `/etc/systemd/system/mnt-c-Program\x20Files.mount` (be careful of the `\` here, that will need escaping again in the shell).
+
+```
+[Unit]
+Description=remount Program Files allowing exec bits
+After=mnt-c.mount
+
+[Mount]
+What=C:/Program Files
+Where=/mnt/c/Program Files
+Type=drvfs
+Options=
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Now `systemctl daemon-reload` and `systemctl enable mnt-c-WINDOWS.mount`, `sudo systemctl enable 'mnt-c-Program\x20Files.mount'`
+and in a Windows terminal, run `wsl --shutdown`. Next time you load your WSL instance it will now have file permissions correctly configured.
 
 If you get an insecure file permission error when running Ansible to SSH in, then
 `chmod 600 .vagrant/machines/default/hyperv/private_key` to correct the permissions to a secure default.
