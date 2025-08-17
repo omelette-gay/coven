@@ -1,0 +1,13 @@
+- name: install cloudnative-pg
+  kubernetes.core.helm:
+    name: cnpg
+    chart_ref: cloudnative-pg
+    chart_repo_url: "{{ lookup('helm_chart', 'cloudnative-pg').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'cloudnative-pg').version }}"
+    release_namespace: "{{ cnpg_k8s_namespace }}"
+    create_namespace: true
+    release_values:
+      monitoring:
+        podMonitorEnabled: true
+        grafanaDashboard:
+          create: true
