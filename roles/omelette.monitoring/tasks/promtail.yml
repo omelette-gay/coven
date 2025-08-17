@@ -15,7 +15,7 @@
       config:
         snippets:
           extraScrapeConfigs: |
-            - job_name: systemd
+            - job_name: systemd-run-log
               journal:
                 json: true
                 max_age: 12h
@@ -25,11 +25,27 @@
               relabel_configs:
                 - source_labels: ['__journal__systemd_unit']
                   target_label: 'unit'
+            - job_name: systemd-var-log
+              journal:
+                json: true
+                max_age: 12h
+                path: /var/log/journal
+                labels:
+                  job: systemd-journal
+              relabel_configs:
+                - source_labels: ['__journal__systemd_unit']
+                  target_label: 'unit'
       extraVolumes:
-        - name: journal
+        - name: run-log-journal
           hostPath:
-            path: /run/log/journal
+            path: /var/log/journal
+        - name: var-log-journal
+          hostPath:
+            path: /var/log/journal
       extraVolumeMounts:
-        - name: journal
+        - name: run-log-journal
           mountPath: /run/log/journal
+          readOnly: true
+        - name: var-log-journal
+          mountPath: /var/log/journal
           readOnly: true
