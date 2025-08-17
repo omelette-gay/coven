@@ -1,0 +1,3 @@
+- name: ensure iscsiadm is available on the host
+  dnf:
+    name: iscsi-initiator-utils

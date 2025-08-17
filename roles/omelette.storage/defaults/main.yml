@@ -1,0 +1,3 @@
+longhorn_k8s_namespace: longhorn-system
+longhorn_default_replica_count: 2
+longhorn_allow_single_replicas: "{{ groups.all|length < longhorn_default_replica_count }}"
