@@ -21,6 +21,8 @@
   kubernetes.core.k8s_json_patch:
     kind: StorageClass
     name: local-path
+    kubeconfig: "{{ kubeconfig }}"
+    validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
     patch:
       - op: replace
         path: /metadata/annotations/storageclass.kubernetes.io~1is-default-class
