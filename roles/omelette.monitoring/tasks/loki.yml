@@ -77,13 +77,6 @@
       deploymentMode: SingleBinary
       singleBinary:
         replicas: 1
-        # include a /tmp dir which is required for the compactor
-        extraVolumeMounts:
-          - name: temporary
-            mountPath: /tmp
-        extraVolumes:
-          - name: temporary
-            emptyDir: {}
 
       # Zero out replica counts of other deployment modes
       backend:
