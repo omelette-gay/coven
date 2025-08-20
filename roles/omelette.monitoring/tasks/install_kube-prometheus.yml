@@ -74,6 +74,9 @@
 
         hostAliases: "{{ k8s_hostaliases|default(omit) }}"
 
+        persistence:
+          enabled: true
+
       prometheus:
         prometheusSpec:
           # look for Prometheus monitoring config installed by other Helm charts
@@ -81,6 +84,15 @@
           podMonitorSelectorNilUsesHelmValues: false
           serviceMonitorSelectorNilUsesHelmValues: false
           probeSelectorNilUsesHelmValues: false
+
+          # enable persistence
+          storageSpec:
+            volumeClaimTemplate:
+              spec:
+                accessModes: [ "ReadWriteOnce" ]
+                resources:
+                  requests:
+                    storage: 10Gi
 
       # fix kube-prometheus-stack to work for k3s where everything is exposed together
       # https://github.com/k3s-io/k3s/issues/3619#issuecomment-1991598167
@@ -250,6 +262,15 @@
         alertmanagerSpec:
           alertmanagerConfigMatcherStrategy:
             type: None
+
+          # enable persistence
+          storage:
+            volumeClaimTemplate:
+              spec:
+                accessModes: [ "ReadWriteOnce" ]
+                resources:
+                  requests:
+                    storage: 5Gi
 
       additionalPrometheusRulesMap:
         needs-restarting:
