@@ -1,1 +1,2 @@
 cnpg_k8s_namespace: cnpg-system
+cnpg_postgres_major_version: 17
