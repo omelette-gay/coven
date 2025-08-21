@@ -119,6 +119,8 @@
     release_namespace: "{{ planka_k8s_namespace }}"
     release_values:
       existingSecretkeySecret: "{{ planka_k8s_secret_key_name }}"
+      persistence:
+        enabled: true
       ingress:
         enabled: true
         annotations:
