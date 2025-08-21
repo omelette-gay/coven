@@ -78,21 +78,6 @@ factorio_servers:
       server_settings:
         name: Girls go Space
         description: Just doing girls things, in space
-  - server_id: intnerds
-    config:
-      service:
-        port: 31496
-      factorioServer:
-        save_name: "internationalnerds"
-        enable_space_age: false
-      serverPassword:
-        passwordSecret: "game-password"
-      server_settings:
-        name: International Nerds Group
-        description: Joh, Roy and Meg being nerdy together
-    dns:
-      hostname: intnerds.omelette.gay
-      zone: omelette.gay
   - server_id: chegsworld
     config:
       service:
