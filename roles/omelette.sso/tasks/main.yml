@@ -1,48 +1,21 @@
-- name: Create Keycloak namespace
-  kubernetes.core.k8s:
-    name: keycloak
-    api_version: v1
-    kind: Namespace
-
-- name: create database secret if it doesn't exist
-  kubernetes.core.k8s:
-    name: "{{ keycloak_db_credentials_secret }}"
-    namespace: keycloak
-    definition:
-      apiVersion: v1
-      kind: Secret
-      data:
-        admin_password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
-        password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
-        replication_password: "{{ lookup('community.general.random_string', length=30)|b64encode }}"
-  when: query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name=keycloak_db_credentials_secret, namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))|length == 0
-
 - name: install database for Keycloak
   kubernetes.core.helm:
-    name: keycloak-db
-    chart_ref: postgresql
-    chart_repo_url: "{{ lookup('helm_chart', 'postgresql').repository }}"
-    chart_version: "{{ lookup('helm_chart', 'postgresql').version }}"
+    name: db
+    chart_ref: cluster
+    chart_repo_url: "{{ lookup('helm_chart', 'cluster').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'cluster').version }}"
     release_namespace: keycloak
     create_namespace: true
     release_values:
-      global:
-        postgresql:
-          auth:
-            username: keycloak
-            database: keycloak
-            password: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name=keycloak_db_credentials_secret, namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.password|b64decode }}"
-            existingSecret: "{{ keycloak_db_credentials_secret }}"
-            secretKeys:
-              adminPasswordKey: admin_password
-              userPasswordKey: password
-              replicationPasswordKey: replication_password
-      metrics:
-        enabled: true
-        serviceMonitor:
-          enabled: true
-        prometheusRule:
-          enabled: true
+      version:
+        postresql: "{{ cnpg_postgres_major_version }}"
+      cluster:
+        instances: 1
+        initdb:
+          database: keycloak
+        monitoring:
+          enabled:
+            true
 
 - name: block Keycloak metrics endpoint from web
   kubernetes.core.k8s:
@@ -89,12 +62,12 @@
 
       database:
         vendor: postgres
-        hostname: keycloak-db-postgresql
-        port: 5432
-        username: keycloak
-        database: keycloak
-        existingSecret: "{{ keycloak_db_credentials_secret }}"
-        existingSecretKey: "password"
+        hostname: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name='db-cluster-app', namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.host|b64decode }}"
+        port: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name='db-cluster-app', namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.port|b64decode }}"
+        database: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name='db-cluster-app', namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.dbname|b64decode }}"
+        username: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name='db-cluster-app', namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.username|b64decode }}"
+        existingSecret: db-cluster-app
+        existingSecretKey: password
 
       # configure monitoring for Keycloak
       serviceMonitor:
