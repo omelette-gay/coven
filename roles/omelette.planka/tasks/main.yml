@@ -143,19 +143,8 @@
           roles:
             - "{{ planka_keycloak_admin_role }}"
       postgresql:
-        auth:
-          password: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name='db-credentials', namespace=planka_k8s_namespace, kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.password|b64decode }}"
-          existingSecret: db-credentials
-          secretKeys:
-            adminPasswordKey: admin_password
-            userPasswordKey: password
-            replicationPasswordKey: replication_password
-        metrics:
-          enabled: true
-          serviceMonitor:
-            enabled: true
-          prometheusRule:
-            enabled: true
+        enabled: false # use externally managed database, not the built-in one
+      existingDburlSecret: db-cluster-app
 
 - name: monitor Planka
   kubernetes.core.k8s:

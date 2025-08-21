@@ -62,12 +62,12 @@
 
       database:
         vendor: postgres
-        hostname: keycloak-db-postgresql
-        port: 5432
-        username: keycloak
-        database: keycloak
-        existingSecret: "{{ keycloak_db_credentials_secret }}"
-        existingSecretKey: "password"
+        hostname: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name='db-cluster-app', namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.host|b64decode }}"
+        port: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name='db-cluster-app', namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.port|b64decode }}"
+        database: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name='db-cluster-app', namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.dbname|b64decode }}"
+        username: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Secret', resource_name='db-cluster-app', namespace='keycloak', kubeconfig=kubeconfig, validate_certs=kubeconfig_require_secure|default(true))[0].data.username|b64decode }}"
+        existingSecret: db-cluster-app
+        existingSecretKey: password
 
       # configure monitoring for Keycloak
       serviceMonitor:
