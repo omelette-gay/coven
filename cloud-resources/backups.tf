@@ -17,3 +17,18 @@ resource "google_storage_bucket_iam_member" "backup_writer" {
   role   = "roles/storage.objectAdmin"
   member = google_service_account.backup_service_account.member
 }
+
+resource "google_service_account_key" "backup_service_account_key" {
+  service_account_id = google_service_account.backup_service_account.name
+}
+
+resource "vault_kv_secret_v2" "backup_service_account_key" {
+  mount = "secret"
+  name  = "backups/service-account-key"
+  disable_read = true
+  data_json = jsonencode(
+    {
+      key = google_service_account_key.backup_service_account_key.private_key
+    }
+  )
+}
