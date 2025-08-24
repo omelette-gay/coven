@@ -27,3 +27,5 @@
       - op: replace
         path: /metadata/annotations/storageclass.kubernetes.io~1is-default-class
         value: "false"
+
+- name: sync GCP backup service account secret into k8s

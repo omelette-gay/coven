@@ -18,17 +18,18 @@ resource "google_storage_bucket_iam_member" "backup_writer" {
   member = google_service_account.backup_service_account.member
 }
 
-resource "google_service_account_key" "backup_service_account_key" {
-  service_account_id = google_service_account.backup_service_account.name
+resource "google_storage_hmac_key" "backup_service_account_key" {
+  service_account_email = google_service_account.backup_service_account.email
 }
 
-resource "vault_kv_secret_v2" "backup_service_account_key" {
+resource "vault_kv_secret_v2" "backup_service_account_creds" {
   mount = "secret"
-  name  = "backups/service-account-key"
-  disable_read = true
+  name  = "backups/service-account-creds"
   data_json = jsonencode(
     {
-      key = google_service_account_key.backup_service_account_key.private_key
+      AWS_ACCESS_KEY_ID     = google_storage_hmac_key.backup_service_account_key.access_id
+      AWS_ENDPOINTS         = "https://storage.googleapis.com"
+      AWS_SECRET_ACCESS_KEY = google_storage_hmac_key.backup_service_account_key.secret
     }
   )
 }

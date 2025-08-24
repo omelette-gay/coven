@@ -5,7 +5,7 @@ terraform {
       version = "6.8.0"
     }
     vault = {
-      source = "hashicorp/vault"
+      source  = "hashicorp/vault"
       version = "5.2.1"
     }
   }
@@ -17,5 +17,5 @@ provider "google" {
 }
 
 provider "vault" {
-    address = "https://vault.coven.omelette.gay"
+  address = "https://vault.coven.omelette.gay"
 }
