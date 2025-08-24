@@ -41,6 +41,8 @@
             - hosts:
                 - "{{ vault_host }}"
               secretName: vault-tls
+        dataStorage:
+          labels: "{{ {'recurring-job.longhorn.io/source': 'enabled', 'recurring-job.longhorn.io/' + longhorn_k8s_recurring_job_name: 'enabled'} }}"
         standalone:
           config: |-
             ui = true
