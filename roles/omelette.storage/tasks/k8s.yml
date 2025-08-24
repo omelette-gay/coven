@@ -9,6 +9,10 @@
     release_values:
       defaultSettings:
         concurrentAutomaticEngineUpgradePerNodeLimit: 3
+      defaultBackupStore:
+        backupTarget: "s3://coven-backups@europe-west2/"
+        backupTargetCredentialSecret: "{{ longhorn_k8s_backup_creds_secret }}"
+        pollInterval: 180
       persistence:
         defaultClassReplicaCount: "{{ longhorn_default_replica_count }}"
         defaultDataLocality: best-effort
@@ -27,3 +31,28 @@
       - op: replace
         path: /metadata/annotations/storageclass.kubernetes.io~1is-default-class
         value: "false"
+
+- name: sync GCP backup service account secret into k8s
+  include_role:
+    name: omelette.secrets
+    tasks_from: create_k8s_secret
+  vars:
+    vault_k8s_secret:
+      vault_secret_name: "backups/service-account-creds"
+      k8s_secret_name: "{{ longhorn_k8s_backup_creds_secret }}"
+      k8s_namespace: "{{ longhorn_k8s_namespace }}"
+      k8s_service_account_name: "longhorn-gcp-backup-creds"
+      vault_role_name: "longhorn-gcp-backup-creds"
+
+- name: Create Longhorn recurring backup job
+  kubernetes.core.k8s:
+    name: "{{ longhorn_k8s_recurring_job_name }}"
+    namespace: "{{ longhorn_k8s_namespace }}"
+    definition:
+      apiVersion: longhorn.io/v1beta2
+      kind: RecurringJob
+      spec:
+        cron: "30 7,19 * * *"
+        task: "backup"
+        retain: 14
+        concurrency: 2

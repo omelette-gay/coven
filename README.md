@@ -16,6 +16,8 @@ You will need to have the following installed (in your WSL environment if on Win
 - kubernetes for Python: `sudo pip3 install kubernetes --break-system-packages`
 - ansible-modules-hashivault: `sudo pip3 install ansible-modules-hashivault --break-system-packages`
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
+- [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+- [gcloud CLI](https://cloud.google.com/sdk/docs/install#deb)
 
 Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
