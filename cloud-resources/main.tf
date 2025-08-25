@@ -14,6 +14,8 @@ terraform {
 provider "google" {
   project = "coven-omelette-gay"
   region  = "europe-west2"
+  user_project_override = true
+  billing_project = "coven-omelette-gay"
 }
 
 provider "vault" {
