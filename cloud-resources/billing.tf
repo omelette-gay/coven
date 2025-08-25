@@ -36,15 +36,15 @@ data "google_billing_account" "account" {
 
 resource "google_billing_budget" "warningbudget" {
   billing_account = data.google_billing_account.account.id
-  display_name = "Billing Budget"
+  display_name    = "Billing Budget"
   amount {
     specified_amount {
       currency_code = "GBP"
-      units = var.budget_value
+      units         = var.budget_value
     }
   }
   threshold_rules {
-      threshold_percent =  0.8
+    threshold_percent = 0.8
   }
 
   threshold_rules {
