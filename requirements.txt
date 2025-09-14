@@ -1,0 +1,4 @@
+# Python requirements for running Ansible
+ansible == 11.10.0
+ansible-modules-hashivault == 5.4.0
+kubernetes == 33.1.0

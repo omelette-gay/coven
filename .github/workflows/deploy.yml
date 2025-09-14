@@ -36,7 +36,7 @@ jobs:
 
       - name: install dependencies
         run: |
-          pip3 install ansible ansible-modules-hashivault kubernetes
+          pip3 install -r requirements.txt
           helm plugin install https://github.com/databus23/helm-diff
           ansible-galaxy install -r requirements.yml
 
