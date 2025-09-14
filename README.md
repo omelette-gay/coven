@@ -9,12 +9,10 @@ NOTE: If you are running this on Windows, Ansible only runs under WSL, so run ev
 You will need to have the following installed (in your WSL environment if on Windows):
  
 - Pip3 and Jmespath: `sudo apt install python3-pip python3-jmespath`
-- Ansible: `sudo pip3 install ansible --break-system-packages`
+- Ansible and dependencies: `sudo pip3 install -r requirements.txt --break-system-packages`
 - [Helm](https://helm.sh/docs/intro/install/)
 - Helm Diff: `helm plugin install https://github.com/databus23/helm-diff`
 - [Vault](https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install)
-- kubernetes for Python: `sudo pip3 install kubernetes --break-system-packages`
-- ansible-modules-hashivault: `sudo pip3 install ansible-modules-hashivault --break-system-packages`
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
 - [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 - [gcloud CLI](https://cloud.google.com/sdk/docs/install#deb)

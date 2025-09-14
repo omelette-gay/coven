@@ -5,3 +5,13 @@ updates:
     open-pull-requests-limit: 100
     schedule:
       interval: weekly
+
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      regular-updates:
+        update-types:
+          - 'minor'
+          - 'patch'
