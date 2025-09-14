@@ -92,7 +92,7 @@
                 accessModes: [ "ReadWriteOnce" ]
                 resources:
                   requests:
-                    storage: 10Gi
+                    storage: 20Gi
 
       # fix kube-prometheus-stack to work for k3s where everything is exposed together
       # https://github.com/k3s-io/k3s/issues/3619#issuecomment-1991598167

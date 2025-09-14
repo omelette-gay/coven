@@ -43,6 +43,7 @@
       k8s_namespace: "{{ longhorn_k8s_namespace }}"
       k8s_service_account_name: "longhorn-gcp-backup-creds"
       vault_role_name: "longhorn-gcp-backup-creds"
+  when: bootstrap_keycloak|default(false) == false
 
 - name: Create Longhorn recurring backup job
   kubernetes.core.k8s:
