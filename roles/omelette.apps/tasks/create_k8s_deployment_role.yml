@@ -57,3 +57,7 @@
 - name: sync GHCR credentials to namespace
   include_tasks: sync_ghcr_creds_to_app.yml
   when: k8s_github_deployment_role.ghcr_credentials_secret is defined
+
+- name: create a Keycloak client for this app
+  include_tasks: create_keycloak_client.yml
+  when: k8s_github_deployment_role.keycloak_client_id is defined

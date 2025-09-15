@@ -119,5 +119,9 @@ k8s_github_deployment_roles:
         k8s_namespace: wedding
         k8s_service_account_name: wedding-app-secrets
         vault_role_name: wedding-app-secrets
+    keycloak_client_id: wedding
+    keycloak_redirect_uris:
+      - https://wedding.omelette.gay/oidc/callback/
+    keycloak_k8s_secret: wedding-sso-secrets
 
 planka_hostname: boards.omelette.gay
