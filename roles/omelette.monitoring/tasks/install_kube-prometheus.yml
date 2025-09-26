@@ -714,7 +714,7 @@
                       + rate(external_dns_webhook_provider_applychanges_errors_total{}[5m]) 
                       + rate(external_dns_webhook_provider_records_errors_total{}[5m])
                     ) > 0
-                  for: 1m
+                  for: 10m
                   labels:
                     severity: critical
 
