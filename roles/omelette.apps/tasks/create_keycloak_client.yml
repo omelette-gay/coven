@@ -1,0 +1,42 @@
+- name: create Keycloak client for app
+  community.general.keycloak_client:
+    client_id: "{{ k8s_github_deployment_role.keycloak_client_id }}"
+    realm: "{{ keycloak_realm }}"
+    protocol: openid-connect
+    standard_flow_enabled: true
+    public_client: false
+    redirect_uris: "{{ k8s_github_deployment_role.keycloak_redirect_uris }}"
+    protocol_mappers:
+      - name: client roles
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-client-role-mapper
+        consentRequired: false
+        config:
+          claim.name: roles
+          multivalued: true
+          userinfo.token.claim: true
+          access.token.claim: true
+          usermodel.clientRoleMapping.clientId: "{{ k8s_github_deployment_role.keycloak_client_id }}"
+  register: keycloak_client
+
+- name: fetch client secret from Keycloak
+  community.general.keycloak_clientsecret_info:
+    id: "{{ keycloak_client.end_state.id }}"
+    realm: "{{ keycloak_realm }}"
+  no_log: true
+  register: keycloak_client_secret
+
+- name: write OIDC credentials to secret
+  kubernetes.core.k8s:
+    name: "{{ k8s_github_deployment_role.keycloak_k8s_secret }}"
+    namespace: "{{ k8s_github_deployment_role.k8s_namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      data:
+        clientId: "{{ keycloak_client.end_state.clientId|b64encode }}"
+        clientSecret: "{{ keycloak_client_secret.clientsecret_info.value|b64encode }}"
+        authorizationEndpoint: "{{ (keycloak_url + '/realms/' + keycloak_realm + '/protocol/openid-connect/auth') | b64encode }}"
+        tokenEndpoint: "{{ (keycloak_url + '/realms/' + keycloak_realm + '/protocol/openid-connect/token') | b64encode }}"
+        userEndpoint: "{{ (keycloak_url + '/realms/' + keycloak_realm + '/protocol/openid-connect/userinfo') | b64encode }}"
+        jwksEndpoint: "{{ (keycloak_url + '/realms/' + keycloak_realm + '/protocol/openid-connect/certs') | b64encode }}"
