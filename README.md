@@ -60,13 +60,6 @@ to specify the inventory as `vagrant-inventory`. Following this, you can specify
     ./login.sh --local
     ansible-playbook -i vagrant-inventory playbook.yml
 
-# Terraform
-As well as the above the project uses several GCP API's that are not on by default, you will need to enable the below:
-
-(Make sure that the correct project is selected above when enabling each API)
-  - [IAM API](https://console.cloud.google.com/apis/library/iam.googleapis.com) 
-  - [Billing API](https://console.cloud.google.com/apis/library/cloudbilling.googleapis.com)
-  - [Billing Budget API](https://console.cloud.google.com/apis/library/billingbudgets.googleapis.com)
 
 # How To
 
