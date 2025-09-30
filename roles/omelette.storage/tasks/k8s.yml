@@ -8,7 +8,7 @@
     create_namespace: true
     release_values:
       defaultSettings:
-        concurrentAutomaticEngineUpgradePerNodeLimit: 3
+        concurrentAutomaticEngineUpgradePerNodeLimit: "3"
       defaultBackupStore:
         backupTarget: "s3://coven-backups@europe-west2/"
         backupTargetCredentialSecret: "{{ longhorn_k8s_backup_creds_secret }}"
