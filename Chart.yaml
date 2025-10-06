@@ -44,7 +44,7 @@ dependencies:
     version: 6.17.0
     repository: https://grafana.github.io/helm-charts/
   - name: planka
-    version: 1.0.4
+    version: 1.0.5
     repository: http://plankanban.github.io/planka/
   - name: vault
     version: 0.30.1
