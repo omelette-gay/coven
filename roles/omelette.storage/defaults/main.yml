@@ -3,3 +3,4 @@ longhorn_default_replica_count: 2
 longhorn_allow_single_replicas: "{{ groups.all|length < longhorn_default_replica_count }}"
 longhorn_k8s_backup_creds_secret: "gcp-backup-creds"
 longhorn_k8s_recurring_job_name: "nightly-backup"
+gcp_backup_bucket_name: coven-backups
