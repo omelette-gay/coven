@@ -48,3 +48,11 @@ On first install, we need to tell Ansible to SSH in using `root` so run that fir
 
 You will need to [create an API token](https://docs.hetzner.com/dns-console/dns/general/api-access-token/) for DNS in Hetzner
 and store this in Vault under the `gitops/hetzner` secret in the key `api_key`.
+
+# Terraform
+As part of the backups for the project we utilise GCP storage buckets, these require several GCP API's that are not enabled by default, you will need to enable the below:
+
+(Make sure that the correct project is selected in GCP when enabling each API)
+  - [IAM API](https://console.cloud.google.com/apis/library/iam.googleapis.com) 
+  - [Billing API](https://console.cloud.google.com/apis/library/cloudbilling.googleapis.com)
+  - [Billing Budget API](https://console.cloud.google.com/apis/library/billingbudgets.googleapis.com)

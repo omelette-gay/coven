@@ -1,3 +1,9 @@
+variable "project_id" {
+  description = "The project ID"
+  type        = string
+  default     = "coven-omelette-gay"
+}
+
 terraform {
   required_providers {
     google = {
@@ -12,8 +18,10 @@ terraform {
 }
 
 provider "google" {
-  project = "coven-omelette-gay"
-  region  = "europe-west2"
+  project               = var.project_id
+  region                = "europe-west2"
+  user_project_override = true
+  billing_project       = var.project_id
 }
 
 provider "vault" {
