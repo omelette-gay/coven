@@ -37,6 +37,9 @@ dependencies:
   - name: longhorn
     version: 1.10.0
     repository: https://charts.longhorn.io
+  - name: plugin-barman-cloud
+    version: 0.2.0
+    repository: https://cloudnative-pg.github.io/charts
   - name: prometheus-blackbox-exporter
     version: 11.3.1
     repository: https://prometheus-community.github.io/helm-charts/

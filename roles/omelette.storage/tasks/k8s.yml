@@ -10,7 +10,7 @@
       defaultSettings:
         concurrentAutomaticEngineUpgradePerNodeLimit: "3"
       defaultBackupStore:
-        backupTarget: "s3://coven-backups@europe-west2/"
+        backupTarget: "s3://{{ gcp_backup_bucket_name }}@europe-west2/"
         backupTargetCredentialSecret: "{{ longhorn_k8s_backup_creds_secret }}"
         pollInterval: 180
       persistence:

@@ -11,3 +11,40 @@
         podMonitorEnabled: true
         grafanaDashboard:
           create: true
+
+- name: install barman-cloud plugin for cnpg backups
+  kubernetes.core.helm:
+    name: plugin-barman-cloud
+    chart_ref: plugin-barman-cloud
+    chart_repo_url: "{{ lookup('helm_chart', 'plugin-barman-cloud').repository }}"
+    chart_version: "{{ lookup('helm_chart', 'plugin-barman-cloud').version }}"
+    release_namespace: "{{ cnpg_k8s_namespace }}"
+
+- name: sync GCP backup service account secret
+  include_role:
+    name: omelette.secrets
+    tasks_from: create_k8s_secret
+  vars:
+    vault_k8s_secret:
+      vault_secret_name: "backups/service-account-key"
+      k8s_secret_name: "{{ cnpg_k8s_backup_creds_secret }}"
+      k8s_namespace: "{{ cnpg_k8s_namespace }}"
+      k8s_service_account_name: "cnpg-gcp-backup-creds"
+      vault_role_name: "cnpg-gcp-backup-creds"
+  when: bootstrap_keycloak|default(false) == false
+
+- name: configure backup object store
+  kubernetes.core.k8s:
+    name: "{{ cnpg_backup_object_store }}"
+    namespace: "{{ cnpg_k8s_namespace }}"
+    definition:
+      apiVersion: barmancloud.cnpg.io/v1
+      kind: ObjectStore
+      spec:
+        configuration:
+          destinationPath: "gs://{{ gcp_backup_bucket_name }}/cnpg"
+          googleCredentials:
+            applicationCredentials:
+              name: "{{ cnpg_k8s_backup_creds_secret }}"
+              key: "credentials.json"
+        retentionPolicy: "{{ cnpg_backup_retention_period }}"

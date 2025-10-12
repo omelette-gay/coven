@@ -33,3 +33,17 @@ resource "vault_kv_secret_v2" "backup_service_account_creds" {
     }
   )
 }
+
+resource "google_service_account_key" "backup_service_account_key" {
+  service_account_id = google_service_account.backup_service_account.name
+}
+
+resource "vault_kv_secret_v2" "backup_service_account_key" {
+  mount = "secret"
+  name  = "backups/service-account-key"
+  data_json = jsonencode(
+    {
+      "credentials.json" = google_service_account_key.backup_service_account_key.private_key
+    }
+  )
+}

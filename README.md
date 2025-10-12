@@ -20,6 +20,12 @@ You will need to have the following installed (in your WSL environment if on Win
 Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
 
+If you are intending on running Terraform, you will need to run `terraform init` in the `cloud-resources/` folder
+to set up your Terraform session too. You will need to re-run this if the Terraform lock file changes (you will
+be warned of this if you run `terraform` without doing so).
+
+In the event you are setting up new things from scratch, then read [the bootstrapping doc](./docs/bootstrapping.md).
+
 # Running on real infrastructure
 
 You will first need to log in to Vault to access the secrets needed for deployment (unless you are bootstrapping!).
@@ -31,7 +37,12 @@ Now you can run the playbook:
 
     ansible-playbook -i inventory playbook.yml
 
-In the event you are setting up new things from scratch, then read [the bootstrapping doc](./docs/bootstrapping.md)
+If you want to run Terraform locally, you will also need to log in to GCP.
+
+    gcloud auth application-default login
+
+Now you can run `terraform apply` in the `cloud-resources/` folder to apply any Terraform changes. Until we have
+remote state in place, you will have to co-ordinate to make sure we do not overwrite any state file changes! 
 
 # Testlab
 
