@@ -20,6 +20,15 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v4
+
+      - name: login to Vault
+        uses: hashicorp/vault-action@v2
+        with:
+          url: https://vault.coven.omelette.gay
+          method: jwt
+          path: github
+          role: gitops
+          exportToken: true
       
       - uses: 'google-github-actions/auth@v3'
         with:
