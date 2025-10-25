@@ -23,9 +23,11 @@ On first run, you will error the first time you need to interact with Vault. You
 UI and run through the init sequence, storing the initial secrets and make a copy of your root token, then
 unsealing Vault.
 
-You can now log in using your root token, e.g., if in Vagrant: `vault login -address https://vault.coven.local -tls-skip-verify` and continue the deploy by re-running Ansible.
+You can now log in using your root token, e.g., if in Vagrant: `vault login -address https://vault.coven.local -tls-skip-verify`
+and continue the deploy by re-running Ansible.
 
-Once you are in and can confirm you can sign in to Vault using Keycloak, now revoke the root token: `vault token revoke -address https://vault.coven.local -self -tls-skip-verify`.
+Once you are in and can confirm you can sign in to Vault using Keycloak, now revoke the root token:
+`vault token revoke -address https://vault.coven.local -self -tls-skip-verify`.
 
 In future runs, you will not need to specify the extra vars when running ansible.
 
@@ -57,3 +59,7 @@ enabled by default, you will need to enable the below for the GCP project being 
   - [IAM API](https://console.cloud.google.com/apis/library/iam.googleapis.com) 
   - [Billing API](https://console.cloud.google.com/apis/library/cloudbilling.googleapis.com)
   - [Billing Budget API](https://console.cloud.google.com/apis/library/billingbudgets.googleapis.com)
+
+As default terraform is configured to store state in a GCP bucket, when initially setting up the project you will have to
+disable the `backend "gcs"` block, then run terraform locally, reenable the `backend "gcs"` block and migrate state with
+`terraform init -migrate-state`.

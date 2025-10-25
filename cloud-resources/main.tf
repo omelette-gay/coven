@@ -5,6 +5,11 @@ variable "project_id" {
 }
 
 terraform {
+  backend "gcs" {
+    bucket = "coven-tfstate"
+    prefix = "terraform/state"
+  }
+
   required_providers {
     google = {
       source  = "hashicorp/google"
