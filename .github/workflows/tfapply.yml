@@ -9,12 +9,11 @@ on:
 
 jobs:
   tfapply:
-    name: "Apply Terraform changes"
+    name: apply Terraform changes
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
-      pull-requests: write
     defaults:
       run:
         working-directory: cloud-resources/
@@ -31,15 +30,17 @@ jobs:
           role: gitops
           exportToken: true
       
-      - uses: 'google-github-actions/auth@v3'
+      - name: login to GCP
+        uses: google-github-actions/auth@v3
         with:
           project_id: coven-omelette-gay
           workload_identity_provider: projects/211831137824/locations/global/workloadIdentityPools/omelette-gay-github-actions/providers/omelette-gay-github-actions
 
-      - uses: hashicorp/setup-terraform@v3
+      - name: setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform Init
+      - name: Terraform init
         run: terraform init -input=false
 
-      - name: Terraform Apply
+      - name: Terraform apply
         run: terraform apply -no-color -input=false
