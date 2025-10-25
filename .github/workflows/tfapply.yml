@@ -3,9 +3,9 @@ name: Plan Terraform changes
 on:
   push:
     branches:
-        - master
-    #paths:
-    #  - "cloud-resources/**"
+      - main
+    paths:
+      - "cloud-resources/**"
 
 jobs:
   tfapply:
