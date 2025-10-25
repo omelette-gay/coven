@@ -21,6 +21,11 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v4
       
+      - uses: 'google-github-actions/auth@v3'
+        with:
+          project_id: coven-omelette-gay
+          workload_identity_provider: projects/211831137824/locations/global/workloadIdentityPools/omelette-gay-github-actions/providers/omelette-gay-github-actions
+
       - uses: hashicorp/setup-terraform@v3
 
       - name: Terraform fmt
