@@ -3,8 +3,8 @@ name: Plan Terraform changes
 on:
   pull_request:
     types: ["opened", "synchronize"]
-    paths:
-      - "cloud-infrastructure/**"
+    #paths:
+    #  - "cloud-infrastructure/**"
 
 jobs:
   tfplan:
