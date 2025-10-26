@@ -16,3 +16,8 @@ updates:
           - 'minor'
           - 'patch'
     versioning-strategy: increase
+
+  - package-ecosystem: terraform
+    directory: "cloud-resources/"
+    schedule:
+      interval: weekly
