@@ -17,6 +17,8 @@ jobs:
     defaults:
       run:
         working-directory: cloud-resources/
+    concurrency:
+      group: tfapply
     steps:
       - name: checkout code
         uses: actions/checkout@v4
