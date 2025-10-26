@@ -9,17 +9,6 @@ terraform {
     bucket = "coven-tfstate"
     prefix = "terraform/state"
   }
-
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "6.8.0"
-    }
-    vault = {
-      source  = "hashicorp/vault"
-      version = "5.2.1"
-    }
-  }
 }
 
 provider "google" {
