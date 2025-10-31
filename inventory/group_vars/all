@@ -109,6 +109,7 @@ k8s_github_deployment_roles:
         k8s_namespace: weight-tracker
         k8s_service_account_name: weight-tracker
         vault_role_name: weight-tracker-google-secret
+
   - github_repo: omelette-gay/wedding
     k8s_namespace: wedding
     role_name: wedding
@@ -123,5 +124,15 @@ k8s_github_deployment_roles:
     keycloak_redirect_uris:
       - https://wedding.omelette.gay/oidc/callback/
     keycloak_k8s_secret: wedding-sso-secrets
+
+  - github_repo: cnorthwood/virtualflightonlinetransmitter
+    k8s_namespace: virtualflightonlinetransmitter
+    role_name: virtualflightonlinetransmitter
+    vault_secrets:
+      - vault_secret_name: virtualflightonlinetransmitter/app
+        k8s_secret_name: server-secret
+        k8s_namespace: virtualflightonlinetransmitter
+        k8s_service_account_name: virtualflightonlinetransmitter-secrets
+        vault_role_name: virtualflightonlinetransmitter-secrets
 
 planka_hostname: boards.omelette.gay
