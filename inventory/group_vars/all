@@ -104,6 +104,11 @@ k8s_github_deployment_roles:
         k8s_namespace: weight-tracker
         k8s_service_account_name: weight-tracker-chriss-fitbit-secret
         vault_role_name: weight-tracker-secrets
+      - vault_secret_name: weight-tracker/meg-fitbit
+        k8s_secret_name: meg-fitbit
+        k8s_namespace: weight-tracker
+        k8s_service_account_name: weight-tracker-meg-fitbit-secret
+        vault_role_name: weight-tracker-meg-secrets
       - vault_secret_name: weight-tracker/google-service-account
         k8s_secret_name: google-service-account
         k8s_namespace: weight-tracker
