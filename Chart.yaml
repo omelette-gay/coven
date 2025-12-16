@@ -41,7 +41,7 @@ dependencies:
     version: 0.3.1
     repository: https://cloudnative-pg.github.io/charts
   - name: prometheus-blackbox-exporter
-    version: 11.6.0
+    version: 11.6.1
     repository: https://prometheus-community.github.io/helm-charts/
   - name: promtail
     version: 6.17.1
