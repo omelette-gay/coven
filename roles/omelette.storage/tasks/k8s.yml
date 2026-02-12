@@ -21,16 +21,6 @@
         serviceMonitor:
           enabled: true
 
-      # work around hotfix https://longhorn.io/docs/1.11.0/important-notes/#longhorn-manager-image
-      preUpgradeChecker:
-        upgradeVersionCheck: false
-      image:
-        csi:
-          instanceManager:
-            tag: v1.11.0-hotfix-1
-          manager:
-            tag: v1.11.0-hotfix-1
-
 - name: make Longhorn the default storage class
   kubernetes.core.k8s_json_patch:
     kind: StorageClass
