@@ -24,50 +24,56 @@ certmanager_acme_server: https://acme-v02.api.letsencrypt.org/directory
 grafana_discord_webhook_url: "{% if not bootstrap_keycloak|default(false) %}{{ lookup('hashivault', 'gitops/grafana-discord-notifier', 'webhook_url', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
 
 external_dns_extra_records:
-  - zone_name: omelette.gay
+  # machine hostnames
+  - zone: omelette.gay
+    name: strix.xdc
+    type: A
     records:
-      # machine hostnames
-      - prefix: strix.xdc
-        type: A
-        value:
-          - "168.119.4.112"
-      - prefix: strix.xdc
-        type: AAAA
-        value:
-          - "2a01:4f8:242:4f21::2"
-      - prefix: janus.gs
-        type: A
-        value:
-          - 51.148.152.196
-      - prefix: janus.gs
-        type: AAAA
-        value:
-          - "2a02:8011:d017:dba5::1"
+      - value: "168.119.4.112"
+  - zone: omelette.gay
+    name: strix.xdc
+    type: AAAA
+    records:
+      - value: "2a01:4f8:242:4f21::2"
+  - zone: omelette.gay
+    name: strix.xdc
+    type: A
+    records:
+      - value: 51.148.152.196
+  - zone: omelette.gay
+    name: strix.xdc
+    type: AAAA
+    records:
+      - value: "2a02:8011:d017:dba5::1"
 
-      # trust asuka.pling.org.uk to send mail
-      - prefix: coven
-        type: TXT
-        value:
-          - "v=spf1 a ip4:109.74.194.110/32 ip6:2a01:7e00::f03c:91ff:fe26:1540/128 -all"
-      - prefix: opendkim._domainkey.coven
-        type: TXT
-        value:
-          - "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDRMLOGRaOJpGlN1OrFltJYMSSvtFsW8Y+51FA83ZDOnb/IPyEkfQyJi99ZdkBZLuOP2SafkA8NP+4W2RRK8tcgIIlro8g5EqZFr3amHCx8rDaUW/JPe9tkerUsYWbBZqdkbqPD/cehABPWxWbd8qi5KV+aNfk1ZKDmUwCfnw0PNQIDAQAB"
+  # trust asuka.pling.org.uk to send mail
+  - zone: omelette.gay
+    name: coven
+    type: TXT
+    records:
+      - value: "v=spf1 a ip4:109.74.194.110/32 ip6:2a01:7e00::f03c:91ff:fe26:1540/128 -all"
+  - zone: omelette.gay
+    name: opendkim._domainkey.coven
+    type: TXT
+    records:
+      - value: "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDRMLOGRaOJpGlN1OrFltJYMSSvtFsW8Y+51FA83ZDOnb/IPyEkfQyJi99ZdkBZLuOP2SafkA8NP+4W2RRK8tcgIIlro8g5EqZFr3amHCx8rDaUW/JPe9tkerUsYWbBZqdkbqPD/cehABPWxWbd8qi5KV+aNfk1ZKDmUwCfnw0PNQIDAQAB"
 
-      # Bluesky verification
-      - prefix: _atproto.dizzy
-        type: TXT
-        value:
-          - "did=did:plc:mzojqfcqta5qv3mqunoxojcg"
-      - prefix: _atproto.emily
-        type: TXT
-        value:
-          - "did=did:plc:jeobzen65n6ugbzawbvrunxu"
+  # Bluesky verification
+  - zone: omelette.gay
+    name: _atproto.dizzy
+    type: TXT
+    records:
+      - value: "did=did:plc:mzojqfcqta5qv3mqunoxojcg"
+  - zone: omelette.gay
+    name: _atproto.emily
+    type: TXT
+    records:
+      - value: "did=did:plc:jeobzen65n6ugbzawbvrunxu"
 
 factorio_servers:
   - server_id: girlsclub
     dns:
-      zone: omelette.gay
+      zone: "@"
       hostname: omelette.gay
     config:
       factorioServer:
@@ -91,7 +97,7 @@ factorio_servers:
         name: Chegs World
         description: Making a factory a home
     dns:
-      hostname: chegsworld.omelette.gay
+      hostname: chegsworld
       zone: omelette.gay
 
 k8s_github_deployment_roles:

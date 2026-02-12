@@ -25,11 +25,11 @@
   when: factorio_server.config.serverPassword.passwordSecret is defined
 
 - name: create SRV record to advertise this Factorio instance
-  community.dns.hetzner_dns_record:
-    hetzner_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
-    state: present
-    zone_name: "{{ factorio_server.dns.zone }}"
-    record: "_factorio._udp.{{ factorio_server.dns.hostname }}"
+  hetzner.hcloud.zone_rrset:
+    api_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_token', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
+    zone: "{{ factorio_server.dns.zone }}"
+    name: "_factorio._udp.{{ factorio_server.dns.hostname }}"
     type: SRV
-    value: "0 0 {{ factorio_server.config.service.port|default(31497) }} factorio-svc.{{ factorio_server.dns.hostname }}."
+    records:
+      - value: "0 0 {{ factorio_server.config.service.port|default(31497) }} factorio-svc.{{ factorio_server.dns.hostname }}."
   when: factorio_server.dns is defined

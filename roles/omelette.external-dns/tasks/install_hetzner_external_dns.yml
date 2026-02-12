@@ -53,8 +53,10 @@
       vault_role_name: "{{ external_dns_hetzner_k8s_secret_name }}-{{ external_dns_hetzner_k8s_secret_name }}"
 
 - name: create records which are not managed by External DNS Operator
-  community.dns.hetzner_dns_record_sets:
-    hetzner_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
-    zone_name: "{{ item.zone_name }}"
-    record_sets: "{{ item.records }}"
+  hetzner.hcloud.zone_rrset:
+    api_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_token', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
+    zone: "{{ item.zone }}"
+    name: "{{ item.name }}"
+    type: "{{ item.type }}"
+    records: "{{ item.records }}"
   loop: "{{ external_dns_extra_records }}"
