@@ -20,7 +20,7 @@
                   name: "{{ external_dns_hetzner_k8s_secret_name }}"
                   key: api_token
             - name: USE_CLOUD_API
-              value: true
+              value: "true"
           livenessProbe:
             httpGet:
               path: /health
