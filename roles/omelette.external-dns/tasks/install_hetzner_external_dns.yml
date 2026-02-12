@@ -11,29 +11,14 @@
         name: webhook
         webhook:
           image:
-            repository: ghcr.io/mconfalonieri/external-dns-hetzner-webhook
-            tag: latest
+            repository: docker.io/hetzner/external-dns-hetzner-webhook
+            tag: v0.3.2 # x-releaser-pleaser-version
           env:
-            - name: HETZNER_API_TOKEN
+            - name: HETZNER_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: "{{ external_dns_hetzner_k8s_secret_name }}"
                   key: api_token
-            - name: USE_CLOUD_API
-              value: "true"
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: http-webhook
-            initialDelaySeconds: 10
-            timeoutSeconds: 5
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: http-webhook
-            initialDelaySeconds: 10
-            timeoutSeconds: 5
-
       serviceMonitor:
         enabled: true
 
