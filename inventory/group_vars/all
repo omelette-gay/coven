@@ -51,24 +51,24 @@ external_dns_extra_records:
     name: coven
     type: TXT
     records:
-      - value: "v=spf1 a ip4:109.74.194.110/32 ip6:2a01:7e00::f03c:91ff:fe26:1540/128 -all"
+      - value: "\"v=spf1 a ip4:109.74.194.110/32 ip6:2a01:7e00::f03c:91ff:fe26:1540/128 -all\""
   - zone: omelette.gay
     name: opendkim._domainkey.coven
     type: TXT
     records:
-      - value: "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDRMLOGRaOJpGlN1OrFltJYMSSvtFsW8Y+51FA83ZDOnb/IPyEkfQyJi99ZdkBZLuOP2SafkA8NP+4W2RRK8tcgIIlro8g5EqZFr3amHCx8rDaUW/JPe9tkerUsYWbBZqdkbqPD/cehABPWxWbd8qi5KV+aNfk1ZKDmUwCfnw0PNQIDAQAB"
+      - value: "\"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDRMLOGRaOJpGlN1OrFltJYMSSvtFsW8Y+51FA83ZDOnb/IPyEkfQyJi99ZdkBZLuOP2SafkA8NP+4W2RRK8tcgIIlro8g5EqZFr3amHCx8rDaUW/JPe9tkerUsYWbBZqdkbqPD/cehABPWxWbd8qi5KV+aNfk1ZKDmUwCfnw0PNQIDAQAB\""
 
   # Bluesky verification
   - zone: omelette.gay
     name: _atproto.dizzy
     type: TXT
     records:
-      - value: "did=did:plc:mzojqfcqta5qv3mqunoxojcg"
+      - value: "\"did=did:plc:mzojqfcqta5qv3mqunoxojcg\""
   - zone: omelette.gay
     name: _atproto.emily
     type: TXT
     records:
-      - value: "did=did:plc:jeobzen65n6ugbzawbvrunxu"
+      - value: "\"did=did:plc:jeobzen65n6ugbzawbvrunxu\""
 
 factorio_servers:
   - server_id: girlsclub
