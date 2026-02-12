@@ -36,12 +36,12 @@ external_dns_extra_records:
     records:
       - value: "2a01:4f8:242:4f21::2"
   - zone: omelette.gay
-    name: strix.xdc
+    name: janus.gs
     type: A
     records:
-      - value: 51.148.152.196
+      - value: "51.148.152.196"
   - zone: omelette.gay
-    name: strix.xdc
+    name: janus.gs
     type: AAAA
     records:
       - value: "2a02:8011:d017:dba5::1"
