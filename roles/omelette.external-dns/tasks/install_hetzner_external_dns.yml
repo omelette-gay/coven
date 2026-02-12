@@ -14,11 +14,13 @@
             repository: ghcr.io/mconfalonieri/external-dns-hetzner-webhook
             tag: latest
           env:
-            - name: HETZNER_API_KEY
+            - name: HETZNER_API_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: "{{ external_dns_hetzner_k8s_secret_name }}"
-                  key: api_key
+                  key: api_token
+            - name: USE_CLOUD_API
+              value: true
           livenessProbe:
             httpGet:
               path: /health
