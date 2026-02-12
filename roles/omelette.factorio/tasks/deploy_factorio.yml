@@ -31,5 +31,5 @@
     name: "_factorio._udp.{{ factorio_server.dns.hostname }}"
     type: SRV
     records:
-      - value: "0 0 {{ factorio_server.config.service.port|default(31497) }} factorio-svc.{{ factorio_server.dns.hostname }}."
+      - value: "0 0 {{ factorio_server.config.service.port|default(31497) }} factorio-svc.{{ factorio_server.dns.hostname }}.{{ factorio_server.dns.zone }}."
   when: factorio_server.dns is defined

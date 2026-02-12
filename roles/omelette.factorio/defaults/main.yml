@@ -8,7 +8,7 @@ factorio_default_config:
     type: LoadBalancer
     ipFamilyPolicy: PreferDualStack
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: "{% if factorio_server.dns is defined %}factorio-svc.{{ factorio_server.dns.hostname }}{% else %}{{ omit }}{% endif %}"
+      external-dns.alpha.kubernetes.io/hostname: "{% if factorio_server.dns is defined %}factorio-svc.{{ factorio_server.dns.hostname }}.{{ factorio_server.dns.zone }}{% else %}{{ omit }}{% endif %}"
   server_settings:
     visibility:
       lan: false
