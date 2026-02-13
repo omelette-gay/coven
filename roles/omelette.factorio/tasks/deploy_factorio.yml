@@ -28,8 +28,8 @@
   hetzner.hcloud.zone_rrset:
     api_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_token', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
     zone: "{{ factorio_server.dns.zone }}"
-    name: "_factorio._udp.{{ factorio_server.dns.hostname }}"
+    name: "_factorio._udp{{ factorio_server.dns.hostname.removesuffix(factorio_server.dns.zone).removesuffix('.') }}"
     type: SRV
     records:
-      - value: "0 0 {{ factorio_server.config.service.port|default(31497) }} factorio-svc.{{ factorio_server.dns.hostname }}.{{ factorio_server.dns.zone }}."
+      - value: "0 0 {{ factorio_server.config.service.port|default(31497) }} factorio-svc.{{ factorio_server.dns.hostname }}."
   when: factorio_server.dns is defined

@@ -73,7 +73,7 @@ external_dns_extra_records:
 factorio_servers:
   - server_id: girlsclub
     dns:
-      hostname: "@"
+      hostname: omelette.gay
       zone: omelette.gay
     config:
       factorioServer:
@@ -97,7 +97,7 @@ factorio_servers:
         name: Chegs World
         description: Making a factory a home
     dns:
-      hostname: chegsworld
+      hostname: chegsworld.omelette.gay
       zone: omelette.gay
 
 k8s_github_deployment_roles:
