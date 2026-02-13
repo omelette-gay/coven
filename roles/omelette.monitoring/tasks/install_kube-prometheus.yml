@@ -63,12 +63,6 @@
             skipReload: true
             initNotifiers: true
             watchMethod: LIST
-          plugins:
-            enabled: true
-            searchNamespace: ALL
-            skipReload: true
-            initPlugins: true
-            watchMethod: LIST
 
         # expose Grafana to the web
         ingress:
