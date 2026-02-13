@@ -44,20 +44,31 @@
             searchNamespace: ALL
             skipReload: true
             initAlerts: true
+            watchMethod: LIST
           dashboards:
             enabled: true
             searchNamespace: ALL
             skipReload: true
+            initDashboards: true
+            watchMethod: LIST
           datasources:
             enabled: true
             searchNamespace: ALL
             skipReload: true
             initDatasources: true
+            watchMethod: LIST
           notifiers:
             enabled: true
             searchNamespace: ALL
             skipReload: true
             initNotifiers: true
+            watchMethod: LIST
+          plugins:
+            enabled: true
+            searchNamespace: ALL
+            skipReload: true
+            initPlugins: true
+            watchMethod: LIST
 
         # expose Grafana to the web
         ingress:
