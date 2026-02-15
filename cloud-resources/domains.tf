@@ -24,7 +24,7 @@ resource "hcloud_zone" "cjn_me_uk" {
 }
 
 resource "hcloud_zone" "dxhosting_co_uk" {
-  name = "dxhosting.me.uk"
+  name = "dxhosting.co.uk"
   mode = "primary"
 }
 
