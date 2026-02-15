@@ -1,15 +1,15 @@
 # delegate some domains to Chris's Fastmail account
 
 locals {
-  domains_with_fastmail_mx = [
-    hcloud_zone.animebots_co_uk,
-    hcloud_zone.barcampmanchester_co_uk,
-    hcloud_zone.chrisn_xyz,
-    hcloud_zone.cjn_me_uk,
-    hcloud_zone.dxhosting_co_uk,
-    hcloud_zone.manchestertechnights_org,
-    hcloud_zone.pling_org_uk,
-  ]
+  domains_with_fastmail_mx = {
+    "animebots.co.uk"          = hcloud_zone.animebots_co_uk,
+    "barcampmanchester.co.uk"  = hcloud_zone.barcampmanchester_co_uk,
+    "chrisn.xyz"               = hcloud_zone.chrisn_xyz,
+    "cjn.me.uk"                = hcloud_zone.cjn_me_uk,
+    "dxhosting.co.uk"          = hcloud_zone.dxhosting_co_uk,
+    "manchestertechnights.org" = hcloud_zone.manchestertechnights_org,
+    "pling.org.uk"             = hcloud_zone.pling_org_uk,
+  }
 }
 
 resource "hcloud_zone_rrset" "fastmail_mx" {
@@ -20,7 +20,7 @@ resource "hcloud_zone_rrset" "fastmail_mx" {
   zone = each.value.id
 
   records = [
-    { value = "10 in1-smtp.messagingengine.com." }
+    { value = "10 in1-smtp.messagingengine.com." },
     { value = "20 in2-smtp.messagingengine.com." }
   ]
 }

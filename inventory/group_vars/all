@@ -58,18 +58,6 @@ external_dns_extra_records:
     records:
       - value: "\"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDRMLOGRaOJpGlN1OrFltJYMSSvtFsW8Y+51FA83ZDOnb/IPyEkfQyJi99ZdkBZLuOP2SafkA8NP+4W2RRK8tcgIIlro8g5EqZFr3amHCx8rDaUW/JPe9tkerUsYWbBZqdkbqPD/cehABPWxWbd8qi5KV+aNfk1ZKDmUwCfnw0PNQIDAQAB\""
 
-  # Bluesky verification
-  - zone: omelette.gay
-    name: _atproto.dizzy
-    type: TXT
-    records:
-      - value: "\"did=did:plc:mzojqfcqta5qv3mqunoxojcg\""
-  - zone: omelette.gay
-    name: _atproto.emily
-    type: TXT
-    records:
-      - value: "\"did=did:plc:jeobzen65n6ugbzawbvrunxu\""
-
 factorio_servers:
   - server_id: girlsclub
     dns:
