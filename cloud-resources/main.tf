@@ -9,6 +9,24 @@ terraform {
     bucket = "coven-tfstate"
     prefix = "terraform/state"
   }
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "7.8.0"
+    }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "5.3.0"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = "0.13.1"
+    }
+    hcloud = {
+      source  = "hetznercloud/hcloud"
+      version = "1.60.0"
+    }
+  }
 }
 
 provider "google" {
@@ -20,4 +38,13 @@ provider "google" {
 
 provider "vault" {
   address = "https://vault.coven.omelette.gay"
+}
+
+ephemeral "vault_kv_secret_v2" "hetzner" {
+  mount = "secret"
+  name  = "gitops/hetzner"
+}
+
+provider "hcloud" {
+  token = ephemeral.vault_kv_secret_v2.hetzner.data["api_token"]
 }
