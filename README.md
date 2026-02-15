@@ -69,7 +69,6 @@ to specify the inventory as `vagrant-inventory`. Following this, you can specify
     ./login.sh --local
     ansible-playbook -i vagrant-inventory playbook.yml
 
-
 # How To
 
 ## Restarting Vault after a deploy

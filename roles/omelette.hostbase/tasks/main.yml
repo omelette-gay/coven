@@ -1,0 +1,8 @@
+---
+- name: configure hostname
+  hostname:
+    name: "{{ hostname }}"
+
+- name: set timezone
+  community.general.timezone:
+    name: "{{ host_timezone }}"
