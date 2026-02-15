@@ -40,11 +40,11 @@ provider "vault" {
   address = "https://vault.coven.omelette.gay"
 }
 
-data "vault_kv_secret_v2" "hetzner" {
+ephemeral "vault_kv_secret_v2" "hetzner" {
   mount = "secret"
   name  = "gitops/hetzner"
 }
 
 provider "hcloud" {
-  token = data.vault_kv_secret_v2.hetzner.data["api_token"]
+  token = ephemeral.vault_kv_secret_v2.hetzner.data["api_token"]
 }
