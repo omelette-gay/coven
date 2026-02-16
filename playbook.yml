@@ -2,7 +2,7 @@
 # this block defines roles which get run against the host machines which form part of our k8s cluster
 - hosts: all
   roles:
-    - omelette.hostname
+    - omelette.hostbase
     - omelette.auto-updates
     - omelette.ssh-users
     - role: xanmanning.k3s
