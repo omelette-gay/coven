@@ -19,7 +19,7 @@
         allowVolumeCreationWithDegradedAvailability: "{{ longhorn_allow_single_replicas }}"
       metrics:
         serviceMonitor:
-          enabled: true
+          enabled: "{% if bootstrap_keycloak|default(false) == false %}true{% else %}{{ omit }}{% endif %}"
 
       # work around hotfix https://longhorn.io/docs/1.11.0/important-notes/#longhorn-manager-image
       preUpgradeChecker:
