@@ -134,4 +134,12 @@ k8s_github_deployment_roles:
         k8s_service_account_name: virtualflightonlinetransmitter-secrets
         vault_role_name: virtualflightonlinetransmitter-secrets
 
+decommissioned_domains:
+  - name: cjn-me-uk
+    domain: cjn.me.uk
+    redirect_target: https://chrisn.xyz/
+  - name: www-cjn-me-uk
+    domain: www.cjn.me.uk
+    redirect_target: https://chrisn.xyz/
+
 planka_hostname: boards.omelette.gay
