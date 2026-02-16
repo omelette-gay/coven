@@ -70,5 +70,6 @@
     - omelette.secrets
     - omelette.external-dns
     - omelette.apps
+    - omelette.decommissioned-domains
     - omelette.factorio
     - omelette.planka
