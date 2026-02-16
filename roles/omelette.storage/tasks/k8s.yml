@@ -9,6 +9,7 @@
     release_values:
       defaultSettings:
         concurrentAutomaticEngineUpgradePerNodeLimit: "3"
+        storageOverProvisioningPercentage: "{{ longhorn_over_provision_percentage }}"
       defaultBackupStore:
         backupTarget: "s3://{{ gcp_backup_bucket_name }}@europe-west2/"
         backupTargetCredentialSecret: "{{ longhorn_k8s_backup_creds_secret }}"
@@ -17,8 +18,6 @@
         defaultClassReplicaCount: "{{ longhorn_default_replica_count }}"
         defaultDataLocality: best-effort
         allowVolumeCreationWithDegradedAvailability: "{{ longhorn_allow_single_replicas }}"
-      csi:
-        storageOverProvisioningPercentage: "{{ longhorn_over_provision_percentage }}"
       metrics:
         serviceMonitor:
           enabled: "{% if bootstrap_keycloak|default(false) == false %}true{% else %}{{ omit }}{% endif %}"
@@ -27,11 +26,12 @@
       preUpgradeChecker:
         upgradeVersionCheck: false
       image:
-        csi:
+        longhorn:
           instanceManager:
             tag: v1.11.0-hotfix-1
           manager:
             tag: v1.11.0-hotfix-1
+    wait: true
 
 - name: make Longhorn the default storage class
   kubernetes.core.k8s_json_patch:

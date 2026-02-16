@@ -49,3 +49,4 @@
         - name: var-log-journal
           mountPath: /var/log/journal
           readOnly: true
+    wait: true

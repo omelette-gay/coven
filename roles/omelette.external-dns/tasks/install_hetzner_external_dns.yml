@@ -23,6 +23,7 @@
         enabled: true
 
       txtOwnerId: "{{ cluster_domain }}"
+    wait: true
   notify: restart Grafana
 
 - name: create secret from Vault with Hetzner API key
