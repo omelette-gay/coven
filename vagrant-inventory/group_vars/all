@@ -13,6 +13,8 @@ cluster_domain: coven.local
 
 certmanager_default_issuer: vault
 
+longhorn_over_provision_percentage: 200
+
 k8s_hostaliases:
   - ip: 192.168.57.100
     hostnames:

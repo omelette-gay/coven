@@ -17,6 +17,8 @@
         defaultClassReplicaCount: "{{ longhorn_default_replica_count }}"
         defaultDataLocality: best-effort
         allowVolumeCreationWithDegradedAvailability: "{{ longhorn_allow_single_replicas }}"
+      csi:
+        storageOverProvisioningPercentage: "{{ longhorn_over_provision_percentage }}"
       metrics:
         serviceMonitor:
           enabled: "{% if bootstrap_keycloak|default(false) == false %}true{% else %}{{ omit }}{% endif %}"
