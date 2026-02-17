@@ -5,6 +5,21 @@
     api_version: v1
   when: decommissioned_domains|length > 0
 
+- name: create noop service for storing decommissioned domain redirects
+  kubernetes.core.k8s:
+    name: noop
+    namespace: "{{ decommissioned_domains_k8s_namespace }}"
+    kind: Service
+    api_version: v1
+    definition:
+      spec:
+        ports:
+          - name: http
+            port: 80
+            targetPort: 80
+            protocol: TCP
+  when: decommissioned_domains|length > 0
+
 - name: create redirect and cert for decommissioned domain
   include_tasks: create_decommissioned_domain.yml
   loop: "{{ decommissioned_domains }}"

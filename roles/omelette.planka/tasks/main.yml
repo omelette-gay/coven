@@ -125,7 +125,7 @@
         enabled: true
         annotations:
           traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd
-          cert-manager.io/cluster-issuer: letsencrypt
+          cert-manager.io/cluster-issuer: "{{ certmanager_default_issuer }}"
         hosts:
           - host: "{{ planka_hostname }}"
             paths:

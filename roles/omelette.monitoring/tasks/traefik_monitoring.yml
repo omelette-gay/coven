@@ -10,6 +10,7 @@
           additionalArguments:
             - "--api.dashboard=true"
             - "--api.insecure=true"
+            - "--providers.kubernetesingress.allowemptyservices=true"
           
           experimental:
             plugins:
