@@ -11,6 +11,7 @@
         podMonitorEnabled: true
         grafanaDashboard:
           create: true
+    wait: true
 
 - name: install barman-cloud plugin for cnpg backups
   kubernetes.core.helm:
@@ -19,6 +20,7 @@
     chart_repo_url: "{{ lookup('helm_chart', 'plugin-barman-cloud').repository }}"
     chart_version: "{{ lookup('helm_chart', 'plugin-barman-cloud').version }}"
     release_namespace: "{{ cnpg_k8s_namespace }}"
+    wait: true
 
 - name: sync GCP backup service account secret
   include_role:

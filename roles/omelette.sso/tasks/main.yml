@@ -16,6 +16,7 @@
         monitoring:
           enabled:
             true
+    wait: true
 
 - name: block Keycloak metrics endpoint from web
   kubernetes.core.k8s:

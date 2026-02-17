@@ -64,8 +64,8 @@
   roles:
     - omelette.storage
     - omelette.monitoring
-    - omelette.postgres
     - omelette.cert-manager
+    - omelette.postgres
     - omelette.sso
     - omelette.secrets
     - omelette.external-dns

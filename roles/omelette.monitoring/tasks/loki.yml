@@ -103,6 +103,7 @@
         replicas: 0
       bloomGateway:
         replicas: 0
+    wait: true
   notify: restart Grafana
 
 - name: install Loki data source
