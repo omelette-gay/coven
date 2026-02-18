@@ -1,0 +1,5 @@
+decommissioned_domains_k8s_namespace: decommissioned-domains
+decommissioned_domains: []
+# - name: example-com
+#   domain: example.com
+#   redirect_target: https://www.foobar.com/

@@ -34,3 +34,8 @@ factorio_servers:
         description: Just doing test things
       serverPassword:
         passwordSecret: "game-password"
+
+decommissioned_domains:
+ - name: test-domain
+   domain: decommissioned.coven.local
+   redirect_target: https://chrisn.xyz/
