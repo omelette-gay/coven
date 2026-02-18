@@ -28,7 +28,7 @@
 
         # enable retention
         limits_config:
-          retention_period: 1y
+          retention_period: 12w
         compactor:
           working_directory: /var/loki/data/retention
           compaction_interval: 10m
