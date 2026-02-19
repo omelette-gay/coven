@@ -13,9 +13,7 @@ ssh_users:
   github:
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGdbUfsB3EIhdi8hhXIK/UbQFIl69WO7Vud1OHdP0ID6 chris@prism
 
-smtp_relay:
-  host: asuka.pling.org.uk
-  port: 587
+smtp_dns_zone: omelette.gay
 
 # get real TLS certificates from Let's Encrypt
 certmanager_acme_server: https://acme-v02.api.letsencrypt.org/directory
@@ -45,18 +43,6 @@ external_dns_extra_records:
     type: AAAA
     records:
       - value: "2a02:8011:d017:dba5::1"
-
-  # trust asuka.pling.org.uk to send mail
-  - zone: omelette.gay
-    name: coven
-    type: TXT
-    records:
-      - value: "\"v=spf1 a ip4:109.74.194.110/32 ip6:2a01:7e00::f03c:91ff:fe26:1540/128 -all\""
-  - zone: omelette.gay
-    name: opendkim._domainkey.coven
-    type: TXT
-    records:
-      - value: "\"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDRMLOGRaOJpGlN1OrFltJYMSSvtFsW8Y+51FA83ZDOnb/IPyEkfQyJi99ZdkBZLuOP2SafkA8NP+4W2RRK8tcgIIlro8g5EqZFr3amHCx8rDaUW/JPe9tkerUsYWbBZqdkbqPD/cehABPWxWbd8qi5KV+aNfk1ZKDmUwCfnw0PNQIDAQAB\""
 
 factorio_servers:
   - server_id: girlsclub

@@ -20,10 +20,6 @@ k8s_hostaliases:
     hostnames:
       - "{{ keycloak_host }}"
 
-smtp_relay:
-  host: asuka.pling.org.uk
-  port: 587
-
 factorio_servers:
   - server_id: testlab
     config:
