@@ -146,7 +146,7 @@
               sourceLabels: [ __name__ ]
 
       kubeControllerManager:
-        endpoints: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+        endpoints: "{{ groups['all'] | map('extract', hostvars, ['ansible_facts', 'default_ipv4', 'address']) }}"
         serviceMonitor:
           https: true
           insecureSkipVerify: true
@@ -167,7 +167,7 @@
       # whilst we are single node, there is no etcd, so we skip this part - but it is defined upstream
 
       kubeScheduler:
-        endpoints: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+        endpoints: "{{ groups['all'] | map('extract', hostvars, ['ansible_facts', 'default_ipv4', 'address']) }}"
         serviceMonitor:
           https: true
           insecureSkipVerify: true
@@ -186,7 +186,7 @@
               sourceLabels: [ __name__ ]
 
       kubeProxy:
-        endpoints: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+        endpoints: "{{ groups['all'] | map('extract', hostvars, ['ansible_facts', 'default_ipv4', 'address']) }}"
         service:
           selector:
             k8s-app: kube-proxy

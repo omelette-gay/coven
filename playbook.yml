@@ -69,6 +69,7 @@
     - omelette.sso
     - omelette.secrets
     - omelette.external-dns
+    - omelette.outbound-mail
     - omelette.apps
     - omelette.decommissioned-domains
     - omelette.factorio
