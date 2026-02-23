@@ -34,9 +34,7 @@
     verify: "{{ kubeconfig_require_secure|default(true) }}"
     name: "{{ vault_pki_cluster_issuer_name }}"
     config:
-      allowed_domains:
-        - "{{ cluster_domain }}"
-      allow_subdomains: true
+      allow_any_name: true
       require_cn: false
       max_ttl: 8760h
 
