@@ -133,6 +133,10 @@ k8s_github_deployment_roles:
     k8s_namespace: pling-org-uk
     role_name: what-if-proportional-representation
 
+  - github_repo: cnorthwood/ubi-calculator
+    k8s_namespace: pling-org-uk
+    role_name: ubi-calculator
+
   - github_repo: cnorthwood/moretobooks
     k8s_namespace: moretobooks
     role_name: moretobooks
