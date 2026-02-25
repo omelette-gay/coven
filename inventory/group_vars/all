@@ -44,6 +44,17 @@ external_dns_extra_records:
     records:
       - value: "2a02:8011:d017:dba5::1"
 
+  - zone: pling.org.uk
+    name: asuka
+    type: A
+    records:
+      - value: "109.74.194.110"
+  - zone: pling.org.uk
+    name: asuka
+    type: AAAA
+    records:
+      - value: "2a01:7e00::f03c:91ff:fe26:1540"
+
 factorio_servers:
   - server_id: girlsclub
     dns:
