@@ -70,6 +70,7 @@
     - omelette.secrets
     - omelette.external-dns
     - omelette.outbound-mail
+    - omelette.mariadb
     - omelette.apps
     - omelette.decommissioned-domains
     - omelette.factorio
