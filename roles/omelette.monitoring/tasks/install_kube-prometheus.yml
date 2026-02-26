@@ -861,6 +861,16 @@
                   labels:
                     issue: Longhorn node {{ "{{" }}$labels.node{{ "}}" }} experiences high CPU pressure.
                     severity: warning
+            - name: backups
+              rules:
+                - alert: LonghornNoRecentBackups
+                  annotations:
+                    description: k8s volume {{ "{{" }}$labels.pvc{{ "}}" }} in namespace {{ "{{" }}$labels.pvc_namespace{{ "}}" }} last had a successful backup {{ "{{" }}printf "%.0f" $value/3600{{ "}}" }} hours ago (it should be backed up twice daily).
+                    summary: k8s volume {{ "{{" }}$labels.pvc{{ "}}" }} in namespace {{ "{{" }}$labels.pvc_namespace{{ "}}" }} has not had a backup for greater than 24 hours.
+                  expr: (time() - longhorn_volume_last_backup_at) > 86400 and (longhorn_volume_last_backup_at > 0)
+                  for: 5m
+                  labels:
+                    severity: error
 
         # https://monitoring.mixins.dev/mysql/
         mariadb:
