@@ -139,6 +139,12 @@ k8s_github_deployment_roles:
   - github_repo: cnorthwood/whereisthenorthreally
     k8s_namespace: pling-org-uk
     role_name: whereisthenorthreally
+    vault_secrets:
+      - vault_secret_name: backups/service-account-creds
+        k8s_secret_name: whereisthenorthreally-gcp-backups
+        k8s_namespace: pling-org-uk
+        k8s_service_account_name: whereisthenorthreally-gcp-backups
+        vault_role_name: whereisthenorthreally-gcp-backups
 
   - github_repo: cnorthwood/what-if-proportional-representation
     k8s_namespace: pling-org-uk
@@ -178,6 +184,11 @@ k8s_github_deployment_roles:
         k8s_namespace: chrisn-xyz
         k8s_service_account_name: chrisn-xyz-wordpress-secrets
         vault_role_name: chrisn-xyz-wordpress-secrets
+      - vault_secret_name: backups/service-account-creds
+        k8s_secret_name: gcp-backups
+        k8s_namespace: chrisn-xyz
+        k8s_service_account_name: chrisn-xyz-gcp-backups
+        vault_role_name: chrisn-xyz-gcp-backups
 
 decommissioned_domains:
   - name: cjn-me-uk
