@@ -1,5 +1,6 @@
 ---
 cluster_domain: coven.omelette.gay
+cluster_dns_zone: omelette.gay
 
 ssh_users:
   chris:
@@ -12,8 +13,6 @@ ssh_users:
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHopifMoKllYjab5QiiY8f4eSuTLFY+usjUqZ/nHgqUi megc@Megs-PC
   github:
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGdbUfsB3EIhdi8hhXIK/UbQFIl69WO7Vud1OHdP0ID6 chris@prism
-
-smtp_dns_zone: omelette.gay
 
 # get real TLS certificates from Let's Encrypt
 certmanager_acme_server: https://acme-v02.api.letsencrypt.org/directory
