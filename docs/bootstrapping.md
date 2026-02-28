@@ -9,7 +9,7 @@ might be.
 When first deploying the SSO configuration, you will need to specify the initial user for Keycloak
 on the command line and enable the bootstrapping flag:
 
-    ansible-playbook -i INSERT-INVENTORY -e 'bootstrap_keycloak=true keycloak_username=USERNAME keycloak_password=PASSWORD' playbook.yml
+    ansible-playbook -i INSERT-INVENTORY -e 'bootstrap=true keycloak_username=USERNAME keycloak_password=PASSWORD' playbook.yml
 
 You will now be able to go to Keycloak and log in using that username and password. You should change
 this password after bootstrapping as it is stored in plaintext in the config for Keycloak.

@@ -33,7 +33,7 @@
       k8s_namespace: "{{ cnpg_k8s_namespace }}"
       k8s_service_account_name: "cnpg-gcp-backup-creds"
       vault_role_name: "cnpg-gcp-backup-creds"
-  when: bootstrap_keycloak|default(false) == false
+  when: bootstrap|default(false) == false
 
 - name: configure backup object store
   kubernetes.core.k8s:
