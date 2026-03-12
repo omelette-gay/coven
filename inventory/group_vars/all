@@ -1,5 +1,6 @@
 ---
 cluster_domain: coven.omelette.gay
+cluster_dns_zone: omelette.gay
 
 ssh_users:
   chris:
@@ -12,13 +13,11 @@ ssh_users:
   github:
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGdbUfsB3EIhdi8hhXIK/UbQFIl69WO7Vud1OHdP0ID6 chris@prism
 
-smtp_dns_zone: omelette.gay
-
 # get real TLS certificates from Let's Encrypt
 certmanager_acme_server: https://acme-v02.api.letsencrypt.org/directory
 
 # read Discord webhook from Vault when not bootstrapping
-grafana_discord_webhook_url: "{% if not bootstrap_keycloak|default(false) %}{{ lookup('hashivault', 'gitops/grafana-discord-notifier', 'webhook_url', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
+grafana_discord_webhook_url: "{% if not bootstrap|default(false) %}{{ lookup('hashivault', 'gitops/grafana-discord-notifier', 'webhook_url', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
 
 external_dns_extra_records:
   # machine hostnames

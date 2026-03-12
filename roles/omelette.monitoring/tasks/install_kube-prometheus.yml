@@ -1,6 +1,6 @@
 - name: Set up SSO
   include_tasks: configure_grafana_sso.yml
-  when: bootstrap_keycloak|default(false) == false
+  when: bootstrap|default(false) == false
 
 - name: install kube-prometheus
   kubernetes.core.helm:

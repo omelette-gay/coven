@@ -49,8 +49,8 @@
 - name: publish DKIM records
   hetzner.hcloud.zone_rrset:
     api_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_token', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
-    zone: "{{ smtp_dns_zone }}"
-    name: "mail._domainkey.{{ cluster_domain.removesuffix(smtp_dns_zone).removesuffix('.') }}"
+    zone: "{{ cluster_dns_zone }}"
+    name: "mail._domainkey.{{ cluster_domain.removesuffix(cluster_dns_zone).removesuffix('.') }}"
     type: TXT
     records:
       - value: "{{ ('v=DKIM1; k=rsa; p=' + (lookup('hashivault', outbound_mail_dkim_secret_name, cluster_domain + '.private', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) | community.crypto.openssl_privatekey_info).public_key.replace('\n', '').removeprefix('-----BEGIN PUBLIC KEY-----').removesuffix('-----END PUBLIC KEY-----')) | hetzner.hcloud.txt_record }}"
@@ -59,8 +59,8 @@
 - name: publish SPF records
   hetzner.hcloud.zone_rrset:
     api_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_token', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
-    zone: "{{ smtp_dns_zone }}"
-    name: "{{ cluster_domain.removesuffix(smtp_dns_zone).removesuffix('.') }}"
+    zone: "{{ cluster_dns_zone }}"
+    name: "{{ cluster_domain.removesuffix(cluster_dns_zone).removesuffix('.') }}"
     type: TXT
     records:
       - value: "{{ ('v=spf1 ip4:' + (groups['all'] | map('extract', hostvars, ['ansible_facts', 'default_ipv4', 'address'])) | join(' ip4:') + ' ~all') | hetzner.hcloud.txt_record }}"
@@ -69,8 +69,8 @@
 - name: publish DMARC records
   hetzner.hcloud.zone_rrset:
     api_token: "{{ lookup('hashivault', external_dns_hetzner_vault_secret_name, 'api_token', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
-    zone: "{{ smtp_dns_zone }}"
-    name: "_dmarc.{{ cluster_domain.removesuffix(smtp_dns_zone).removesuffix('.') }}"
+    zone: "{{ cluster_dns_zone }}"
+    name: "_dmarc.{{ cluster_domain.removesuffix(cluster_dns_zone).removesuffix('.') }}"
     type: TXT
     records:
       - value: "{{ 'v=DMARC1; p=quarantine' | hetzner.hcloud.txt_record }}"

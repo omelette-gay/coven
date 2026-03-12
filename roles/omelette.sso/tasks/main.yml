@@ -51,7 +51,7 @@
             -Djgroups.dns.query=keycloak-keycloakx-headless
         - name: KC_PROXY
           value: "edge"
-        {% if bootstrap_keycloak|default(false) %}
+        {% if bootstrap|default(false) %}
         - name: KEYCLOAK_ADMIN
           value: "{{ keycloak_username }}"
         - name: KEYCLOAK_ADMIN_PASSWORD
