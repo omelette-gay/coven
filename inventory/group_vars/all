@@ -180,6 +180,12 @@ k8s_github_deployment_roles:
   - github_repo: cnorthwood/campaign-bible
     k8s_namespace: libdems
     role_name: campaign-bible
+    vault_secrets:
+      - vault_secret_name: libdems/campaign-bible
+        k8s_secret_name: campaign-bible-basic-auth
+        k8s_namespace: libdems
+        k8s_service_account_name: campaign-bible-basic-auth
+        vault_role_name: campaign-bible-basic-auth
     ghcr_credentials_secret: ghcr-credentials
 
 decommissioned_domains:
