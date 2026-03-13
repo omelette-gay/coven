@@ -177,6 +177,11 @@ k8s_github_deployment_roles:
         k8s_service_account_name: chrisn-xyz-gcp-backups
         vault_role_name: chrisn-xyz-gcp-backups
 
+  - github_repo: cnorthwood/campaign-bible
+    k8s_namespace: libdems
+    role_name: campaign-bible
+    ghcr_credentials_secret: ghcr-credentials
+
 decommissioned_domains:
   - name: cjn-me-uk
     domain: cjn.me.uk
