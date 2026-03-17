@@ -21,16 +21,6 @@
       metrics:
         serviceMonitor:
           enabled: "{% if bootstrap|default(false) == false %}true{% else %}{{ omit }}{% endif %}"
-
-      # work around hotfix https://longhorn.io/docs/1.11.0/important-notes/#longhorn-manager-image
-      preUpgradeChecker:
-        upgradeVersionCheck: false
-      image:
-        longhorn:
-          instanceManager:
-            tag: v1.11.0-hotfix-1
-          manager:
-            tag: v1.11.0-hotfix-1
     wait: true
 
 - name: make Longhorn the default storage class
