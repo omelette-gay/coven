@@ -21,3 +21,13 @@ updates:
     directory: "cloud-resources/"
     schedule:
       interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      regular-updates:
+        update-types:
+          - 'minor'
+          - 'patch'
