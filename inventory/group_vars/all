@@ -188,6 +188,16 @@ k8s_github_deployment_roles:
         vault_role_name: campaign-bible-basic-auth
     ghcr_credentials_secret: ghcr-credentials
 
+  - github_repo: omelette-gay/luna-multiplayer-helm-chart
+    k8s_namespace: luna-multiplayer
+    role_name: luna-multiplayer
+    vault_secrets:
+      - vault_secret_name: luna-multiplayer/girlsclub
+        k8s_secret_name: girlsclub-config
+        k8s_namespace: luna-multiplayer
+        k8s_service_account_name: luna-multiplayer-girlsclub-config
+        vault_role_name: luna-multiplayer-girlsclub-config
+
 decommissioned_domains:
   - name: cjn-me-uk
     domain: cjn.me.uk
