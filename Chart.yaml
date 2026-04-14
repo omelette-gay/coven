@@ -47,7 +47,7 @@ dependencies:
     version: 26.3.0
     repository: https://helm.mariadb.com/mariadb-operator
   - name: plugin-barman-cloud
-    version: 0.5.0
+    version: 0.6.0
     repository: https://cloudnative-pg.github.io/charts
   - name: prometheus-blackbox-exporter
     version: 11.9.1
