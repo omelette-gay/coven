@@ -52,6 +52,8 @@
       # Enable minio for storage
       minio:
         enabled: true
+        persistence:
+          size: "{{ loki_storage_size }}"
 
       # deploy only a single instance
       deploymentMode: SingleBinary
