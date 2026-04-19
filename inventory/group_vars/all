@@ -207,3 +207,6 @@ decommissioned_domains:
     redirect_target: https://chrisn.xyz/
 
 planka_hostname: boards.omelette.gay
+
+# increase storage for logs in prod
+loki_storage_size: 12Gi
