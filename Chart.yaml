@@ -58,6 +58,9 @@ dependencies:
   - name: planka
     version: 1.1.2
     repository: http://plankanban.github.io/planka/
+  - name: strimzi-kafka-operator
+    version: 0.51.0
+    repository: https://strimzi.io/charts/
   - name: vault
     version: 0.31.0
     repository: https://helm.releases.hashicorp.com/
