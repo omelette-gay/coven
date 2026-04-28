@@ -17,7 +17,7 @@ dependencies:
     version: 1.20.0
     repository: https://kubernetes-sigs.github.io/external-dns/
   - name: external-secrets
-    version: 2.3.0
+    version: 2.4.0
     repository: https://charts.external-secrets.io/
   - name: factorio-server-charts
     version: 2.5.2
