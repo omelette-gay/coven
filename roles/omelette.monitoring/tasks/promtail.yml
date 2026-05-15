@@ -11,6 +11,11 @@
       serviceMonitor:
         enabled: true
 
+      # enable workaround for crash when too many files
+      initContainer:
+        enabled: true
+        fsInotifyMaxUserInstances: 512
+
       # collect systemd from host
       config:
         snippets:
@@ -49,4 +54,5 @@
         - name: var-log-journal
           mountPath: /var/log/journal
           readOnly: true
+
     wait: true
