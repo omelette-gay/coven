@@ -13,8 +13,16 @@
 
       # enable workaround for crash when too many files
       initContainer:
-        enabled: true
-        fsInotifyMaxUserInstances: 512
+        - name: init-sysctl
+          image: busybox:1.33
+          command:
+            - sh
+            - -c
+            - |
+              sysctl -w fs.inotify.max_user_instances=512
+              sysctl -w fs.inotify.max_user_watches=524288
+          securityContext:
+            privileged: true
 
       # collect systemd from host
       config:
