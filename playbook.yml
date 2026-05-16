@@ -71,6 +71,7 @@
     - omelette.external-dns
     - omelette.outbound-mail
     - omelette.mariadb
+    - omelette.kafka
     - omelette.apps
     - omelette.decommissioned-domains
     - omelette.factorio
