@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: login to Vault
-        uses: hashicorp/vault-action@v3
+        uses: hashicorp/vault-action@v4
         with:
           url: https://vault.coven.omelette.gay
           method: jwt
