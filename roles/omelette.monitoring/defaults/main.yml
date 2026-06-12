@@ -5,3 +5,4 @@ grafana_keycloak_admin_role: grafana-admin
 traefik_blockpath_plugin_verson: v0.2.1
 
 loki_storage_size: "5Gi"
+loki_chunks_cache_memory: 4096
