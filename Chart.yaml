@@ -4,6 +4,9 @@ version: 0.0.1
 description: This is not a real Helm chart - it only exists so Dependabot can update it, the versions are then read by Ansible to make sure the versions we're deploying are stable.
 type: application
 dependencies:
+  - name: alloy
+    version: 1.10.0
+    repository: https://grafana.github.io/helm-charts
   - name: cert-manager
     version: 1.20.2
     repository: https://charts.jetstack.io/
@@ -52,9 +55,6 @@ dependencies:
   - name: prometheus-blackbox-exporter
     version: 11.11.0
     repository: https://prometheus-community.github.io/helm-charts/
-  - name: promtail
-    version: 6.17.1
-    repository: https://grafana.github.io/helm-charts/
   - name: planka
     version: 1.1.2
     repository: http://plankanban.github.io/planka/
