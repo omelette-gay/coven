@@ -81,6 +81,8 @@
                 command: [ "/bin/sh", "-c" ]
                 args:
                   - |
+                    set -e
+                    
                     mc alias set {{ object_store.name }} http://{{ object_store.name }}-rustfs-svc.{{ object_store.namespace }}.svc.cluster.local:9000 $ACCESS_KEY $SECRET_KEY;
                     
                     mc mb {{ object_store.name }}/{{ bucket }} --ignore-existing;
