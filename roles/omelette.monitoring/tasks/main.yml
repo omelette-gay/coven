@@ -12,5 +12,5 @@
   include_tasks: loki.yml
   when: bootstrap|default(false) == false # we can only do this once we've at least bootstrapped our secrets system
 
-- name: install promtail
-  include_tasks: promtail.yml
+- name: install alloy
+  include_tasks: alloy.yml
