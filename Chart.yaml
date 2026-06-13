@@ -32,7 +32,7 @@ dependencies:
     version: 86.2.0
     repository: https://prometheus-community.github.io/helm-charts/
   - name: loki
-    version: 16.0.0
+    version: 17.2.0
     repository: https://grafana-community.github.io/helm-charts/
   - name: longhorn
     version: 1.12.0
