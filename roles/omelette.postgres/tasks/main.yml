@@ -12,6 +12,7 @@
         grafanaDashboard:
           create: true
     wait: true
+  notify: restart Grafana
 
 - name: install barman-cloud plugin for cnpg backups
   kubernetes.core.helm:

@@ -1,3 +1,17 @@
+- name: create object store for Loki
+  include_role:
+    name: omelette.storage
+    tasks_from: create_object_store
+  vars:
+    object_store:
+      name: loki
+      namespace: monitoring
+      size: "{{ loki_storage_size }}"
+      buckets:
+        - loki-chunks
+        - loki-ruler
+        - loki-admin
+
 - name: install Loki
   kubernetes.core.helm:
     name: loki
@@ -5,8 +19,13 @@
     chart_repo_url: "{{ lookup('helm_chart', 'loki').repository }}"
     chart_version: "{{ lookup('helm_chart', 'loki').version }}"
     release_namespace: monitoring
-    create_namespace: true
     release_values:
+      global:
+       # ensure the credentials for Rustfs are imported
+        extraEnvFrom:
+          - secretRef:
+              name: loki-object-store-credentials
+
       loki:
         # define database versions (if new ones come out, they can be specified with an epoch here)
         schemaConfig:
@@ -18,6 +37,20 @@
               index:
                 prefix: loki_index_
                 period: 24h
+
+        # use rustfs for storage
+        storage:
+          type: s3
+          bucketNames:
+            chunks: loki-chunks
+            ruler: loki-ruler
+            admin: loki-admin
+          s3:
+            endpoint: http://loki-rustfs-svc.monitoring.svc.cluster.local:9000
+            accessKeyId: ${RUSTFS_ACCESS_KEY}
+            secretAccessKey: ${RUSTFS_SECRET_KEY}
+            s3ForcePathStyle: true
+            insecure: true
 
         # trust all connections inside the cluster
         auth_enabled: false
@@ -36,6 +69,11 @@
           retention_delete_delay: 2h
           retention_delete_worker_count: 100
           delete_request_store: s3
+
+      chunksCache:
+        allocatedMemory: "{{ loki_chunks_cache_memory }}"
+        allocatedCPU: 50m # this is set very low because we're currently only a single node cluster
+
       memberlist:
         service:
           publishNotReadyAddresses: true
@@ -48,12 +86,6 @@
           enabled: true
         serviceMonitor:
           enabled: true
-
-      # Enable minio for storage
-      minio:
-        enabled: true
-        persistence:
-          size: "{{ loki_storage_size }}"
 
       # deploy only a single instance
       deploymentMode: SingleBinary

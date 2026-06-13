@@ -15,23 +15,25 @@ certmanager_default_issuer: vault
 
 longhorn_over_provision_percentage: 200
 
+loki_chunks_cache_memory: 1024
+
 k8s_hostaliases:
   - ip: 192.168.57.100
     hostnames:
       - "{{ keycloak_host }}"
 
-factorio_servers:
-  - server_id: testlab
-    config:
-      factorioServer:
-        enable_space_age: false
-      server_settings:
-        name: Test Lab
-        description: Just doing test things
-      serverPassword:
-        passwordSecret: "game-password"
+factorio_servers: []
+#  - server_id: testlab
+#    config:
+#      factorioServer:
+#        enable_space_age: false
+#      server_settings:
+#        name: Test Lab
+#        description: Just doing test things
+#      serverPassword:
+#        passwordSecret: "game-password"
 
-decommissioned_domains:
- - name: test-domain
-   domain: decommissioned.coven.local
-   redirect_target: https://chrisn.xyz/
+decommissioned_domains: []
+# - name: test-domain
+#   domain: decommissioned.coven.local
+#   redirect_target: https://chrisn.xyz/
