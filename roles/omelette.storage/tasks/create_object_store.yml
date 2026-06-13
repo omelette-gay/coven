@@ -13,8 +13,8 @@
     verify: "{{ kubeconfig_require_secure|default(true) }}"
     secret: "object-store/{{ object_store.name }}"
     data:
-      RUSTFS_ACCESS_KEY: "{{ lookup('community.general.random_string', length=32) }}"
-      RUSTFS_SECRET_KEY: "{{ lookup('community.general.random_string', length=32) }}"
+      RUSTFS_ACCESS_KEY: "{{ lookup('community.general.random_string', length=32, special=False) }}"
+      RUSTFS_SECRET_KEY: "{{ lookup('community.general.random_string', length=32, special=False) }}"
   when: object_store_credentials.failed
 
 - name: create secret from Vault for object store credentials
@@ -49,6 +49,9 @@
         enabled: false
       secret:
         existingSecret: "{{ object_store.name }}-object-store-credentials"
+      config:
+        rustfs:
+          log_level: warn
     wait: true
 
 - name: create required buckets
