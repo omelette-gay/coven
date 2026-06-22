@@ -62,7 +62,7 @@ dependencies:
     version: 0.8.0
     repository: https://charts.rustfs.com
   - name: strimzi-kafka-operator
-    version: 1.0.0
+    version: 1.0.1
     repository: https://strimzi.io/charts/
   - name: vault
     version: 0.31.0
