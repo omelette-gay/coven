@@ -16,7 +16,7 @@ jobs:
       group: coven-deploy
     steps:
       - name: checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: login to Vault
         uses: hashicorp/vault-action@v4
