@@ -198,6 +198,18 @@ k8s_github_deployment_roles:
         k8s_service_account_name: luna-multiplayer-girlsclub-config
         vault_role_name: luna-multiplayer-girlsclub-config
 
+  - github_repo: omelette-gay/home-assistant
+    k8s_namespace: home-assistant
+    role_name: home-assistant
+    ghcr_credentials_secret: ghcr-credentials
+    keycloak_client_id: home-assistant
+    keycloak_redirect_uris:
+      - https://home.gs.omelette.gay/auth/oidc/callback
+    keycloak_client_roles:
+      - admin
+      - resident
+    keycloak_k8s_secret: home-assistant-sso-secrets
+
 decommissioned_domains:
   - name: cjn-me-uk
     domain: cjn.me.uk

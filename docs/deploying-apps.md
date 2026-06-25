@@ -31,6 +31,8 @@ k8s_github_deployment_roles:
         k8s_service_account_name: example-app-secrets # this is the name of the k8s service account that will be created that will be granted access to Vault
         vault_role_name: example-app-secrets          # this is the name of the role within Vault that can read the secret and the k8s service account will be granted access to
     keycloak_client_id: example-app                   # this is optional, and if specified, will create a client within Keycloak that this app can use to authenticate users
+    keycloak_client_roles:                            # this is optional, and if specified, will create roles within that client that users can be mapped to
+      - admin
     keycloak_redirect_uris:                           # this is required if the keycloak_client_id is set and is the list of redirect URIs that Keycloak will accept for this app
       - https://example.omelette.gay/oidc/callback/
     keycloak_k8s_secret: sso-secrets                  # this is required if the keycloak_client_id is set and is the name of the secret that will be created in k8s containing the OIDC configuration for Keycloak. The secret will have the following keys corresponding to the relevant OIDC config settings for our Keycloak: clientId, clientSecret, authorizationEndpoint, tokenEndpoint, userEndpoint, jwksEndpoint
