@@ -3,4 +3,7 @@ hostname: strix.xdc.omelette.gay
 ansible_ssh_host: strix.xdc.omelette.gay
 k3s_agent:
   node-label:
+    # this means that only strix will have load balancers created on it - which means that all external traffic will
+    # come through strix and there's no risk of accidentally having the only external IP of something be the internal
+    # IP of one of the nodes
     - svccontroller.k3s.cattle.io/enablelb=true
