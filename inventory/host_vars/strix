@@ -1,3 +1,6 @@
 ---
 hostname: strix.xdc.omelette.gay
 ansible_ssh_host: strix.xdc.omelette.gay
+k3s_agent:
+  node-label:
+    - svccontroller.k3s.cattle.io/enablelb=true
