@@ -1,0 +1,11 @@
+- name: create interface config file
+  template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    mode: '0600'
+
+- name: enable wireguard interface
+  systemd_service:
+    name: wg-quick@wg0
+    state: started
+    enabled: true

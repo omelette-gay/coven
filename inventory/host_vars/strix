@@ -1,3 +1,13 @@
 ---
 hostname: strix.xdc.omelette.gay
 ansible_ssh_host: strix.xdc.omelette.gay
+k3s_agent:
+  node-label:
+    # this means that only strix will have load balancers created on it - which means that all external traffic will
+    # come through strix and there's no risk of accidentally having the only external IP of something be the internal
+    # IP of one of the nodes
+    - svccontroller.k3s.cattle.io/enablelb=true
+
+wireguard_private_key: "{% if not bootstrap|default(false) %}{{ lookup('hashivault', 'wireguard/strix', 'private_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
+wireguard_ipv4_interface: 192.168.178.203/24
+wireguard_ipv6_interface: fd1e:6349:c40a::203/64

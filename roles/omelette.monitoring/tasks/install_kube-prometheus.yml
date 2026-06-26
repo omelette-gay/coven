@@ -14,7 +14,7 @@
       crds:
         upgradeJob:
           enabled: true
-          forceConflicts: false
+          forceConflicts: true # required so for fresh installs things can go from Helm managed to managed via the upgrade job
       grafana:
         # configure Grafana
         grafana.ini:
