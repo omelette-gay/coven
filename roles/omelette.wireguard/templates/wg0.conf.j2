@@ -1,0 +1,10 @@
+[Interface]
+PrivateKey = {{ wireguard_private_key }}
+Address = {{ wireguard_ipv4_interface }},{{ wireguard_ipv6_interface }}
+
+[Peer]
+PublicKey = {{ wireguard_server_public_key }}
+PresharedKey = {{ wireguard_server_preshared_key }}
+AllowedIPs = {{ wireguard_ipv4_network }},{{ wireguard_ipv6_network }}
+Endpoint = {{ wireguard_server_endpoint }}
+PersistentKeepalive = 25
