@@ -18,6 +18,26 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v7
 
+      - name: connect to janus
+        run: |
+          sudo apt-get install -y wireguard
+
+          cat <<EOF | sudo tee /etc/wireguard/wg0.conf >/dev/null
+          [Interface]
+          PrivateKey = ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+          Address = 192.168.178.204/24,fd1e:6349:c40a::204/64
+          
+          [Peer]
+          PublicKey = ${{ secrets.WIREGUARD_SERVER_PUBLIC_KEY }}
+          PresharedKey = ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+          AllowedIPs = 192.168.178.0/24,fd1e:6349:c40a::/64
+          Endpoint = janus.gs.omelette.gay:59384
+          PersistentKeepalive = 25
+          EOF
+          
+          sudo systemctl enable wg-quick@wg0
+          sudo systemctl start wg-quick@wg0
+
       - name: login to Vault
         uses: hashicorp/vault-action@v4
         with:
@@ -42,3 +62,7 @@ jobs:
 
       - name: run Ansible
         run: ansible-playbook -u github -i inventory playbook.yml
+
+      - name: close down Wireguard connection
+        if: always()
+        run: sudo systemctl stop wg-quick@wg0
