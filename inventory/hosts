@@ -1,1 +1,5 @@
+[k3s_controllers]
 strix
+
+[k3s_agents]
+grimhilde

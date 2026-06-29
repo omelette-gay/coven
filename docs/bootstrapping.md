@@ -46,6 +46,24 @@ On first install, we need to tell Ansible to SSH in using `root` so run that fir
 
     ANSIBLE_REMOTE_USER=root ansible-playbook playbook.yml -i inventory -l my-new-server 
 
+## Other fresh installs
+
+For other machines, we install a fresh install of Rocky from the minimal installer, with a single large `/`
+partition (other than the bootloader). You will want to create your user during the initial setup, and once
+installed, SSH into it and copy your SSH key so you can run an initial provision using Ansible.
+
+We also want to enable passwordless sudo, which you can do by running `visudo` to edit `/etc/sudoers`
+and uncommenting the relevant line (and commenting out the other one), such as the section that mentions `wheel`
+looks like so:
+
+    ## Allows people in group wheel to run all commands
+    # %wheel        ALL=(ALL)       ALL
+    
+    ## Same thing without a password
+    %wheel  ALL=(ALL)       NOPASSWD: ALL
+
+This will allow Ansible to then run (this may be automated in future).
+
 ## External API keys
 
 You will need to [create an API token](https://docs.hetzner.com/dns-console/dns/general/api-access-token/) for DNS in Hetzner

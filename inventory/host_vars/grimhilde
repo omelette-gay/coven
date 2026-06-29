@@ -1,0 +1,3 @@
+---
+hostname: grimhilde.gs.omelette.gay
+ansible_ssh_host: 192.168.178.36

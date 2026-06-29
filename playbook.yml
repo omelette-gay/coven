@@ -21,6 +21,10 @@
         k3s_agent:
           node-name: "{{ hostname }}"
     - omelette.storage
+  become: true
+
+- hosts: k3s_controllers
+  roles:
     - omelette.kubeconfig
   become: true
 
@@ -40,13 +44,13 @@
       clusters:
         - name: default
           cluster:
-            server: "https://{{ hostvars[groups.all[0]].ansible_ssh_host }}:6443"
-            certificate-authority-data: "{{ hostvars[groups.all[0]].kubeconfig_ca_data }}"
+            server: "https://{{ hostvars[groups.k3s_controllers[0]].ansible_ssh_host }}:6443"
+            certificate-authority-data: "{{ hostvars[groups.k3s_controllers[0]].kubeconfig_ca_data }}"
       users:
         - name: default
           user:
-            client-certificate-data: "{{ hostvars[groups.all[0]].kubeconfig_client_cert_data }}"
-            client-key-data: "{{ hostvars[groups.all[0]].kubeconfig_client_key_data }}"
+            client-certificate-data: "{{ hostvars[groups.k3s_controllers[0]].kubeconfig_client_cert_data }}"
+            client-key-data: "{{ hostvars[groups.k3s_controllers[0]].kubeconfig_client_key_data }}"
 
   module_defaults:
     group/kubernetes.core.k8s:
