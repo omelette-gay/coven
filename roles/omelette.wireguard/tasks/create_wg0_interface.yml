@@ -9,3 +9,30 @@
     name: wg-quick@wg0
     state: started
     enabled: true
+
+# we had some weird issues in the cluster without doing this - this should fix it
+- name: Create NetworkManager dispatcher script for TCP MSS clamping
+  ansible.builtin.copy:
+    dest: "/etc/NetworkManager/dispatcher.d/99-clamp-mss.sh"
+    mode: '0755'
+    owner: root
+    group: root
+    content: |
+      #!/bin/bash
+      INTERFACE="{{ ansible_facts['default_ipv4']['interface'] }}"
+      ACTION=$2
+
+      # Only run when our specific public interface comes up
+      if [ "$1" = "$INTERFACE" ] && [ "$ACTION" = "up" ]; then
+          # Check if the rule is already there to prevent duplicates
+          iptables -t mangle -C POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o "$INTERFACE" -j TCPMSS --set-mss {{ wireguard_mss_clamp }} 2>/dev/null
+          if [ $? -ne 0 ]; then
+              iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o "$INTERFACE" -j TCPMSS --set-mss {{ wireguard_mss_clamp }}
+          fi
+      fi
+  become: true
+
+- name: Run the dispatcher script immediately to apply the rule right now
+  ansible.builtin.command: "/etc/NetworkManager/dispatcher.d/99-clamp-mss.sh {{ ansible_facts['default_ipv4']['interface'] }} up"
+  changed_when: true
+  become: true
