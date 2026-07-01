@@ -74,3 +74,9 @@ and store this in Vault under the `gitops/hetzner` secret in the key `api_key`.
 As default Terraform is configured to store state in a GCP bucket, when initially setting up the project you will have to
 disable the `backend "gcs"` block, then run Terraform locally, reenable the `backend "gcs"` block and migrate state with
 `terraform init -migrate-state`.
+
+# GitHub actions
+
+GitHub's SSH keys are deployed onto the servers via Ansible, however GitHub needs also to be configured to trust
+the SSH keys of the hosts. This is done by configuring the SSH_KNOWN_HOSTS secret in the GitHub environment. You can
+make this file by running `ssh-keyscan <host>` for each host in the inventory and combining it together into that secret.
