@@ -26,6 +26,7 @@ jobs:
           [Interface]
           PrivateKey = ${{ secrets.WIREGUARD_PRIVATE_KEY }}
           Address = 192.168.178.204/24,fd1e:6349:c40a::204/64
+          MTU = 1392
           
           [Peer]
           PublicKey = ${{ secrets.WIREGUARD_SERVER_PUBLIC_KEY }}
