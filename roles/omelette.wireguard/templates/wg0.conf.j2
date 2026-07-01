@@ -1,6 +1,7 @@
 [Interface]
 PrivateKey = {{ wireguard_private_key }}
 Address = {{ wireguard_ipv4_interface }},{{ wireguard_ipv6_interface }}
+MTU = {{ wireguard_mtu }}
 
 [Peer]
 PublicKey = {{ wireguard_server_public_key }}

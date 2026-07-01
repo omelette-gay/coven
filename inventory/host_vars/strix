@@ -2,6 +2,13 @@
 hostname: strix.xdc.omelette.gay
 ansible_ssh_host: strix.xdc.omelette.gay
 k3s_agent:
+  node-name: "{{ hostname }}"
+
+  # route all traffic through the wireguard tunnel, but still expose our external interface to the network
+  node-ip: 192.168.178.203
+  node-external-ip: 168.119.4.112
+  flannel-iface: wg0
+
   node-label:
     # this means that only strix will have load balancers created on it - which means that all external traffic will
     # come through strix and there's no risk of accidentally having the only external IP of something be the internal

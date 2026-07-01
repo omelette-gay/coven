@@ -28,6 +28,7 @@ This is our primary (and currently only) k8s cluster.
 #### Hosts
 
 - _strix_: hosted in external datacentre [Hetzner FSN1-DC15](https://docs.hetzner.com/general/others/data-centers-and-connection/)
+- _grimhilde_: Chris's old Mac Mini at home
 
 ## Networks
 
