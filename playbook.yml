@@ -11,11 +11,13 @@
         k3s_become: true
     - omelette.storage
   become: true
+  any_errors_fatal: true
 
 - hosts: k3s_controllers
   roles:
     - omelette.kubeconfig
   become: true
+  any_errors_fatal: true
 
 # the roles defined in this section are for roles which run on the cluster, rather than the individual hosts
 - hosts: localhost

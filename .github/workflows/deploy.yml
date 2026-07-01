@@ -30,14 +30,13 @@ jobs:
           
           [Peer]
           PublicKey = ${{ secrets.WIREGUARD_SERVER_PUBLIC_KEY }}
-          PresharedKey = ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+          PresharedKey = ${{ secrets.WIREGUARD_SERVER_PRESHARED_KEY }}
           AllowedIPs = 192.168.178.0/24,fd1e:6349:c40a::/64
           Endpoint = janus.gs.omelette.gay:59384
           PersistentKeepalive = 25
           EOF
           
-          sudo systemctl enable wg-quick@wg0
-          sudo systemctl start wg-quick@wg0
+          sudo wg-quick up wg0
 
       - name: login to Vault
         uses: hashicorp/vault-action@v4
@@ -66,4 +65,4 @@ jobs:
 
       - name: close down Wireguard connection
         if: always()
-        run: sudo systemctl stop wg-quick@wg0
+        run: sudo wg-quick down wg0
