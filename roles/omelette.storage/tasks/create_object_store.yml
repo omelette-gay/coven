@@ -52,6 +52,21 @@
       config:
         rustfs:
           log_level: warn
+      extraEnv:
+        # configure metrics reporting
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "http/protobuf"
+        - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+          value: "http://kube-prometheus-kube-prome-prometheus.monitoring.svc.cluster.local:9090/api/v1/otlp"
+        - name: OTEL_SERVICE_NAME
+          value: "{{ object_store.name }}-rustfs"
+        - name: K8S_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "service.namespace={{ object_store.namespace }},service.instance.id=$(K8S_POD_NAME),k8s.namespace.name={{ object_store.namespace }},k8s.pod.name=$(K8S_POD_NAME)"
+
     wait: true
 
 - name: create required buckets

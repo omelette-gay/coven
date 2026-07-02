@@ -116,6 +116,29 @@
 
       prometheus:
         prometheusSpec:
+          # enable the OTLP receiver
+          extraArgs:
+            web.enable-otlp-receiver: null
+
+          otlp:
+            # Recommended attributes to be promoted to labels - https://prometheus.io/docs/guides/opentelemetry/
+            promote_resource_attributes:
+              - service.instance.id
+              - service.name
+              - service.namespace
+              - service.version
+              - container.name
+              - k8s.cluster.name
+              - k8s.container.name
+              - k8s.cronjob.name
+              - k8s.daemonset.name
+              - k8s.deployment.name
+              - k8s.job.name
+              - k8s.namespace.name
+              - k8s.pod.name
+              - k8s.replicaset.name
+              - k8s.statefulset.name
+
           # look for Prometheus monitoring config installed by other Helm charts
           ruleSelectorNilUsesHelmValues: false
           podMonitorSelectorNilUsesHelmValues: false
