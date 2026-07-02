@@ -178,7 +178,7 @@
               sourceLabels: [ __name__ ]
 
       kubeControllerManager:
-        endpoints: "{{ groups['k3s_controllers'] | map('extract', hostvars, ['k8s_api_prometheus_scrape_ip']) }}"
+        endpoints: "{{ groups['k3s_controllers'] | map('extract', hostvars, ['k3s_agent', 'node-ip']) }}"
         serviceMonitor:
           https: true
           insecureSkipVerify: true
@@ -199,7 +199,7 @@
       # whilst we are single node, there is no etcd, so we skip this part - but it is defined upstream
 
       kubeScheduler:
-        endpoints: "{{ groups['k3s_controllers'] | map('extract', hostvars, ['k8s_api_prometheus_scrape_ip']) }}"
+        endpoints: "{{ groups['k3s_controllers'] | map('extract', hostvars, ['k3s_agent', 'node-ip']) }}"
         serviceMonitor:
           https: true
           insecureSkipVerify: true
@@ -218,7 +218,7 @@
               sourceLabels: [ __name__ ]
 
       kubeProxy:
-        endpoints: "{{ groups['k3s_controllers'] | map('extract', hostvars, ['k8s_api_prometheus_scrape_ip']) }}"
+        endpoints: "{{ groups['k3s_controllers'] | map('extract', hostvars, ['k3s_agent', 'node-ip']) }}"
         service:
           selector:
             k8s-app: kube-proxy
