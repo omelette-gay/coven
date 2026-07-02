@@ -15,6 +15,7 @@
         upgradeJob:
           enabled: true
           forceConflicts: true # required so for fresh installs things can go from Helm managed to managed via the upgrade job
+
       grafana:
         # configure Grafana
         grafana.ini:
@@ -308,6 +309,48 @@
                 resources:
                   requests:
                     storage: 5Gi
+
+      kube-state-metrics:
+        enabled: true
+
+        rbac:
+          extraRules:
+            - apiGroups: [ "k8s.mariadb.com" ]
+              resources: [ "physicalbackups" ]
+              verbs: [ "list", "watch" ]
+
+        customResourceState:
+          enabled: true
+          config:
+            kind: CustomResourceStateMetricsList
+            spec:
+              resources:
+                - group: k8s.mariadb.com
+                  version: v1alpha1
+                  kind: PhysicalBackup
+                  metrics:
+                    - name: mariadb_physicalbackup_status_condition
+                      description: "The status of conditions for MariaDB PhysicalBackups resources"
+                      each:
+                        type: Gauge
+                        gauge:
+                          value: 1
+                        labelsFromPath:
+                          name: [ metadata, name ]
+                          namespace: [ metadata, namespace ]
+                          condition: [ status, conditions, type ]
+                          status: [ status, conditions, status ]
+
+                    - name: mariadb_physicalbackup_completion_time_seconds
+                      description: "The completion time of the last MariaDB PhysicalBackup"
+                      each:
+                        type: Gauge
+                        gauge:
+                          valueFromPath: [ status, completionTime ]
+                          pathModifier: stringToUnixTimestamp
+                        labelsFromPath:
+                          name: [ metadata, name ]
+                          namespace: [ metadata, namespace ]
 
       additionalPrometheusRulesMap:
         needs-restarting:
