@@ -14,6 +14,8 @@ k3s_agent:
     # come through strix and there's no risk of accidentally having the only external IP of something be the internal
     # IP of one of the nodes
     - svccontroller.k3s.cattle.io/enablelb=true
+    
+    - coven.omelette.gay/location=xdc
 
 wireguard_private_key: "{% if not bootstrap|default(false) %}{{ lookup('hashivault', 'wireguard/strix', 'private_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
 wireguard_ipv4_interface: 192.168.178.203/24
