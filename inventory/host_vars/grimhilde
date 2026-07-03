@@ -3,3 +3,5 @@ hostname: grimhilde.gs.omelette.gay
 ansible_ssh_host: 192.168.178.36
 k3s_agent:
   node-name: "{{ hostname }}"
+  node-label:
+    - coven.omelette.gay/location=gs
