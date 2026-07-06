@@ -52,12 +52,14 @@
       config:
         rustfs:
           log_level: warn
+          obs_endpoint:
+            enabled: true
+            base_endpoint: http://kube-prometheus-kube-prome-prometheus.monitoring.svc.cluster.local:9090/api/v1/otlp
+            use_stdout: true
+            metrics:
+              enabled: true
       extraEnv:
-        # configure metrics reporting
-        - name: OTEL_EXPORTER_OTLP_PROTOCOL
-          value: "http/protobuf"
-        - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: "http://kube-prometheus-kube-prome-prometheus.monitoring.svc.cluster.local:9090/api/v1/otlp"
+        # configure labels metrics reporting
         - name: OTEL_SERVICE_NAME
           value: "{{ object_store.name }}-rustfs"
         - name: K8S_POD_NAME

@@ -306,7 +306,6 @@
         # collect textfiles from the host
         extraArgs:
           - --collector.textfile.directory=/run/node-exporter
-          - --collector.wireguard
         extraHostVolumeMounts:
           - name: textfiles
             hostPath: /run/node-exporter
