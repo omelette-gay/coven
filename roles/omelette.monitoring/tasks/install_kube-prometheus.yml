@@ -705,7 +705,7 @@
         # https://github.com/cloudnative-pg/cloudnative-pg/blob/main/docs/src/samples/monitoring/prometheusrule.yaml
         cnpg-default-alerts:
           groups:
-            - name: cnp-default.rules
+            - name: cnpg-default.rules
               rules:
                 - alert: LongRunningTransaction
                   annotations:
@@ -1014,6 +1014,25 @@
                   expr: rate(mysql_global_status_innodb_log_waits[15m]) > 10
                   labels:
                     severity: warning
+            - name: mariadb-backup.rules
+              rules:
+                - alert: MariaDBBackupFailed
+                  expr: mariadb_physicalbackup_status_condition{condition="Complete", status="False"} == 1
+                  for: 5m
+                  labels:
+                    severity: error
+                  annotations:
+                    summary: MariaDB Physical Backup Failed
+                    description: The MariaDB physical backup {{ '{{' }} $labels.name {{ '}}' }} in namespace {{ '{{' }} $labels.namespace {{ '}}' }} has failed.
+
+                - alert: MariaDBBackupStale
+                  expr: (time() - mariadb_physicalbackup_completion_time_seconds) > 93600
+                  for: 15m
+                  labels:
+                    severity: warning
+                  annotations:
+                    summary: MariaDB Backup Stale
+                    description: No successful MariaDB physical backup has completed for {{ '{{' }} $labels.name {{ '}}' }} in namespace {{ '{{' }} $labels.namespace {{ '}}' }} for over 26 hours.
 
     wait: true
   notify: restart Grafana
