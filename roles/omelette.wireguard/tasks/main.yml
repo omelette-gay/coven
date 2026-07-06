@@ -12,3 +12,7 @@
 - name: create wg0 interface
   include_tasks: create_wg0_interface.yml
   when: wireguard_private_key is defined
+
+- name: monitor wireguard
+  include_tasks: monitor_wireguard.yml
+  when: wireguard_private_key is defined

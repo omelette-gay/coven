@@ -1,0 +1,6 @@
+[Unit]
+Description=wireguard-exporter.timer
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wireguard-exporter /run/node-exporter/wireguard.prom

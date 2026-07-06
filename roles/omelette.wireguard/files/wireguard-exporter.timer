@@ -1,0 +1,9 @@
+[Unit]
+Description=wireguard-exporter.timer
+
+[Timer]
+# every minute
+OnCalendar=*:*
+
+[Install]
+WantedBy=timers.target
