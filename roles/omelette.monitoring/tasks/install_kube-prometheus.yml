@@ -118,12 +118,10 @@
       prometheus:
         prometheusSpec:
           # enable the OTLP receiver
-          extraArgs:
-            web.enable-otlp-receiver: null
-
+          enableOTLPReceiver: true
           otlp:
             # Recommended attributes to be promoted to labels - https://prometheus.io/docs/guides/opentelemetry/
-            promote_resource_attributes:
+            promoteResourceAttributes:
               - service.instance.id
               - service.name
               - service.namespace

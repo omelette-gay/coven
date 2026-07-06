@@ -56,7 +56,7 @@
         # configure metrics reporting
         - name: OTEL_EXPORTER_OTLP_PROTOCOL
           value: "http/protobuf"
-        - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: "http://kube-prometheus-kube-prome-prometheus.monitoring.svc.cluster.local:9090/api/v1/otlp"
         - name: OTEL_SERVICE_NAME
           value: "{{ object_store.name }}-rustfs"
