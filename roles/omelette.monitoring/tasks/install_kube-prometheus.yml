@@ -1034,6 +1034,19 @@
                     summary: MariaDB Backup Stale
                     description: No successful MariaDB physical backup has completed for {{ '{{' }} $labels.name {{ '}}' }} in namespace {{ '{{' }} $labels.namespace {{ '}}' }} for over 26 hours.
 
+        rustfs:
+          groups:
+            - name: rustfs
+              rules:
+                - alert: RustfsScannerFailuresDetected
+                  expr: rate(rustfs_scanner_failures_total[5m]) > 0
+                  for: 15m
+                  labels:
+                    severity: warning
+                  annotations:
+                    summary: Rustfs background scanner is failing
+                    description: The Rustfs background maintenance loop for {{ "{{" }}$labels.service{{ "}}" }} has recorded failure increments over the last 15 minutes. This suggests data corruption, missing files, or I/O degradation.
+
     wait: true
   notify: restart Grafana
 
