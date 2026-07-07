@@ -135,6 +135,40 @@
               }
             }
             
+            loki.source.kubernetes_events "cluster_events" {
+              forward_to = [loki.process.cluster_events.receiver]
+            }
+            
+            loki.process "cluster_events" {
+              forward_to = [loki.write.default.receiver]
+            
+              stage.json {
+                  expressions = {
+                  action    = "action",
+                  api_version = "apiVersion",
+                  count     = "count",
+                  event_time = "eventTime",
+                  message   = "message",
+                  reason    = "reason",
+                  type      = "type",
+                  namespace = "metadata.namespace",
+                  name      = "metadata.name",
+                  obj_kind  = "involvedObject.kind",
+                  obj_name  = "involvedObject.name",
+                }
+              }
+            
+              stage.labels {
+                values = {
+                  clear     = "action",
+                  namespace = "namespace",
+                  reason    = "reason",
+                  type      = "type",
+                  job       = "kubernetes-events",
+                }
+              }
+            }
+            
             loki.write "default" {
               endpoint {
                 url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
@@ -146,6 +180,9 @@
             - name: run-log-journal
               mountPath: /run/log/journal
               readOnly: true
+        # clustering ensures k8s events are de-duped
+        clustering:
+          enabled: true
       controller:
         volumes:
           extra:
