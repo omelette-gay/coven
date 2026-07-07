@@ -1047,6 +1047,19 @@
                     summary: Rustfs background scanner is failing
                     description: The Rustfs background maintenance loop for {{ "{{" }}$labels.service{{ "}}" }} has recorded failure increments over the last 15 minutes. This suggests data corruption, missing files, or I/O degradation.
 
+        wireguard:
+          groups:
+            - name: wireguard
+              rules:
+                - alert: WireguardPeerDown
+                  expr: (time() - wireguard_latest_handshake_seconds) > 300
+                  for: 2m
+                  labels:
+                    severity: critical
+                  annotations:
+                    summary: WireGuard peer down on {{ "{{" }} $labels.instance {{ "}}" }}
+                    description: The WireGuard peer {{ "{{" }} $labels.endpoint {{ "}}" }} on device {{ "{{" }} $labels.interface {{ "}}" }} has not completed a handshake in the last 5 minutes.
+
     wait: true
   notify: restart Grafana
 

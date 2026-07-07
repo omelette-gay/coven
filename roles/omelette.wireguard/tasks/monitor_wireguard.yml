@@ -1,0 +1,31 @@
+---
+- name: install wireguard-exporter script
+  copy:
+    src: wireguard-exporter.sh
+    dest: /usr/local/bin/wireguard-exporter
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: install wireguard-exporter systemd timer
+  copy:
+    src: wireguard-exporter.timer
+    dest: /etc/systemd/system/wireguard-exporter.timer
+    owner: root
+    group: root
+  register: install_wireguard_exporter_timer
+
+- name: install wireguard-exporter systemd unit
+  copy:
+    src: wireguard-exporter.service
+    dest: /etc/systemd/system/wireguard-exporter.service
+    owner: root
+    group: root
+  register: install_wireguard_exporter_unit
+
+- name: enable wireguard systemd unit
+  systemd_service:
+    name: wireguard-exporter.timer
+    state: started
+    enabled: true
+    daemon_reload: "{{ install_wireguard_exporter_timer.changed or install_wireguard_exporter_unit.changed }}"
