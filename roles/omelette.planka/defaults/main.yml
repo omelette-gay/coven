@@ -6,3 +6,4 @@ planka_vault_sso_secrets_name: planka/sso
 planka_keycloak_client_name: planka
 planka_keycloak_admin_role: admin
 planka_hostname: planka.coven.local
+planka_k8s_backup_creds_secret: planka-gcp-backup-creds
