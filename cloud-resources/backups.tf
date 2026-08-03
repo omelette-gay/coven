@@ -65,7 +65,8 @@ resource "vault_kv_secret_v2" "backup_service_account_key" {
 
   data_json = jsonencode(
     {
-      "APPLICATION_CREDENTIALS" = google_service_account_key.backup_service_account_key.private_key
+      "APPLICATION_CREDENTIALS" = base64decode(google_service_account_key.backup_service_account_key.private_key) # cnpg needs them in this form with this name
+      "credentials.json" = google_service_account_key.backup_service_account_key.private_key # mariadb needs them in this form with this name
     }
   )
 }
