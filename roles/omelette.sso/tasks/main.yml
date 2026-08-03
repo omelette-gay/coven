@@ -1,11 +1,31 @@
+---
+- name: create Keycloak k8s Namespace
+  kubernetes.core.k8s:
+    name: "{{ keycloak_k8s_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: sync GCP backup service account secret
+  include_role:
+    name: omelette.secrets
+    tasks_from: create_k8s_secret
+  vars:
+    vault_k8s_secret:
+      vault_secret_name: "backups/service-account-key"
+      k8s_secret_name: "{{ keycloak_k8s_backup_creds_secret }}"
+      k8s_namespace: "{{ keycloak_k8s_namespace }}"
+      k8s_service_account_name: "keycloak-gcp-backup-creds"
+      vault_role_name: "keycloak-gcp-backup-creds"
+  when: bootstrap|default(false) == false
+
 - name: install database for Keycloak
   kubernetes.core.helm:
     name: db
     chart_ref: cluster
     chart_repo_url: "{{ lookup('helm_chart', 'cluster').repository }}"
     chart_version: "{{ lookup('helm_chart', 'cluster').version }}"
-    release_namespace: keycloak
-    create_namespace: true
+    release_namespace: "{{ keycloak_k8s_namespace }}"
     release_values:
       version:
         postresql: "{{ cnpg_postgres_major_version }}"
@@ -14,14 +34,32 @@
         initdb:
           database: keycloak
         monitoring:
-          enabled:
-            true
+          enabled: true
+      backups:
+        enabled: true
+        method: plugin
+        pluginConfiguration:
+          name: barman-cloud.cloudnative-pg.io
+        provider: google
+        google:
+          bucket: "{{ gcp_backup_bucket_name }}"
+          path: /cnpg/keycloak/
+        secret:
+          name: "{{ keycloak_k8s_backup_creds_secret }}"
+          create: false
+        scheduledBackups:
+          - name: daily-backup
+            schedule: "0 30 8,20 * * *"
+            backupOwnerReference: self
+            method: plugin
+            pluginConfiguration:
+              name: barman-cloud.cloudnative-pg.io
     wait: true
 
 - name: block Keycloak metrics endpoint from web
   kubernetes.core.k8s:
     name: block-metrics-path
-    namespace: keycloak
+    namespace: "{{ keycloak_k8s_namespace }}"
     definition:
       apiVersion: traefik.io/v1alpha1
       kind: Middleware
@@ -37,8 +75,7 @@
     chart_ref: keycloakx
     chart_repo_url: "{{ lookup('helm_chart', 'keycloakx').repository }}"
     chart_version: "{{ lookup('helm_chart', 'keycloakx').version }}"
-    release_namespace: keycloak
-    create_namespace: true
+    release_namespace: "{{ keycloak_k8s_namespace }}"
     release_values:
       command:
         - "/opt/keycloak/bin/kc.sh"
@@ -143,7 +180,7 @@
 - name: monitor Keycloak
   kubernetes.core.k8s:
     name: keycloak-https
-    namespace: keycloak
+    namespace: "{{ keycloak_k8s_namespace }}"
     api_version: monitoring.coreos.com/v1
     kind: Probe
     definition:

@@ -2,7 +2,9 @@ keycloak_host: "auth.{{ cluster_domain }}"
 keycloak_url: "https://{{ keycloak_host }}/auth"
 keycloak_realm: omelette.gay
 
+keycloak_k8s_namespace: keycloak
 keycloak_vault_secret_path: gitops/keycloak-master-credentials
+keycloak_k8s_backup_creds_secret: keycloak-gcp-backup-creds
 
 keycloak_username: "{{ lookup('hashivault', keycloak_vault_secret_path, 'username', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}"
 keycloak_automation_username: ansible-automation
