@@ -92,6 +92,18 @@
         clientId: "{{ keycloak_planka_client.end_state.clientId|b64encode }}"
         clientSecret: "{{ keycloak_planka_client_secret.clientsecret_info.value|b64encode }}"
 
+- name: sync GCP backup service account secret
+  include_role:
+    name: omelette.secrets
+    tasks_from: create_k8s_secret
+  vars:
+    vault_k8s_secret:
+      vault_secret_name: "backups/service-account-key"
+      k8s_secret_name: "{{ planka_k8s_backup_creds_secret }}"
+      k8s_namespace: "{{ planka_k8s_namespace }}"
+      k8s_service_account_name: "planka-gcp-backup-creds"
+      vault_role_name: "planka-gcp-backup-creds"
+
 - name: install database for Planka
   kubernetes.core.helm:
     name: db
@@ -107,8 +119,25 @@
         initdb:
           database: planka
         monitoring:
-          enabled:
-            true
+          enabled: true
+      backups:
+        enabled: true
+        method: plugin
+        pluginConfiguration:
+          name: barman-cloud.cloudnative-pg.io
+        provider: google
+        google:
+          bucket: "{{ gcp_backup_bucket_name }}"
+          path: /cnpg/planka/
+        secret:
+          name: "{{ planka_k8s_backup_creds_secret }}"
+        scheduledBackups:
+          - name: daily-backup
+            schedule: "0 0 8,20 * * *"
+            backupOwnerReference: self
+            method: plugin
+            pluginConfiguration:
+              name: barman-cloud.cloudnative-pg.io
 
 - name: Install Planka
   kubernetes.core.helm:
@@ -147,6 +176,16 @@
       postgresql:
         enabled: false # use externally managed database, not the built-in one
       existingDburlSecret: db-cluster-app
+
+- name: mark Planka storage for Longhorn backup
+  kubernetes.core.k8s:
+    state: patched
+    kind: PersistentVolumeClaim
+    name: planka
+    namespace: "{{ planka_k8s_namespace }}"
+    definition:
+      metadata:
+        labels: "{{ {'recurring-job.longhorn.io/source': 'enabled', 'recurring-job.longhorn.io/' + longhorn_k8s_recurring_job_name: 'enabled'} }}"
 
 - name: monitor Planka
   kubernetes.core.k8s:
