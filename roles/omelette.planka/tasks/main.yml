@@ -130,6 +130,7 @@
           bucket: "{{ gcp_backup_bucket_name }}"
           path: /cnpg/planka/
         secret:
+          create: false
           name: "{{ planka_k8s_backup_creds_secret }}"
         scheduledBackups:
           - name: daily-backup

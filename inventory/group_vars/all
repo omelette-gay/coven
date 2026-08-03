@@ -108,6 +108,11 @@ k8s_github_deployment_roles:
         k8s_namespace: wedding
         k8s_service_account_name: wedding-app-secrets
         vault_role_name: wedding-app-secrets
+      - vault_secret_name: backups/service-account-creds
+        k8s_secret_name: wedding-gcp-backup-creds
+        k8s_namespace: wedding
+        k8s_service_account_name: wedding-gcp-backup-creds
+        vault_role_name: wedding-gcp-backup-creds
     keycloak_client_id: wedding
     keycloak_redirect_uris:
       - https://wedding.omelette.gay/oidc/callback/
