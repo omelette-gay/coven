@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "cloud-resources/**"
 
 jobs:
   tfapply:
@@ -16,9 +14,9 @@ jobs:
       id-token: write
     defaults:
       run:
-        working-directory: cloud-resources/
+        working-directory: coven/
     concurrency:
-      group: tfapply
+      group: coven-terraform
     steps:
       - name: checkout code
         uses: actions/checkout@v7

@@ -44,7 +44,7 @@ disable swap so can remove the swap partition.
 Once the OS has been installed, we have a blank system where we can then SSH in as root using the same SSH key.
 On first install, we need to tell Ansible to SSH in using `root` so run that first Ansible command as:
 
-    ANSIBLE_REMOTE_USER=root ansible-playbook playbook.yml -i inventory -l my-new-server 
+    ANSIBLE_REMOTE_USER=root ansible-playbook playbook.yml -i coven/inventory -l my-new-server 
 
 ## Other fresh installs
 

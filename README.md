@@ -20,9 +20,9 @@ You will need to have the following installed (in your WSL environment if on Win
 Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
 
-If you are intending on running Terraform, you will need to run `terraform init` in the `cloud-resources/` folder
-to set up your Terraform session too. You will need to re-run this if the Terraform lock file changes (you will
-be warned of this if you run `terraform` without doing so).
+You will need to run `terraform init` in each environment's folder (`coven/` and `testlab/`) to set up your
+Terraform sessions. You will need to re-run this if the Terraform lock file changes (you will be warned of
+this if you run `terraform` without doing so).
 
 In the event you are setting up new things from scratch, then read [the bootstrapping doc](./docs/bootstrapping.md).
 
@@ -35,14 +35,13 @@ This will also log you in to allow you to use kubectl locally.
 
 Now you can run the playbook:
 
-    ansible-playbook -i inventory playbook.yml
+    ansible-playbook -i coven/inventory playbook.yml
 
 If you want to run Terraform locally, you will also need to log in to GCP.
 
     gcloud auth application-default login
 
-Now you can run `terraform apply` in the `cloud-resources/` folder to apply any Terraform changes. Until we have
-remote state in place, you will have to co-ordinate to make sure we do not overwrite any state file changes! 
+Now you can run `terraform apply` in the `coven/` folder to apply any Terraform changes. 
 
 # Testlab
 
@@ -64,10 +63,10 @@ If you want to access Keycloak, Vault and Grafana locally, then add the followin
     192.168.57.100 monitoring.coven.local
 
 On first run, see [the bootstrapping doc](./docs/bootstrapping.md) for information on first deploying this, remembering
-to specify the inventory as `vagrant-inventory`. Following this, you can specify the following:
+to specify the inventory as `testlab/inventory`. Following this, you can specify the following:
 
     ./login.sh --local
-    ansible-playbook -i vagrant-inventory playbook.yml
+    ansible-playbook -i testlab/inventory playbook.yml
 
 # How To
 
