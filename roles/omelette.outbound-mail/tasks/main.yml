@@ -97,8 +97,7 @@
         - name: dkim-keys
           mountPath: /etc/opendkim/keys
           readOnly: true
-      nodeSelector:
-        "coven.omelette.gay/location": "xdc"
+      nodeSelector: "{{ outbound_mail_node_selector | default(omit) }}"
 # disabled for now - see https://github.com/omelette-gay/gitops/issues/358
 #      metrics:
 #        enabled: true
