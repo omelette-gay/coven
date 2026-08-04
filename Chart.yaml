@@ -7,6 +7,9 @@ dependencies:
   - name: alloy
     version: 1.11.0
     repository: https://grafana.github.io/helm-charts
+  - name: altinity-clickhouse-operator
+    version: 0.27.2
+    repository: https://helm.altinity.com
   - name: cert-manager
     version: 1.20.3
     repository: https://charts.jetstack.io/

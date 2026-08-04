@@ -68,6 +68,7 @@
     - omelette.outbound-mail
     - omelette.mariadb
     - omelette.kafka
+    - omelette.clickhouse
     - omelette.apps
     - omelette.decommissioned-domains
     - omelette.factorio
