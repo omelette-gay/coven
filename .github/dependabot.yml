@@ -18,7 +18,7 @@ updates:
     versioning-strategy: increase
 
   - package-ecosystem: terraform
-    directory: "cloud-resources/"
+    directory: "coven/"
     schedule:
       interval: weekly
 

@@ -1,19 +1,19 @@
-name: Deploy to Coven
+name: Configure Coven hosts
 on:
   workflow_dispatch:
   push:
     branches:
       - main
 jobs:
-  deploy:
-    name: Deploy to cluster
+  configure:
+    name: Configure Coven hosts
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     environment: coven
     concurrency:
-      group: coven-deploy
+      group: coven-ansible
     steps:
       - name: checkout code
         uses: actions/checkout@v7
@@ -61,7 +61,7 @@ jobs:
           ansible-galaxy install -r requirements.yml
 
       - name: run Ansible
-        run: ansible-playbook -u github -i inventory playbook.yml
+        run: ansible-playbook -u github -i coven/inventory playbook.yml
 
       - name: close down Wireguard connection
         if: always()
