@@ -4,3 +4,7 @@ ansible_ssh_user: vagrant
 ansible_ssh_private_key_file: "{{ '.vagrant/machines/default/*/private_key' | fileglob | first }}"
 
 hostname: vagrant.local
+
+k3s_agent:
+  node-name: "{{ hostname }}"
+  node-ip: 192.168.57.100

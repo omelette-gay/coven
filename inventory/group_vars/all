@@ -238,3 +238,6 @@ wireguard_server_preshared_key: "{% if not bootstrap|default(false) %}{{ lookup(
 wireguard_ipv4_network: 192.168.178.0/24
 wireguard_ipv6_network: fd1e:6349:c40a::/64
 wireguard_server_endpoint: janus.gs.omelette.gay:59384
+
+outbound_mail_node_selector:
+  "coven.omelette.gay/location": "xdc"

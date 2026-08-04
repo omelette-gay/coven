@@ -1,1 +1,4 @@
+[k3s_controllers]
 default
+
+[k3s_agents]
