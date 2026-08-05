@@ -4,8 +4,6 @@ When we first deploy something, there will often have to be something a bit non-
 e.g., because the automation user accounts aren't set up. This guide documents what those
 might be.
 
-## Accessing the cluster
-
 ## First deploy of SSO
 
 When first deploying the SSO configuration, you will need to specify the initial user for Keycloak

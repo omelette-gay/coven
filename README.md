@@ -75,7 +75,7 @@ If you are installing (or re-installing) a new testlab, you need to trust the te
     ssh-keygen -R 192.168.57.100
     ssh -i .vagrant/machines/default/hyperv/private_key vagrant@192.168.57.100
 
-To access Keycloak, Vault and Grafana locally, then add the following to `/etc/hosts` (or `C:\Windows\system32\drivers\etc\hosts`).
+To access Keycloak, Vault and Grafana locally, add the following to `/etc/hosts` (or `C:\Windows\system32\drivers\etc\hosts`).
 
     192.168.57.100 auth.coven.local
     192.168.57.100 vault.coven.local
