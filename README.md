@@ -8,8 +8,7 @@ NOTE: If you are running this on Windows, Ansible only runs under WSL, so run ev
 
 You will need to have the following installed (in your WSL environment if on Windows):
 
-- Pip3 and Jmespath: `sudo apt install python3-pip python3-jmespath`
-- Ansible and dependencies: `sudo pip3 install -r requirements.txt --break-system-packages`
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - [Helm](https://helm.sh/docs/intro/install/)
 - Helm Diff: `helm plugin install https://github.com/databus23/helm-diff`
 - [Vault](https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install)
@@ -17,7 +16,7 @@ You will need to have the following installed (in your WSL environment if on Win
 - [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 - [gcloud CLI](https://cloud.google.com/sdk/docs/install#deb)
 
-Our setup uses some external roles for deploying k3s. Run `ansible-galaxy install -r requirements.yml` to bring down
+Our setup uses some external roles for deploying k3s. Run `uv run ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
 
 You will need to run `terraform init` in each environment's folder (`coven/` and `testlab/`) to set up your
@@ -35,7 +34,7 @@ This will also log you in to allow you to use kubectl locally.
 
 Now you can run the playbook:
 
-    ansible-playbook -i coven/inventory playbook.yml
+    uv run ansible-playbook -i coven/inventory playbook.yml
 
 If you want to run Terraform locally, you will also need to log in to GCP.
 
@@ -50,10 +49,10 @@ as well as the other pre-requisites defined above.
 
 > [!IMPORTANT]
 > Although most of the dependencies are one time install per machine and managed using your regular package manager,
-> Ansible and it's dependencies are not, and you will need to update these periodically for your test lab:
-> `sudo pip3 install -r requirements.txt --break-system-packages --ignore-installed; ansible-galaxy install -r requirements.yml --force`
+> the external Ansible roles we use are not, and you will need to update these periodically for your test lab:
+> `uv run ansible-galaxy install -r requirements.yml --force`.
 
->[!NOTE]
+> [!NOTE]
 > **Note that on Windows, Vagrant must be installed on the Windows side**, as it runs under Hyper-V. Everything other than
 > Vagrant then runs in WSL. VirtualBox and WSL2 do not run side-by-side. On Windows, as Vagrant must run as admin to
 > control Hyper-V, there is a helper script in the repo called `./vagrant.ps1` which you can use in WSL to run Vagrant
@@ -62,7 +61,7 @@ as well as the other pre-requisites defined above.
 You can then start the testlab by running `vagrant up` (`./vagrant.ps1 up`). On the first run on Windows you must then `vagrant reload` (`./vagrant.ps1 reload`)
 to complete the configuration of the new static IP network.
 
->[!TIP]
+> [!TIP]
 > If you're booting up the testlab for the first time in a while, you will need to [unseal Vault](#restart-and-unseal-vault-after-a-deploy-or-reboot),
 > and you might not have a valid token. To get working auth set up, run `./bootstrap-auth.sh --local` to copy over the
 > system credentials from your testlab and you can use `kubectl` like usual, then `./login.sh --local` to properly auth
@@ -85,7 +84,7 @@ On first run, see [the bootstrapping doc](./docs/bootstrapping.md) for informati
 to specify the inventory as `testlab/inventory`. Following this, you can specify the following:
 
     ./login.sh --local
-    ansible-playbook -i testlab/inventory playbook.yml
+    uv run ansible-playbook -i testlab/inventory playbook.yml
 
 # How To
 
@@ -124,7 +123,6 @@ We can now visit http://localhost:8080/dashboard/ to view the dashboard.
 
 You can now visit http://localhost:8080/ to view the Longhorn dashboard.
 
-
 ## Configure users for SSH
 
 There is a group var called `ssh_users` which consists of usernames and SSH keys which can sudo. You can configure this group var
@@ -144,13 +142,13 @@ environment, create a file `/etc/systemd/system/mnt-c-WINDOWS.mount`:
     [Unit]
     Description=remount Windows allowing exec bits
     After=mnt-c.mount
-    
+
     [Mount]
     What=C:/WINDOWS
     Where=/mnt/c/WINDOWS
     Type=drvfs
     Options=
-    
+
     [Install]
     WantedBy=multi-user.target
 
@@ -159,13 +157,13 @@ And also `/etc/systemd/system/mnt-c-Program\x20Files.mount` (be careful of the `
     [Unit]
     Description=remount Program Files allowing exec bits
     After=mnt-c.mount
-    
+
     [Mount]
     What=C:/Program Files
     Where=/mnt/c/Program Files
     Type=drvfs
     Options=
-    
+
     [Install]
     WantedBy=multi-user.target
 
