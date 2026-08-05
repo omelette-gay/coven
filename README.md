@@ -7,7 +7,7 @@ This repo contains all the infrastructure-as-code stuff for deploying and managi
 NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL.
 
 You will need to have the following installed (in your WSL environment if on Windows):
- 
+
 - Pip3 and Jmespath: `sudo apt install python3-pip python3-jmespath`
 - Ansible and dependencies: `sudo pip3 install -r requirements.txt --break-system-packages`
 - [Helm](https://helm.sh/docs/intro/install/)
@@ -41,22 +41,41 @@ If you want to run Terraform locally, you will also need to log in to GCP.
 
     gcloud auth application-default login
 
-Now you can run `terraform apply` in the `coven/` folder to apply any Terraform changes. 
+Now you can run `terraform apply` in the `coven/` folder to apply any Terraform changes.
 
 # Testlab
 
 To provision a VM which tests out our Ansible scripts and deployments, you will need [Vagrant](https://www.vagrantup.com/) installed,
 as well as the other pre-requisites defined above.
 
-**Note that on Windows, Vagrant must be installed on the Windows side**, as it runs under Hyper-V. Everything other than
-Vagrant then runs in WSL. VirtualBox and WSL2 do not run side-by-side. On Windows, as Vagrant must run as admin to
-control Hyper-V, there is a helper script in the repo called `./vagrant.ps1` which you can use in WSL to run Vagrant
-as admin in Windows, so below you can run `./vagrant.ps1 up` etc to start the VM, without having to leave WSL yourself.
+> [!IMPORTANT]
+> Although most of the dependencies are one time install per machine and managed using your regular package manager,
+> Ansible and it's dependencies are not, and you will need to update these periodically for your test lab:
+> `sudo pip3 install -r requirements.txt --break-system-packages --ignore-installed; ansible-galaxy install -r requirements.yml --force`
 
-You can then start the testlab by running `vagrant up`. On Windows you must then `vagrant reload` (`./vagrant.ps1 reload`)
-to complete the configuration of the new static IP network. `vagrant ssh` will then give you a shell on the host machine.
+>[!NOTE]
+> **Note that on Windows, Vagrant must be installed on the Windows side**, as it runs under Hyper-V. Everything other than
+> Vagrant then runs in WSL. VirtualBox and WSL2 do not run side-by-side. On Windows, as Vagrant must run as admin to
+> control Hyper-V, there is a helper script in the repo called `./vagrant.ps1` which you can use in WSL to run Vagrant
+> as admin in Windows, so below you can run `./vagrant.ps1 up` etc to start the VM, without having to leave WSL yourself.
 
-If you want to access Keycloak, Vault and Grafana locally, then add the following to `/etc/hosts` (or `C:\Windows\system32\drivers\etc\hosts`).
+You can then start the testlab by running `vagrant up` (`./vagrant.ps1 up`). On the first run on Windows you must then `vagrant reload` (`./vagrant.ps1 reload`)
+to complete the configuration of the new static IP network.
+
+>[!TIP]
+> If you're booting up the testlab for the first time in a while, you will need to [unseal Vault](#restart-and-unseal-vault-after-a-deploy-or-reboot),
+> and you might not have a valid token. To get working auth set up, run `./bootstrap-auth.sh --local` to copy over the
+> system credentials from your testlab and you can use `kubectl` like usual, then `./login.sh --local` to properly auth
+> using Vault and Keycloak.
+
+To SSH in the testlab you can run: `ssh -i .vagrant/machines/default/hyperv/private_key vagrant@192.168.57.100`.
+If you are installing (or re-installing) a new testlab, you need to trust the testlab's SSH server key:
+
+    chmod 600 .vagrant/machines/default/hyperv/private_key
+    ssh-keygen -R 192.168.57.100
+    ssh -i .vagrant/machines/default/hyperv/private_key vagrant@192.168.57.100
+
+To access Keycloak, Vault and Grafana locally, add the following to `/etc/hosts` (or `C:\Windows\system32\drivers\etc\hosts`).
 
     192.168.57.100 auth.coven.local
     192.168.57.100 vault.coven.local
@@ -70,7 +89,7 @@ to specify the inventory as `testlab/inventory`. Following this, you can specify
 
 # How To
 
-## Restarting Vault after a deploy
+## Restart and unseal Vault after a deploy or reboot
 
 Our Vault is not configured to "auto-unseal", so on first boot, it requires unseal codes (which are stored offline) to
 be entered into it. This means that after running Ansible, if that changes Vault, you will need to manually cause
@@ -84,10 +103,27 @@ You will then need to unseal Vault before the UI becomes available. You can do t
 Go to the [Vault login page](http://vault.coven.omelette.gay) and select method "OIDC", role "admin" and under more options
 set mount path to "keycloak".
 
-## Stopping crashes on Mac
+## Stop crashes on Mac
 
 When trying to read secrets from Vault, Python will regularly crash. You can avoid this by running `export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
 before running Ansible.
+
+## Debug Traefik
+
+One of the best ways to look at Traefik issues is to interrogate the state via the Traefik dashboard. This is
+enabled in "insecure" mode on our cluster, but this is okay as it's not directly exposed anywhere. To see it,
+we'll need to be logged into the cluster and then create a port forward to our local machine to look at it.
+
+    kubectl -n kube-system port-forward deployments/traefik 8080:8080
+
+We can now visit http://localhost:8080/dashboard/ to view the dashboard.
+
+## Access the Longhorn console
+
+     kubectl -n longhorn-system port-forward svc/longhorn-frontend 8080:80
+
+You can now visit http://localhost:8080/ to view the Longhorn dashboard.
+
 
 ## Configure users for SSH
 
@@ -99,49 +135,42 @@ Ansible playbook to then add your account to it!
 
 You will need to edit WSL's config to let permissions to be read correctly. Edit /etc/wsl.conf and add:
 
-        [automount]
-        options = "metadata,umask=022,fmask=111"
+    [automount]
+    options = "metadata,umask=022,fmask=111"
 
 This however will stop us executing some Windows files that we need to run Vagrant, to fix this, in your WSL
 environment, create a file `/etc/systemd/system/mnt-c-WINDOWS.mount`:
 
-```
-[Unit]
-Description=remount Windows allowing exec bits
-After=mnt-c.mount
-
-[Mount]
-What=C:/WINDOWS
-Where=/mnt/c/WINDOWS
-Type=drvfs
-Options=
-
-[Install]
-WantedBy=multi-user.target
-```
+    [Unit]
+    Description=remount Windows allowing exec bits
+    After=mnt-c.mount
+    
+    [Mount]
+    What=C:/WINDOWS
+    Where=/mnt/c/WINDOWS
+    Type=drvfs
+    Options=
+    
+    [Install]
+    WantedBy=multi-user.target
 
 And also `/etc/systemd/system/mnt-c-Program\x20Files.mount` (be careful of the `\` here, that will need escaping again in the shell).
 
-```
-[Unit]
-Description=remount Program Files allowing exec bits
-After=mnt-c.mount
-
-[Mount]
-What=C:/Program Files
-Where=/mnt/c/Program Files
-Type=drvfs
-Options=
-
-[Install]
-WantedBy=multi-user.target
-```
+    [Unit]
+    Description=remount Program Files allowing exec bits
+    After=mnt-c.mount
+    
+    [Mount]
+    What=C:/Program Files
+    Where=/mnt/c/Program Files
+    Type=drvfs
+    Options=
+    
+    [Install]
+    WantedBy=multi-user.target
 
 Now `systemctl daemon-reload` and `systemctl enable mnt-c-WINDOWS.mount`, `sudo systemctl enable 'mnt-c-Program\x20Files.mount'`
 and in a Windows terminal, run `wsl --shutdown`. Next time you load your WSL instance it will now have file permissions correctly configured.
-
-If you get an insecure file permission error when running Ansible to SSH in, then
-`chmod 600 .vagrant/machines/default/hyperv/private_key` to correct the permissions to a secure default.
 
 ## Linux tab completion for kubectl objects
 
