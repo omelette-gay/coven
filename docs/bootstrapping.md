@@ -4,6 +4,8 @@ When we first deploy something, there will often have to be something a bit non-
 e.g., because the automation user accounts aren't set up. This guide documents what those
 might be.
 
+## Accessing the cluster
+
 ## First deploy of SSO
 
 When first deploying the SSO configuration, you will need to specify the initial user for Keycloak
@@ -19,9 +21,13 @@ should log in and create yourself a user in the "omelette.gay" realm which is th
 logging in to things that are not admining Keycloak. This user should also be put in the "admins" group
 so you can log in to Vault using this login.
 
-On first run, you will error the first time you need to interact with Vault. You will need to go to the Vault
-UI and run through the init sequence, storing the initial secrets and make a copy of your root token, then
-unsealing Vault.
+Once k3s is installed on the server, you will need to authenticate to the cluster with the system user until SSO
+and Vault are fully installed and configured. There is a `bootstrap-auth.sh` script which will set up your local
+k8s credentials to the system user on the box.
+
+On first run, you will error the first time you need to interact with Vault. You will need to go to init Vault with
+`kubectl -n vault exec -it vault-0 -- vault operator init`. On the testlab you may prefer to only have a single unlock
+key for speed: `kubectl -n vault exec -it vault-0 -- vault operator init -key-shares=1 -key-threshold=1`.
 
 You can now log in using your root token, e.g., if in Vagrant: `vault login -address https://vault.coven.local -tls-skip-verify`
 and continue the deploy by re-running Ansible.
@@ -44,7 +50,7 @@ disable swap so can remove the swap partition.
 Once the OS has been installed, we have a blank system where we can then SSH in as root using the same SSH key.
 On first install, we need to tell Ansible to SSH in using `root` so run that first Ansible command as:
 
-    ANSIBLE_REMOTE_USER=root ansible-playbook playbook.yml -i coven/inventory -l my-new-server 
+    ANSIBLE_REMOTE_USER=root ansible-playbook playbook.yml -i coven/inventory -l my-new-server
 
 ## Other fresh installs
 
@@ -58,7 +64,7 @@ looks like so:
 
     ## Allows people in group wheel to run all commands
     # %wheel        ALL=(ALL)       ALL
-    
+
     ## Same thing without a password
     %wheel  ALL=(ALL)       NOPASSWD: ALL
 
