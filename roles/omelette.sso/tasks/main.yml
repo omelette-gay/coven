@@ -30,7 +30,7 @@
       version:
         postresql: "{{ cnpg_postgres_major_version }}"
       cluster:
-        instances: 1
+        instances: 2
         initdb:
           database: keycloak
         monitoring:
