@@ -13,6 +13,7 @@ You will need to have the following installed (in your WSL environment if on Win
 - Helm Diff: `helm plugin install https://github.com/databus23/helm-diff`
 - [Vault](https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
+- [kubectl cnpg plugin](https://cloudnative-pg.io/docs/devel/kubectl-plugin/)
 - [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 - [gcloud CLI](https://cloud.google.com/sdk/docs/install#deb)
 
@@ -34,7 +35,7 @@ This will also log you in to allow you to use kubectl locally.
 
 Now you can run the playbook:
 
-    uv run ansible-playbook -i coven/inventory playbook.yml
+    uv run ansible-playbook -i coven/inventory plays/configure-hosts.yml
 
 If you want to run Terraform locally, you will also need to log in to GCP.
 
@@ -84,7 +85,7 @@ On first run, see [the bootstrapping doc](./docs/bootstrapping.md) for informati
 to specify the inventory as `testlab/inventory`. Following this, you can specify the following:
 
     ./login.sh --local
-    uv run ansible-playbook -i testlab/inventory playbook.yml
+    uv run ansible-playbook -i testlab/inventory plays/configure-hosts.yml
 
 # How To
 

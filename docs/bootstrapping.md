@@ -9,7 +9,7 @@ might be.
 When first deploying the SSO configuration, you will need to specify the initial user for Keycloak
 on the command line and enable the bootstrapping flag:
 
-    uv run ansible-playbook -i INSERT-INVENTORY -e 'bootstrap=true keycloak_username=USERNAME keycloak_password=PASSWORD' playbook.yml
+    uv run ansible-playbook -i INSERT-INVENTORY -e 'bootstrap=true keycloak_username=USERNAME keycloak_password=PASSWORD' plays/configure-hosts.yml
 
 You will now be able to go to Keycloak and log in using that username and password. You should change
 this password after bootstrapping as it is stored in plaintext in the config for Keycloak.
@@ -48,7 +48,7 @@ disable swap so can remove the swap partition.
 Once the OS has been installed, we have a blank system where we can then SSH in as root using the same SSH key.
 On first install, we need to tell Ansible to SSH in using `root` so run that first Ansible command as:
 
-    ANSIBLE_REMOTE_USER=root uv run ansible-playbook playbook.yml -i coven/inventory -l my-new-server
+    ANSIBLE_REMOTE_USER=root uv run ansible-playbook plays/configure-hosts.yml -i coven/inventory -l my-new-server
 
 ## Other fresh installs
 
