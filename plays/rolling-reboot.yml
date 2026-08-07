@@ -1,0 +1,59 @@
+---
+- name: reboot k3s nodes if there are pending upgrades
+  hosts: all
+  serial: 1
+  become: true
+
+  tasks:
+    - name: Check if node requires a reboot
+      ansible.builtin.command: needs-restarting -r
+      register: reboot_check
+      failed_when: reboot_check.rc not in [0, 1]
+      changed_when: false
+
+    - name: Report status if no reboot is needed
+      ansible.builtin.debug:
+        msg: "Node {{ inventory_hostname }} does not require a reboot. Skipping."
+      when: reboot_check.rc == 0
+
+    - name: Drain, Reboot, and Uncordon Node
+      when: reboot_check.rc == 1 # exit code 1 = reboot required
+      block:
+        - name: Drain node before reboot
+          delegate_to: localhost
+          become: false
+          ansible.builtin.command: >
+            kubectl drain {{ k3s_agent['node-name'] }}
+            --ignore-daemonsets
+            --delete-emptydir-data
+            --force
+          register: drain_result
+          changed_when: "'drained' in drain_result.stdout or 'cordoned' in drain_result.stdout"
+
+        - name: Reboot the node
+          ansible.builtin.reboot:
+            msg: "Reboot triggered by rolling-reboot playbook"
+            connect_timeout: 5
+            reboot_timeout: 600
+            pre_reboot_delay: 0
+            post_reboot_delay: 15
+            test_command: uptime
+
+        - name: Wait for node to re-join and report Ready status
+          delegate_to: localhost
+          become: false
+          ansible.builtin.command: >
+            kubectl get node {{ k3s_agent['node-name'] }}
+            -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+          register: node_ready
+          until: node_ready.stdout == "True"
+          retries: 30
+          delay: 10
+
+        - name: Uncordon the node
+          delegate_to: localhost
+          become: false
+          ansible.builtin.command: >
+            kubectl uncordon {{ k3s_agent['node-name'] }}
+          register: uncordon_result
+          changed_when: "'uncordoned' in uncordon_result.stdout"
