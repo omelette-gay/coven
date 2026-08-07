@@ -5,7 +5,7 @@ set -e
 if [ "$1" == "--coven" ] ; then
   export SSH_ARGS=strix.xdc.omelette.gay
 elif [ "$1" == "--local" ] ; then
-  export SSH_ARGS=-i .vagrant/machines/default/*/private_key vagrant@192.168.57.100
+  export SSH_ARGS="-i .vagrant/machines/default/*/private_key vagrant@192.168.57.100"
 else
   echo "usage: $0 [--coven|--local]"
   exit 1
