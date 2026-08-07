@@ -57,6 +57,13 @@ jobs:
             vCyvWCodXqQCIFn+wIsfK9e2QFftm/idiRRRhpqHVcP4F0HUaTuNNsz2
             -----END CERTIFICATE-----
 
+      - name: write kubeconfig out
+        run: |
+          mkdir ~/.kube
+          cat >~/.kube/config <<EOF
+          ${{ steps.k8s_auth.outputs.kubeconfig }}
+          EOF
+
       - uses: hashicorp/setup-terraform@v4
 
       - name: Terraform fmt

@@ -51,6 +51,13 @@ jobs:
             vCyvWCodXqQCIFn+wIsfK9e2QFftm/idiRRRhpqHVcP4F0HUaTuNNsz2
             -----END CERTIFICATE-----
       
+      - name: write kubeconfig out
+        run: |
+          mkdir ~/.kube
+          cat >~/.kube/config <<EOF
+          ${{ steps.k8s_auth.outputs.kubeconfig }}
+          EOF
+
       - name: login to GCP
         uses: google-github-actions/auth@v3
         with:
