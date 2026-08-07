@@ -64,7 +64,7 @@ jobs:
           uv run ansible-galaxy install -r requirements.yml
 
       - name: run Ansible
-        run: uv run ansible-playbook -u github -i coven/inventory playbook.yml
+        run: uv run ansible-playbook -u github -i coven/inventory plays/configure-hosts.yml
 
       - name: close down Wireguard connection
         if: always()
