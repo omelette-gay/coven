@@ -61,7 +61,7 @@ resource "hcloud_zone_rrset" "srv" {
   zone = var.dns.zone.id
   records = [
     {
-      value = "0 0 ${var.port} minecraft-svc.${var.dns.hostname}"
+      value = "0 0 ${var.port} minecraft-svc.${var.dns.hostname}."
     }
   ]
 }
