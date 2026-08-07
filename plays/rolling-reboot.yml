@@ -19,6 +19,27 @@
     - name: Drain, Reboot, and Uncordon Node
       when: reboot_check.rc == 1 # exit code 1 = reboot required
       block:
+        - name: Gracefully switchover any CNPG primaries on this node
+          delegate_to: localhost
+          become: false
+          ansible.builtin.shell: |
+            # Find all CNPG primaries running on this specific node and trigger switchover
+            for pod in $(kubectl get pods -A -l cnpg.io/instanceRole=primary --field-selector spec.nodeName={{ k3s_agent['node-name'] }} -o jsonpath='{range .items[*]}{.metadata.namespace}{"/"}{.metadata.labels.cnpg\.io\/cluster}{"\n"}{end}'); do
+              NS=$(echo $pod | cut -d'/' -f1)
+              CLUSTER=$(echo $pod | cut -d'/' -f2)
+              kubectl cnpg switchover $CLUSTER -n $NS
+            done
+          failed_when: false
+          changed_when: false
+
+        - name: Scale down matter server on strix which blocks drain
+          delegate_to: localhost
+          become: false
+          ansible.builtin.command: >
+            kubectl -n home-assistant scale statefulset gs-home-assistant-matter-server --replicas=0
+          failed_when: false
+          when: inventory_hostname == "grimhilde"
+
         - name: Drain node before reboot
           delegate_to: localhost
           become: false
@@ -57,3 +78,33 @@
             kubectl uncordon {{ k3s_agent['node-name'] }}
           register: uncordon_result
           changed_when: "'uncordoned' in uncordon_result.stdout"
+
+        - name: Rebalance CNPG Standby pods if co-located on the same node
+          delegate_to: localhost
+          become: false
+          ansible.builtin.shell: |
+            # Find standby pods running on the same node as their primary and delete them to force rescheduling
+            for cluster in $(kubectl get clusters.postgresql.cnpg.io -A -o jsonpath='{range .items[*]}{.metadata.namespace}{"/"}{.metadata.name}{"\n"}{end}'); do
+              NS=$(echo $cluster | cut -d'/' -f1)
+              NAME=$(echo $cluster | cut -d'/' -f2)
+            
+              # Get node of primary and standby
+              PRIM_NODE=$(kubectl get pods -n $NS -l cnpg.io/cluster=$NAME,cnpg.io/instanceRole=primary -o jsonpath='{.items[0].spec.nodeName}')
+              STDBY_POD=$(kubectl get pods -n $NS -l cnpg.io/cluster=$NAME,cnpg.io/instanceRole=replica -o jsonpath='{.items[0].metadata.name}')
+              STDBY_NODE=$(kubectl get pods -n $NS -l cnpg.io/cluster=$NAME,cnpg.io/instanceRole=replica -o jsonpath='{.items[0].spec.nodeName}')
+            
+              if [ "$PRIM_NODE" = "$STDBY_NODE" ] && [ -n "$STDBY_POD" ]; then
+                echo "Rebalancing standby $STDBY_POD in namespace $NS"
+                kubectl delete pod $STDBY_POD -n $NS
+              fi
+            done
+          failed_when: false
+          changed_when: false
+
+        - name: Scale up matter server on grimhilde which blocks drain
+          delegate_to: localhost
+          become: false
+          ansible.builtin.command: >
+            kubectl -n home-assistant scale statefulset gs-home-assistant-matter-server --replicas=1
+          failed_when: false
+          when: inventory_hostname == "grimhilde"

@@ -13,6 +13,7 @@ You will need to have the following installed (in your WSL environment if on Win
 - Helm Diff: `helm plugin install https://github.com/databus23/helm-diff`
 - [Vault](https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
+- kubectl cnpg plugin: `kubectl cnpg install plugin`
 - [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 - [gcloud CLI](https://cloud.google.com/sdk/docs/install#deb)
 
