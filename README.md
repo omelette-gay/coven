@@ -87,6 +87,9 @@ to specify the inventory as `testlab/inventory`. Following this, you can specify
     ./login.sh --local
     uv run ansible-playbook -i testlab/inventory plays/configure-hosts.yml
 
+Now you can run `terraform apply` in the `testlab/` folder to apply any Terraform changes.
+The tfstate for the testlab is local, stored in a gitignored file.
+
 # How To
 
 ## Restart and unseal Vault after a deploy or reboot

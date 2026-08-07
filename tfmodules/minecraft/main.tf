@@ -56,7 +56,7 @@ resource "helm_release" "minecraft" {
 resource "hcloud_zone_rrset" "srv" {
   count = var.dns == null ? 0 : 1
 
-  name = "_minecraft._tcp.${trimsuffix(trimsuffix(var.dns.hostname, var.dns.zone.name), ".")}"
+  name = trimsuffix("_minecraft._tcp.${trimsuffix(var.dns.hostname, var.dns.zone.name)}", ".")
   type = "SRV"
   zone = var.dns.zone.id
   records = [

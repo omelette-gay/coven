@@ -26,6 +26,14 @@ terraform {
       source  = "hetznercloud/hcloud"
       version = "1.68.0"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "3.2.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "3.2.1"
+    }
   }
 }
 
@@ -47,4 +55,14 @@ ephemeral "vault_kv_secret_v2" "hetzner" {
 
 provider "hcloud" {
   token = ephemeral.vault_kv_secret_v2.hetzner.data["api_token"]
+}
+
+provider "helm" {
+  kubernetes = {
+    config_path = "~/.kube/config"
+  }
+}
+
+provider "kubernetes" {
+  config_path = "~/.kube/config"
 }
