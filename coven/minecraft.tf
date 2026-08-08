@@ -11,7 +11,13 @@ module "girlsclub_minecraft" {
   motd = "Girls yearn for the mines"
   whitelist = [
     "DizzyUK83",
-    "Laser2k13"
+    "Laser2k13",
+    "Katie_Armitage",
+    "emilyg99",
+    "Christinana_",
+    "WiFiGirl92",
+    "slimsadie12345",
+    "avakf"
   ]
   ops = [
     "DizzyUK83",
