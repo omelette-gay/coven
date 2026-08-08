@@ -1,81 +1,232 @@
 # delegate some domains to Chris's Fastmail account
 
-locals {
-  domains_with_fastmail_mx = {
-    "animebots.co.uk"          = hcloud_zone.animebots_co_uk,
-    "barcampmanchester.co.uk"  = hcloud_zone.barcampmanchester_co_uk,
-    "chrisn.xyz"               = hcloud_zone.chrisn_xyz,
-    "cjn.me.uk"                = hcloud_zone.cjn_me_uk,
-    "dxhosting.co.uk"          = hcloud_zone.dxhosting_co_uk,
-    "manchestertechnights.org" = hcloud_zone.manchestertechnights_org,
-    "pling.org.uk"             = hcloud_zone.pling_org_uk,
+module "fastmail" {
+  source = "../tfmodules/fastmail"
+
+  for_each = {
+    for zone in [
+      hcloud_zone.animebots_co_uk,
+      hcloud_zone.barcampmanchester_co_uk,
+      hcloud_zone.chrisn_xyz,
+      hcloud_zone.cjn_me_uk,
+      hcloud_zone.dxhosting_co_uk,
+      hcloud_zone.manchestertechnights_org,
+      hcloud_zone.pling_org_uk,
+    ] : zone.name => zone
   }
+
+  zone = each.value
 }
 
-resource "hcloud_zone_rrset" "fastmail_mx" {
-  for_each = local.domains_with_fastmail_mx
+# Migration of the Fastmail records into ../tfmodules/fastmail.
+# Safe to delete once this has been applied against all state files.
 
-  name = "@"
-  type = "MX"
-  zone = each.value.id
-
-  records = [
-    { value = "10 in1-smtp.messagingengine.com." },
-    { value = "20 in2-smtp.messagingengine.com." }
-  ]
+moved {
+  from = hcloud_zone_rrset.fastmail_mx["animebots.co.uk"]
+  to   = module.fastmail["animebots.co.uk"].hcloud_zone_rrset.mx
 }
 
-resource "hcloud_zone_rrset" "fastmail_spf" {
-  for_each = local.domains_with_fastmail_mx
-
-  name = "@"
-  type = "TXT"
-  zone = each.value.id
-  records = [
-    { value = provider::hcloud::txt_record("v=spf1 include:spf.messagingengine.com ?all") }
-  ]
+moved {
+  from = hcloud_zone_rrset.fastmail_spf["animebots.co.uk"]
+  to   = module.fastmail["animebots.co.uk"].hcloud_zone_rrset.spf
 }
 
-resource "hcloud_zone_rrset" "fastmail_dkim1" {
-  for_each = local.domains_with_fastmail_mx
-
-  name = "fm1._domainkey"
-  type = "CNAME"
-  zone = each.value.id
-  records = [
-    { value = "fm1.${each.value.name}.dkim.fmhosted.com." }
-  ]
+moved {
+  from = hcloud_zone_rrset.fastmail_dmarc["animebots.co.uk"]
+  to   = module.fastmail["animebots.co.uk"].hcloud_zone_rrset.dmarc
 }
 
-resource "hcloud_zone_rrset" "fastmail_dkim2" {
-  for_each = local.domains_with_fastmail_mx
-
-  name = "fm2._domainkey"
-  type = "CNAME"
-  zone = each.value.id
-  records = [
-    { value = "fm2.${each.value.name}.dkim.fmhosted.com." }
-  ]
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim1["animebots.co.uk"]
+  to   = module.fastmail["animebots.co.uk"].hcloud_zone_rrset.dkim["fm1"]
 }
 
-resource "hcloud_zone_rrset" "fastmail_dkim3" {
-  for_each = local.domains_with_fastmail_mx
-
-  name = "fm3._domainkey"
-  type = "CNAME"
-  zone = each.value.id
-  records = [
-    { value = "fm3.${each.value.name}.dkim.fmhosted.com." }
-  ]
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim2["animebots.co.uk"]
+  to   = module.fastmail["animebots.co.uk"].hcloud_zone_rrset.dkim["fm2"]
 }
 
-resource "hcloud_zone_rrset" "fastmail_dmarc" {
-  for_each = local.domains_with_fastmail_mx
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim3["animebots.co.uk"]
+  to   = module.fastmail["animebots.co.uk"].hcloud_zone_rrset.dkim["fm3"]
+}
 
-  name = "_dmarc"
-  type = "TXT"
-  zone = each.value.id
-  records = [
-    { value = provider::hcloud::txt_record("v=DMARC1; p=none;") }
-  ]
+moved {
+  from = hcloud_zone_rrset.fastmail_mx["barcampmanchester.co.uk"]
+  to   = module.fastmail["barcampmanchester.co.uk"].hcloud_zone_rrset.mx
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_spf["barcampmanchester.co.uk"]
+  to   = module.fastmail["barcampmanchester.co.uk"].hcloud_zone_rrset.spf
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dmarc["barcampmanchester.co.uk"]
+  to   = module.fastmail["barcampmanchester.co.uk"].hcloud_zone_rrset.dmarc
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim1["barcampmanchester.co.uk"]
+  to   = module.fastmail["barcampmanchester.co.uk"].hcloud_zone_rrset.dkim["fm1"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim2["barcampmanchester.co.uk"]
+  to   = module.fastmail["barcampmanchester.co.uk"].hcloud_zone_rrset.dkim["fm2"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim3["barcampmanchester.co.uk"]
+  to   = module.fastmail["barcampmanchester.co.uk"].hcloud_zone_rrset.dkim["fm3"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_mx["chrisn.xyz"]
+  to   = module.fastmail["chrisn.xyz"].hcloud_zone_rrset.mx
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_spf["chrisn.xyz"]
+  to   = module.fastmail["chrisn.xyz"].hcloud_zone_rrset.spf
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dmarc["chrisn.xyz"]
+  to   = module.fastmail["chrisn.xyz"].hcloud_zone_rrset.dmarc
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim1["chrisn.xyz"]
+  to   = module.fastmail["chrisn.xyz"].hcloud_zone_rrset.dkim["fm1"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim2["chrisn.xyz"]
+  to   = module.fastmail["chrisn.xyz"].hcloud_zone_rrset.dkim["fm2"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim3["chrisn.xyz"]
+  to   = module.fastmail["chrisn.xyz"].hcloud_zone_rrset.dkim["fm3"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_mx["cjn.me.uk"]
+  to   = module.fastmail["cjn.me.uk"].hcloud_zone_rrset.mx
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_spf["cjn.me.uk"]
+  to   = module.fastmail["cjn.me.uk"].hcloud_zone_rrset.spf
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dmarc["cjn.me.uk"]
+  to   = module.fastmail["cjn.me.uk"].hcloud_zone_rrset.dmarc
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim1["cjn.me.uk"]
+  to   = module.fastmail["cjn.me.uk"].hcloud_zone_rrset.dkim["fm1"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim2["cjn.me.uk"]
+  to   = module.fastmail["cjn.me.uk"].hcloud_zone_rrset.dkim["fm2"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim3["cjn.me.uk"]
+  to   = module.fastmail["cjn.me.uk"].hcloud_zone_rrset.dkim["fm3"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_mx["dxhosting.co.uk"]
+  to   = module.fastmail["dxhosting.co.uk"].hcloud_zone_rrset.mx
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_spf["dxhosting.co.uk"]
+  to   = module.fastmail["dxhosting.co.uk"].hcloud_zone_rrset.spf
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dmarc["dxhosting.co.uk"]
+  to   = module.fastmail["dxhosting.co.uk"].hcloud_zone_rrset.dmarc
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim1["dxhosting.co.uk"]
+  to   = module.fastmail["dxhosting.co.uk"].hcloud_zone_rrset.dkim["fm1"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim2["dxhosting.co.uk"]
+  to   = module.fastmail["dxhosting.co.uk"].hcloud_zone_rrset.dkim["fm2"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim3["dxhosting.co.uk"]
+  to   = module.fastmail["dxhosting.co.uk"].hcloud_zone_rrset.dkim["fm3"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_mx["manchestertechnights.org"]
+  to   = module.fastmail["manchestertechnights.org"].hcloud_zone_rrset.mx
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_spf["manchestertechnights.org"]
+  to   = module.fastmail["manchestertechnights.org"].hcloud_zone_rrset.spf
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dmarc["manchestertechnights.org"]
+  to   = module.fastmail["manchestertechnights.org"].hcloud_zone_rrset.dmarc
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim1["manchestertechnights.org"]
+  to   = module.fastmail["manchestertechnights.org"].hcloud_zone_rrset.dkim["fm1"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim2["manchestertechnights.org"]
+  to   = module.fastmail["manchestertechnights.org"].hcloud_zone_rrset.dkim["fm2"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim3["manchestertechnights.org"]
+  to   = module.fastmail["manchestertechnights.org"].hcloud_zone_rrset.dkim["fm3"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_mx["pling.org.uk"]
+  to   = module.fastmail["pling.org.uk"].hcloud_zone_rrset.mx
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_spf["pling.org.uk"]
+  to   = module.fastmail["pling.org.uk"].hcloud_zone_rrset.spf
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dmarc["pling.org.uk"]
+  to   = module.fastmail["pling.org.uk"].hcloud_zone_rrset.dmarc
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim1["pling.org.uk"]
+  to   = module.fastmail["pling.org.uk"].hcloud_zone_rrset.dkim["fm1"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim2["pling.org.uk"]
+  to   = module.fastmail["pling.org.uk"].hcloud_zone_rrset.dkim["fm2"]
+}
+
+moved {
+  from = hcloud_zone_rrset.fastmail_dkim3["pling.org.uk"]
+  to   = module.fastmail["pling.org.uk"].hcloud_zone_rrset.dkim["fm3"]
 }
