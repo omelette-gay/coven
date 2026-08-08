@@ -114,6 +114,8 @@
 
         persistence:
           enabled: true
+        deploymentStrategy:
+          type: Recreate
 
       prometheus:
         prometheusSpec:
