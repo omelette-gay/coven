@@ -20,7 +20,8 @@ module "girlsclub_minecraft" {
     "WiFiGirl92",
     "slimsadie12345",
     "avakf",
-    "Mystic_Liv"
+    "Mystic_Liv",
+    "PaddyHasCake"
   ]
   ops = [
     "DizzyUK83",
