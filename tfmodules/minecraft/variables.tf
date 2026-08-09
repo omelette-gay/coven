@@ -37,3 +37,9 @@ variable "dns" {
   })
   default = null
 }
+
+variable "memory" {
+  description = "How much memory to assign to the server"
+  type        = string
+  default     = "1G"
+}

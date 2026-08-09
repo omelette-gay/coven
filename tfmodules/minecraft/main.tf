@@ -32,6 +32,7 @@ resource "helm_release" "minecraft" {
       minecraftServer = {
         eula       = true
         difficulty = "normal"
+        type       = "PAPER"
         whitelist  = join(",", var.whitelist)
         ops        = join(",", var.ops)
         motd       = var.motd
@@ -39,7 +40,11 @@ resource "helm_release" "minecraft" {
         serviceType = "LoadBalancer"
         servicePort = var.port
 
-        tty = false
+        memory = var.memory
+        tty    = false
+      }
+      extraEnv = {
+        USE_MEOWICE_FLAGS = "true"
       }
       persistence = {
         dataDir = {
