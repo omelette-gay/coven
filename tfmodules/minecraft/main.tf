@@ -62,34 +62,48 @@ resource "helm_release" "minecraft" {
           containerPort = 9940
           protocol      = "TCP"
           service = {
-            enabled  = false # do not expose to the world
+            enabled = false # do not expose to the world
           }
         }
       ]
-        # Mount the ConfigMap into a temporary directory in the pod
-        extraVolumes = [
-          {
-            name = "prometheus-exporter-config"
-            configMap = {
-              name = kubernetes_config_map_v1.prometheus_exporter_config.metadata[0].name
+      # Mount the ConfigMap into a temporary directory in the pod
+      extraVolumes = [
+        {
+          name = "prometheus-exporter-config"
+          configMap = {
+            name = kubernetes_config_map_v1.prometheus_exporter_config.metadata[0].name
+          }
+        }
+      ]
+
+      extraVolumeMounts = [
+        {
+          name      = "prometheus-exporter-config"
+          mountPath = "/tmp/prometheus-config"
+        }
+      ]
+
+      initContainers = [
+        {
+          name  = "init-prometheus-config"
+          image = "busybox:latest"
+          command = [
+            "sh",
+            "-c",
+            "mkdir -p /data/plugins/PrometheusExporter && cp /tmp/prometheus-config/config.yml /data/plugins/PrometheusExporter/config.yml"
+          ]
+          volumeMounts = [
+            {
+              name      = "prometheus-exporter-config"
+              mountPath = "/tmp/prometheus-config"
+            },
+            {
+              name      = "data" # Mounts the server's persistent volume
+              mountPath = "/data"
             }
-          }
-        ]
-
-        extraVolumeMounts = [
-          {
-            name      = "prometheus-exporter-config"
-            mountPath = "/tmp/prometheus-config"
-          }
-        ]
-
-  lifecycle = {
-        postStart = [
-          "bash",
-          "-c",
-          "mkdir -p /data/plugins/PrometheusExporter && cp /tmp/prometheus-config/config.yml /data/plugins/PrometheusExporter/config.yml"
-        ]
-      }
+          ]
+        }
+      ]
     })
   ]
 }
