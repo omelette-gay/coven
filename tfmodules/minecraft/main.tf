@@ -45,10 +45,10 @@ resource "helm_release" "minecraft" {
           {
             name          = "metrics"
             containerPort = 9940
-            protocol      = "TCP"
             service = {
               enabled  = true
               embedded = false # do not expose to the world
+              port     = 9940
             }
           }
         ]
