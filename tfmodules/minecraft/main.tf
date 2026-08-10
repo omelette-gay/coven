@@ -69,17 +69,18 @@ resource "helm_release" "minecraft" {
       # Mount the ConfigMap into a temporary directory in the pod
       extraVolumes = [
         {
-          name = "prometheus-exporter-config"
-          configMap = {
-            name = kubernetes_config_map_v1.prometheus_exporter_config.metadata[0].name
+          volumes = {
+            name = "prometheus-exporter-config"
+            configMap = {
+              name = kubernetes_config_map_v1.prometheus_exporter_config.metadata[0].name
+            }
           }
-        }
-      ]
-
-      extraVolumeMounts = [
-        {
-          name      = "prometheus-exporter-config"
-          mountPath = "/tmp/prometheus-config"
+          volumeMounts = [
+            {
+              name      = "prometheus-exporter-config"
+              mountPath = "/tmp/prometheus-config"
+            }
+          ]
         }
       ]
 
