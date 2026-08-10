@@ -1089,14 +1089,16 @@
                   annotations:
                     summary: Minecraft server experiencing low TPS on {{ "{{" }} $labels.pod {{ "}}" }}
                     description: TPS on {{ "{{" }} $labels.pod {{ "}}" }} (namespace {{ "{{" }} $labels.namespace {{ "}}" }}) has dropped to {{ "{{" }} $value | printf \"%.2f\" {{ "}}" }} (below 18) for over 3 minutes.
+
                 - alert: MinecraftHighTickDuration
-                  expr: mc_tick_duration_average > 45000000
+                  expr: (mc_tick_duration_average / 1000000) > 45
                   for: 3m
                   labels:
                     severity: warning
                   annotations:
                     summary: Minecraft server high tick duration on {{ "{{" }} $labels.pod {{ "}}" }}
-                    description: Average tick duration on {{ "{{" }} $labels.pod {{ "}}" }} is {{ "{{" }} $value | float | div 1000000 | printf \"%.2f\" {{ "}}" }}ms (limit is 50ms). Server is near capacity.
+                    description: Average tick duration on {{ "{{" }} $labels.pod {{ "}}" }} is {{ "{{" }} $value | printf \"%.0f\" {{ "}}" }} ms (limit is 45ms). Server is near capacity.
+
                 - alert: MinecraftJVMHeapMemoryHigh
                   expr: (mc_jvm_memory{type="used"} / mc_jvm_memory{type="max"}) * 100 > 90
                   for: 5m
@@ -1105,7 +1107,6 @@
                   annotations:
                     summary: Minecraft JVM Heap memory high on {{ "{{" }} $labels.pod {{ "}}" }}
                     description: JVM Heap usage on {{ "{{" }} $labels.pod {{ "}}" }} is at {{ "{{" }} $value | printf \"%.1f\" {{ "}}" }}% of max allocated memory (-Xmx) for over 5 minutes. The server may experience heavy Garbage Collection lag spikes.
-
     wait: true
   notify: restart Grafana
 

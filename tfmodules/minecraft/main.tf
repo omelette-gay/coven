@@ -62,7 +62,8 @@ resource "helm_release" "minecraft" {
           containerPort = 9940
           protocol      = "TCP"
           service = {
-            enabled = false # do not expose to the world
+            enabled  = true
+            embedded = false # do not expose to the world
           }
         }
       ]
