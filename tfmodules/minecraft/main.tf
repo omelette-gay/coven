@@ -37,7 +37,7 @@ resource "helm_release" "minecraft" {
         ops        = join(",", var.ops)
         motd       = var.motd
 
-        plugin_urls = ["https://github.com/sladkoff/minecraft-prometheus-exporter/releases/download/v3.1.2/minecraft-prometheus-exporter-3.1.2.jar"]
+        pluginUrls = ["https://github.com/sladkoff/minecraft-prometheus-exporter/releases/download/v3.1.2/minecraft-prometheus-exporter-3.1.2.jar"]
 
         serviceType = "LoadBalancer"
         servicePort = var.port
