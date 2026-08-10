@@ -93,6 +93,14 @@
                 editable: true
                 options:
                   path: /var/lib/grafana/dashboards/mariadb
+              - name: minecraft
+                orgId: 1
+                folder: ''
+                type: file
+                disableDeletion: false
+                editable: true
+                options:
+                  path: /var/lib/grafana/dashboards/minecraft
         dashboards:
           mariadb:
             mysql-overview:
