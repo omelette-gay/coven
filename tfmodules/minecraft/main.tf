@@ -41,6 +41,17 @@ resource "helm_release" "minecraft" {
 
         serviceType = "LoadBalancer"
         servicePort = var.port
+        extraPorts = [
+          {
+            name          = "metrics"
+            containerPort = 9940
+            protocol      = "TCP"
+            service = {
+              enabled  = true
+              embedded = false # do not expose to the world
+            }
+          }
+        ]
 
         memory = var.memory
         tty    = false
@@ -56,17 +67,6 @@ resource "helm_release" "minecraft" {
       serviceAnnotations = var.dns == null ? {} : {
         "external-dns.alpha.kubernetes.io/hostname" = "minecraft-svc.${var.dns.hostname}"
       }
-      extraPorts = [
-        {
-          name          = "metrics"
-          containerPort = 9940
-          protocol      = "TCP"
-          service = {
-            enabled  = true
-            embedded = false # do not expose to the world
-          }
-        }
-      ]
       # Mount the ConfigMap into a temporary directory in the pod
       extraVolumes = [
         {
