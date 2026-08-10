@@ -98,7 +98,7 @@ resource "helm_release" "minecraft" {
               mountPath = "/tmp/prometheus-config"
             },
             {
-              name      = "data" # Mounts the server's persistent volume
+              name      = "datadir"
               mountPath = "/data"
             }
           ]
