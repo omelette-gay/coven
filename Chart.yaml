@@ -5,7 +5,7 @@ description: This is not a real Helm chart - it only exists so Dependabot can up
 type: application
 dependencies:
   - name: alloy
-    version: 1.11.0
+    version: 1.11.1
     repository: https://grafana.github.io/helm-charts
   - name: altinity-clickhouse-operator
     version: 0.27.2
