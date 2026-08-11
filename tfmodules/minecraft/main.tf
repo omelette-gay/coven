@@ -62,6 +62,7 @@ resource "helm_release" "minecraft" {
       persistence = {
         dataDir = {
           enabled = true
+          Size    = var.disk_size
         }
       }
       serviceAnnotations = var.dns == null ? {} : {

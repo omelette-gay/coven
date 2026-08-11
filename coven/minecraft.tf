@@ -8,7 +8,8 @@ module "girlsclub_minecraft" {
     zone     = hcloud_zone.omelette_gay
   }
 
-  memory = "4G"
+  memory    = "4G"
+  disk_size = "10G"
 
   motd = "Girls yearn for the mines"
   whitelist = [

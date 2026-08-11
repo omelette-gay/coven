@@ -43,3 +43,9 @@ variable "memory" {
   type        = string
   default     = "1G"
 }
+
+variable "disk_size" {
+  description = "How big a disk to assign to the Minecraft data dir"
+  type        = string
+  default     = "1G"
+}
