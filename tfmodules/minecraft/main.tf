@@ -2,19 +2,19 @@ terraform {
   required_providers {
     helm = {
       source  = "hashicorp/helm"
-      version = "3.2.0"
+      version = ">= 3.2.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "3.2.1"
+      version = ">= 3.2.1"
     }
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.68.0"
+      version = ">= 1.68.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.7.2"
+      version = ">= 3.7.2"
     }
   }
 }
@@ -106,6 +106,11 @@ resource "helm_release" "minecraft" {
           existingSecret = kubernetes_secret_v1.rcon[0].metadata[0].name
           secretKey      = "rcon-password"
         } : {}
+      }
+      resources = {
+        requests = {
+          memory = "${tonumber(trimsuffix(var.memory, "G")) + 1}G"
+        }
       }
       extraEnv = {
         USE_MEOWICE_FLAGS = "true"
