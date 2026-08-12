@@ -101,11 +101,11 @@ resource "helm_release" "minecraft" {
         memory = var.memory
         tty    = false
 
-        rcon = var.backups_enabled ? {
-          enabled        = true
-          existingSecret = kubernetes_secret_v1.rcon[0].metadata[0].name
+        rcon = {
+          enabled        = var.backups_enabled
+          existingSecret = var.backups_enabled ? kubernetes_secret_v1.rcon[0].metadata[0].name : ""
           secretKey      = "rcon-password"
-        } : {}
+        }
       }
       resources = {
         requests = {
@@ -121,15 +121,15 @@ resource "helm_release" "minecraft" {
           Size    = var.disk_size
         }
       }
-      mcbackup = var.backups_enabled ? {
-        enabled = true
+      mcbackup = {
+        enabled = var.backups_enabled
         persistence = {
           backupDir = {
-            enabled       = true
-            existingClaim = kubernetes_persistent_volume_claim_v1.backups[0].metadata[0].name
+            enabled       = var.backups_enabled
+            existingClaim = var.backups_enabled ? kubernetes_persistent_volume_claim_v1.backups[0].metadata[0].name : ""
           }
         }
-      } : {}
+      }
       serviceAnnotations = var.dns == null ? {} : {
         "external-dns.alpha.kubernetes.io/hostname" = "minecraft-svc.${var.dns.hostname}"
       }
