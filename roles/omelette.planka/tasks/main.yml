@@ -116,44 +116,29 @@
         postresql: "{{ cnpg_postgres_major_version }}"
       cluster:
         instances: 2
+        initdb:
+          database: planka
         monitoring:
           enabled: true
-
-      mode: recovery
-      recovery:
+      backups:
+        enabled: true
         method: plugin
         pluginConfiguration:
           name: barman-cloud.cloudnative-pg.io
-        pitrTarget:
-          time: "2026-08-11T04:00:00Z"
-        database: planka
-
         provider: google
         google:
-          bucket: coven-backups
-          path: "/cnpg/planka/"
+          bucket: "{{ gcp_backup_bucket_name }}"
+          path: /cnpg/planka/
         secret:
           create: false
-          name: planka-gcp-backup-creds
-#      backups:
-#        enabled: true
-#        method: plugin
-#        pluginConfiguration:
-#          name: barman-cloud.cloudnative-pg.io
-#        provider: google
-#        google:
-#          bucket: "{{ gcp_backup_bucket_name }}"
-#          path: /cnpg/planka/
-#        secret:
-#          create: false
-#          name: "{{ planka_k8s_backup_creds_secret }}"
-#        scheduledBackups:
-#          - name: daily-backup
-#            schedule: "0 0 8,20 * * *"
-#            backupOwnerReference: self
-#            method: plugin
-#            pluginConfiguration:
-#              name: barman-cloud.cloudnative-pg.io
+          name: "{{ planka_k8s_backup_creds_secret }}"
+        scheduledBackups:
+          - name: daily-backup
+            schedule: "0 0 8,20 * * *"
+            backupOwnerReference: self
+            method: plugin
+            pluginConfiguration:
+              name: barman-cloud.cloudnative-pg.io
 
 - name: Install Planka
   kubernetes.core.helm:
