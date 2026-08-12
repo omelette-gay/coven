@@ -12,12 +12,57 @@ terraform {
       source  = "hetznercloud/hcloud"
       version = "1.68.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.7.2"
+    }
   }
 }
 
 resource "kubernetes_namespace_v1" "this" {
   metadata {
     name = "minecraft-${var.server_id}"
+  }
+}
+
+resource "random_password" "rcon" {
+  count   = var.backups_enabled ? 1 : 0
+  length  = 32
+  special = false
+}
+
+resource "kubernetes_secret_v1" "rcon" {
+  count = var.backups_enabled ? 1 : 0
+
+  metadata {
+    name      = "${var.server_id}-rcon"
+    namespace = resource.kubernetes_namespace_v1.this.metadata[0].name
+  }
+
+  data = {
+    "rcon-password" = random_password.rcon[0].result
+  }
+}
+
+resource "kubernetes_persistent_volume_claim_v1" "backups" {
+  count = var.backups_enabled ? 1 : 0
+
+  metadata {
+    name      = "${var.server_id}-minecraft-backupdir"
+    namespace = resource.kubernetes_namespace_v1.this.metadata[0].name
+    labels = var.longhorn_recurring_job_name != null ? {
+      "recurring-job.longhorn.io/source"                             = "enabled"
+      "recurring-job.longhorn.io/${var.longhorn_recurring_job_name}" = "enabled"
+    } : {}
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = var.backup_disk_size
+      }
+    }
   }
 }
 
@@ -55,6 +100,12 @@ resource "helm_release" "minecraft" {
 
         memory = var.memory
         tty    = false
+
+        rcon = var.backups_enabled ? {
+          enabled        = true
+          existingSecret = kubernetes_secret_v1.rcon[0].metadata[0].name
+          secretKey      = "rcon-password"
+        } : {}
       }
       extraEnv = {
         USE_MEOWICE_FLAGS = "true"
@@ -65,6 +116,15 @@ resource "helm_release" "minecraft" {
           Size    = var.disk_size
         }
       }
+      mcbackup = var.backups_enabled ? {
+        enabled = true
+        persistence = {
+          backupDir = {
+            enabled       = true
+            existingClaim = kubernetes_persistent_volume_claim_v1.backups[0].metadata[0].name
+          }
+        }
+      } : {}
       serviceAnnotations = var.dns == null ? {} : {
         "external-dns.alpha.kubernetes.io/hostname" = "minecraft-svc.${var.dns.hostname}"
       }

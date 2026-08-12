@@ -49,3 +49,21 @@ variable "disk_size" {
   type        = string
   default     = "1G"
 }
+
+variable "backups_enabled" {
+  description = "Whether to enable periodic world backups"
+  type        = bool
+  default     = false
+}
+
+variable "backup_disk_size" {
+  description = "How big a disk to assign to the Minecraft backup dir"
+  type        = string
+  default     = "5G"
+}
+
+variable "longhorn_recurring_job_name" {
+  description = "Longhorn recurring job name to label the backup PVC with. If null, no Longhorn labels are set."
+  type        = string
+  default     = null
+}
