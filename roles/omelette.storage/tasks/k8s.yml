@@ -11,6 +11,8 @@
         concurrentAutomaticEngineUpgradePerNodeLimit: "3"
         storageOverProvisioningPercentage: "{{ longhorn_over_provision_percentage }}" # allow over provision for the sandbox
         engineReplicaTimeout: 30 # network connections in our cluster are over the internet, so can be slower, so increase the timeout from default
+        nodeDrainPolicy: allow-if-replica-is-stopped
+        defaultDataLocality: best-effort
       defaultBackupStore:
         backupTarget: "s3://{{ gcp_backup_bucket_name }}@europe-west2/"
         backupTargetCredentialSecret: "{{ longhorn_k8s_backup_creds_secret }}"
