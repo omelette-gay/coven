@@ -11,6 +11,10 @@ module "girlsclub_minecraft" {
   memory    = "4G"
   disk_size = "10G"
 
+  backups_enabled             = true
+  backup_disk_size            = "20G"
+  longhorn_recurring_job_name = "nightly-backup"
+
   motd = "Girls yearn for the mines"
   whitelist = [
     "DizzyUK83",

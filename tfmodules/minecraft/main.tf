@@ -2,15 +2,19 @@ terraform {
   required_providers {
     helm = {
       source  = "hashicorp/helm"
-      version = "3.2.0"
+      version = ">= 3.2.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "3.2.1"
+      version = ">= 3.2.1"
     }
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.68.0"
+      version = ">= 1.68.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.7.2"
     }
   }
 }
@@ -18,6 +22,47 @@ terraform {
 resource "kubernetes_namespace_v1" "this" {
   metadata {
     name = "minecraft-${var.server_id}"
+  }
+}
+
+resource "random_password" "rcon" {
+  count   = var.backups_enabled ? 1 : 0
+  length  = 32
+  special = false
+}
+
+resource "kubernetes_secret_v1" "rcon" {
+  count = var.backups_enabled ? 1 : 0
+
+  metadata {
+    name      = "${var.server_id}-rcon"
+    namespace = resource.kubernetes_namespace_v1.this.metadata[0].name
+  }
+
+  data = {
+    "rcon-password" = random_password.rcon[0].result
+  }
+}
+
+resource "kubernetes_persistent_volume_claim_v1" "backups" {
+  count = var.backups_enabled ? 1 : 0
+
+  metadata {
+    name      = "${var.server_id}-minecraft-backupdir"
+    namespace = resource.kubernetes_namespace_v1.this.metadata[0].name
+    labels = var.longhorn_recurring_job_name != null ? {
+      "recurring-job.longhorn.io/source"                             = "enabled"
+      "recurring-job.longhorn.io/${var.longhorn_recurring_job_name}" = "enabled"
+    } : {}
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = var.backup_disk_size
+      }
+    }
   }
 }
 
@@ -55,6 +100,17 @@ resource "helm_release" "minecraft" {
 
         memory = var.memory
         tty    = false
+
+        rcon = {
+          enabled        = var.backups_enabled
+          existingSecret = var.backups_enabled ? kubernetes_secret_v1.rcon[0].metadata[0].name : ""
+          secretKey      = "rcon-password"
+        }
+      }
+      resources = {
+        requests = {
+          memory = "${tonumber(trimsuffix(var.memory, "G")) + 1}G"
+        }
       }
       extraEnv = {
         USE_MEOWICE_FLAGS = "true"
@@ -63,6 +119,15 @@ resource "helm_release" "minecraft" {
         dataDir = {
           enabled = true
           Size    = var.disk_size
+        }
+      }
+      mcbackup = {
+        enabled = var.backups_enabled
+        persistence = {
+          backupDir = {
+            enabled       = var.backups_enabled
+            existingClaim = var.backups_enabled ? kubernetes_persistent_volume_claim_v1.backups[0].metadata[0].name : ""
+          }
         }
       }
       serviceAnnotations = var.dns == null ? {} : {
