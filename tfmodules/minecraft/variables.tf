@@ -67,3 +67,9 @@ variable "longhorn_recurring_job_name" {
   type        = string
   default     = null
 }
+
+variable "prefer_nodes" {
+  description = "a node label to prefer running the server on"
+  type        = string
+  default     = null
+}
