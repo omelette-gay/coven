@@ -9,10 +9,10 @@ module "girlsclub_minecraft" {
   }
 
   memory    = "4G"
-  disk_size = "10G"
+  disk_size = "10Gi"
 
   backups_enabled             = true
-  backup_disk_size            = "20G"
+  backup_disk_size            = "20Gi"
   longhorn_recurring_job_name = "nightly-backup"
 
   motd = "Girls yearn for the mines"
