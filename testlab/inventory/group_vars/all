@@ -13,7 +13,7 @@ cluster_domain: coven.local
 
 certmanager_default_issuer: vault
 
-longhorn_over_provision_percentage: 200
+longhorn_over_provision_percentage: 400
 
 loki_chunks_cache_memory: 1024
 
