@@ -107,20 +107,24 @@ resource "helm_release" "minecraft" {
           secretKey      = "rcon-password"
         }
       }
+
       resources = {
         requests = {
           memory = "${tonumber(trimsuffix(var.memory, "G")) + 1}G"
         }
       }
+
       extraEnv = {
         USE_MEOWICE_FLAGS = "true"
       }
+
       persistence = {
         dataDir = {
           enabled = true
           Size    = var.disk_size
         }
       }
+
       mcbackup = {
         enabled = var.backups_enabled
         persistence = {
@@ -130,10 +134,30 @@ resource "helm_release" "minecraft" {
           }
         }
       }
+
       serviceAnnotations = var.dns == null ? {} : {
         "external-dns.alpha.kubernetes.io/hostname" = "minecraft-svc.${var.dns.hostname}"
       }
-      # Mount the ConfigMap into a temporary directory in the pod
+
+      affinity = var.prefer_nodes != "" ? {
+        nodeAffinity = {
+          preferredDuringSchedulingIgnoredDuringExecution = [
+            {
+              weight = 100
+              preference = {
+                matchExpressions = [
+                  {
+                    key      = split("=", var.prefer_nodes)[0]
+                    operator = "In"
+                    values   = [split("=", var.prefer_nodes)[1]]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      } : {}
+
       extraVolumes = [
         {
           volumes = [{
