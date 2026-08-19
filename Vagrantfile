@@ -1,3 +1,24 @@
+# patch Vagrant to work when the Vagrantfile is itself on a WSL volume
+if Gem.win_platform?
+  psm1_glob = 'C:/Program Files/Vagrant/embedded/gems/gems/vagrant-*/plugins/providers/hyperv/scripts/utils/VagrantVM/VagrantVM.psm1'
+
+  Dir.glob(psm1_glob).each do |psm1_path|
+    next unless File.exist?(psm1_path)
+
+    content = File.read(psm1_path)
+    target_str = '$acl = Get-ACL -Path $Path'
+    patch_str  = 'try { $acl = Get-ACL -Path $Path -ErrorAction Stop } catch { return $true }'
+
+    if content.include?(target_str) && !content.include?('try { $acl = Get-ACL')
+      puts "==> vagrant: Applying WSL UNC patch to #{psm1_path}..."
+      updated_content = content.sub(target_str, patch_str)
+
+      File.write(psm1_path, updated_content)
+      puts "==> vagrant: Hyper-V Get-ACL patch successfully applied."
+    end
+  end
+end
+
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/rocky9"
 
@@ -29,12 +50,12 @@ Vagrant.configure("2") do |config|
     # configure this to go onto a switch in 192.168.57.0/24 we can give a static address to
     config.trigger.before :up do |trigger|
       trigger.info = "Creating 'VagrantSwitch' Hyper-V switch if it does not exist..."
-      trigger.run = {privileged: "true", powershell_elevated_interactive: "true", path: "./vagrant-scripts/create-hyperv-switch.ps1"}
+      trigger.run = {privileged: "true", powershell_elevated_interactive: "true", inline: File.read(File.join(__dir__, "vagrant-scripts", "create-hyperv-switch.ps1"))}
     end
 
     config.trigger.before :reload do |trigger|
       trigger.info = "Setting Hyper-V switch to 'VagrantSwitch' to allow for static IP..."
-      trigger.run = {privileged: "true", powershell_elevated_interactive: "true", path: "./vagrant-scripts/set-hyperv-switch.ps1"}
+      trigger.run = {privileged: "true", powershell_elevated_interactive: "true", inline: File.read(File.join(__dir__, "vagrant-scripts", "set-hyperv-switch.ps1"))}
     end
 
     config.vm.provision "shell", inline: "nmcli con mod eth0 ipv4.method manual ipv4.dns 8.8.8.8 ipv4.address 192.168.57.100/24 ipv4.gateway 192.168.57.1"
