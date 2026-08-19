@@ -58,6 +58,18 @@ as well as the other pre-requisites defined above.
 > Vagrant then runs in WSL. VirtualBox and WSL2 do not run side-by-side. On Windows, as Vagrant must run as admin to
 > control Hyper-V, there is a helper script in the repo called `./vagrant.ps1` which you can use in WSL to run Vagrant
 > as admin in Windows, so below you can run `./vagrant.ps1 up` etc to start the VM, without having to leave WSL yourself.
+>
+> If you have checked out your testlab into a native WSL folder (not a mount) you will also need to configure Vagrant
+> to store its files on an NTFS drive. Add the following to your `~/.bash_profile` file, adjusting paths appropriately:
+>
+> ```shell
+> export VAGRANT_DOTFILE_PATH="/mnt/d/Vagrant/Projects/omelette"
+> export VAGRANT_HOME="/mnt/d/Vagrant/home"
+> export WSLENV="VAGRANT_HOME/p:VAGRANT_DOTFILE_PATH/p:$WSLENV"
+> ```
+> 
+> You should also symlink `.vagrant` to `$VAGRANT_DOTFILE_PATH` so that commands that need the private key can still
+> find it: `ln -s $VAGRANT_DOTFILE_PATH .vagrant`
 
 You can then start the testlab by running `vagrant up` (`./vagrant.ps1 up`). On the first run on Windows you must then `vagrant reload` (`./vagrant.ps1 reload`)
 to complete the configuration of the new static IP network.
