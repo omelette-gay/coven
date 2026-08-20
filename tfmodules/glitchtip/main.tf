@@ -49,7 +49,7 @@ module "keycloak_client" {
   realm_id            = var.keycloak_realm
   client_id           = "glitchtip"
   client_name         = "GlitchTip"
-  valid_redirect_uris = ["https://${var.domain}/accounts/keycloak/login/callback/"]
+  valid_redirect_uris = ["https://${var.domain}/accounts/oidc/keycloak/login/callback/"]
   k8s_namespace       = kubernetes_namespace_v1.this.metadata[0].name
   k8s_secret_name     = "glitchtip-oidc"
 
