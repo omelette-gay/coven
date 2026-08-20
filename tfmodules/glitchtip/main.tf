@@ -108,7 +108,7 @@ resource "helm_release" "this" {
         },
         {
           name  = "ENABLE_SOCIAL_APPS_USER_REGISTRATION"
-          value = "false"
+          value = "true"
         },
         {
           name  = "GLITCHTIP_ENABLE_LOGS"
