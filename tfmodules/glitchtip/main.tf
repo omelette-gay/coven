@@ -159,6 +159,14 @@ resource "helm_release" "this" {
               key  = "RUSTFS_SECRET_KEY"
             }
           }
+        },
+        {
+          name  = "EMAIL_URL",
+          value = "smtp://mail.mail.svc.cluster.local:587"
+        },
+        {
+          name  = "DEFAULT_FROM_EMAIL",
+          value = var.sender_email
         }
       ]
 

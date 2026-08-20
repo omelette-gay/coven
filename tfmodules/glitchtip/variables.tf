@@ -31,3 +31,8 @@ variable "postgresql_storage_size" {
   type        = string
   default     = "5Gi"
 }
+
+variable "sender_email" {
+  description = "email address to send emails from"
+  default     = "glitchtip@coven.local"
+}
