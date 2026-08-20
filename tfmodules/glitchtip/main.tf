@@ -66,6 +66,24 @@ module "object_store" {
   depends_on = [kubernetes_namespace_v1.this]
 }
 
+resource "kubernetes_manifest" "block_metrics_path" {
+  manifest = {
+    apiVersion = "traefik.io/v1alpha1"
+    kind       = "Middleware"
+    metadata = {
+      name      = "block-metrics-path"
+      namespace = kubernetes_namespace_v1.this.metadata[0].name
+    }
+    spec = {
+      plugin = {
+        "plugin-blockpath" = {
+          Regex = ["^/metrics(.*)"]
+        }
+      }
+    }
+  }
+}
+
 resource "helm_release" "this" {
   name          = "glitchtip"
   namespace     = kubernetes_namespace_v1.this.metadata[0].name
@@ -99,6 +117,10 @@ resource "helm_release" "this" {
         {
           name  = "GLITCHTIP_ENABLE_UPTIME"
           value = "false"
+        },
+        {
+          name  = "ENABLE_OBSERVABILITY_API"
+          value = "true"
         },
         {
           name  = "GLITCHTIP_ENABLE_DUCKDB"
@@ -144,7 +166,7 @@ resource "helm_release" "this" {
         enabled = true
         annotations = {
           "cert-manager.io/cluster-issuer"                   = var.cluster_issuer
-          "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
+          "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd,${kubernetes_namespace_v1.this.metadata[0].name}-block-metrics-path@kubernetescrd"
         }
         hosts = [{
           host = var.domain
@@ -187,7 +209,7 @@ resource "helm_release" "this" {
     })
   ]
 
-  depends_on = [kubernetes_secret_v1.secret, module.object_store]
+  depends_on = [kubernetes_secret_v1.secret, module.object_store, kubernetes_manifest.block_metrics_path]
 }
 
 resource "kubernetes_job_v1" "configure_oidc" {
