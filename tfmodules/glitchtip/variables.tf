@@ -9,6 +9,17 @@ variable "cluster_issuer" {
   default     = "letsencrypt"
 }
 
+variable "keycloak_url" {
+  description = "Keycloak base URL"
+  type        = string
+}
+
+variable "keycloak_realm" {
+  description = "Keycloak realm used for GlitchTip SSO"
+  type        = string
+  default     = "omelette.gay"
+}
+
 variable "postgresql_instances" {
   description = "Number of CNPG PostgreSQL instances"
   type        = number
