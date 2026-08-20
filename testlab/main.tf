@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "3.2.1"
     }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "5.10.1"
+    }
     hcloud = {
       source  = "hetznercloud/hcloud"
       version = "1.68.0"
@@ -29,4 +33,9 @@ provider "kubernetes" {
 
 provider "hcloud" {
   token = "0000000000000000000000000000000000000000000000000000000000000000"
+}
+
+provider "vault" {
+  address         = "https://vault.coven.local"
+  skip_tls_verify = true
 }
