@@ -231,7 +231,7 @@ decommissioned_domains:
 planka_hostname: boards.omelette.gay
 
 # increase storage for logs in prod
-loki_storage_size: 12Gi
+loki_storage_size: 20Gi
 
 wireguard_server_public_key: "{% if not bootstrap|default(false) %}{{ lookup('hashivault', 'wireguard/janus', 'public_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
 wireguard_server_preshared_key: "{% if not bootstrap|default(false) %}{{ lookup('hashivault', 'wireguard/janus', 'preshared_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
