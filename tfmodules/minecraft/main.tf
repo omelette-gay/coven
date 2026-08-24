@@ -116,6 +116,7 @@ resource "helm_release" "minecraft" {
 
       extraEnv = {
         USE_MEOWICE_FLAGS = "true"
+        PATCH_DEFINITIONS = "/patches"
       }
 
       persistence = {
@@ -166,6 +167,23 @@ resource "helm_release" "minecraft" {
               name = kubernetes_config_map_v1.prometheus_exporter_config.metadata[0].name
             }
           }]
+        },
+        {
+          volumes = [
+            {
+              name = "paper-patches"
+              configMap = {
+                name = "${var.server_id}-paper-patches"
+              }
+            }
+          ]
+          volumeMounts = [
+            {
+              name      = "paper-patches"
+              mountPath = "/patches"
+              readOnly  = true
+            }
+          ]
         }
       ]
 
@@ -188,6 +206,29 @@ resource "helm_release" "minecraft" {
               mountPath = "/data"
             }
           ]
+        }
+      ]
+
+      extraDeploy = [
+        {
+          apiVersion = "v1"
+          kind       = "ConfigMap"
+          metadata = {
+            name = "${var.server_id}-paper-patches"
+          }
+          data = {
+            "allow-piston-duplication.json" = jsonencode({
+              file = "/data/config/paper-global.yml"
+              ops = [
+                {
+                  "$set" = {
+                    path  = "$.unsupported-settings.allow-piston-duplication"
+                    value = true
+                  }
+                }
+              ]
+            })
+          }
         }
       ]
     })

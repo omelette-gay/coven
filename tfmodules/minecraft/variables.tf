@@ -47,7 +47,7 @@ variable "memory" {
 variable "disk_size" {
   description = "How big a disk to assign to the Minecraft data dir"
   type        = string
-  default     = "1G"
+  default     = "1Gi"
 }
 
 variable "backups_enabled" {
@@ -71,5 +71,5 @@ variable "longhorn_recurring_job_name" {
 variable "prefer_nodes" {
   description = "a node label to prefer running the server on"
   type        = string
-  default     = null
+  default     = ""
 }
