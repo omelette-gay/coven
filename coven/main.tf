@@ -34,6 +34,14 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "3.2.1"
     }
+    keycloak = {
+      source  = "keycloak/keycloak"
+      version = "5.9.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.9.0"
+    }
   }
 }
 
@@ -65,4 +73,23 @@ provider "helm" {
 
 provider "kubernetes" {
   config_path = "~/.kube/config"
+}
+
+ephemeral "vault_kv_secret_v2" "keycloak" {
+  mount = "secret"
+  name  = "gitops/keycloak-master-credentials"
+}
+
+locals {
+  keycloak_url       = "https://auth.coven.omelette.gay"
+  keycloak_base_path = "/auth"
+}
+
+provider "keycloak" {
+  url       = local.keycloak_url
+  base_path = local.keycloak_base_path
+  realm     = "master"
+  client_id = "admin-cli"
+  username  = ephemeral.vault_kv_secret_v2.keycloak.data["username"]
+  password  = ephemeral.vault_kv_secret_v2.keycloak.data["password"]
 }
