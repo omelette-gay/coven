@@ -2,10 +2,16 @@
 
 roles:
   - name: xanmanning.k3s
+    version: v3.6.4
 
 collections:
   - name: ansible.posix
+    version: 2.2.2
   - name: community.general
+    version: 13.3.0
   - name: kubernetes.core
+    version: 6.5.0
   - name: community.dns
+    version: 4.1.0
   - name: community.crypto
+    version: 3.3.0
