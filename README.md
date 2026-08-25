@@ -51,7 +51,7 @@ as well as the other pre-requisites defined above.
 > [!IMPORTANT]
 > Although most of the dependencies are one time install per machine and managed using your regular package manager,
 > the external Ansible roles we use are not, and you will need to update these periodically for your test lab:
-> `uv run ansible-galaxy install -r requirements.yml --force`.
+> `uv run ansible-galaxy install -r requirements.yml`.
 
 > [!NOTE]
 > **Note that on Windows, Vagrant must be installed on the Windows side**, as it runs under Hyper-V. Everything other than
