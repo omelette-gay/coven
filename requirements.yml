@@ -12,6 +12,6 @@ collections:
   - name: kubernetes.core
     version: 6.5.0
   - name: community.dns
-    version: 4.1.0
+    version: 4.1.1
   - name: community.crypto
     version: 3.3.0
