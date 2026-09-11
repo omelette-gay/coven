@@ -17,7 +17,7 @@ dependencies:
     version: 0.8.1
     repository: https://cloudnative-pg.github.io/charts
   - name: external-dns
-    version: 1.21.1
+    version: 1.22.0
     repository: https://kubernetes-sigs.github.io/external-dns/
   - name: external-secrets
     version: 2.10.0
