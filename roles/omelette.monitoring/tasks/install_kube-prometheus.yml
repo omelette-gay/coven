@@ -220,7 +220,6 @@
         endpoints: "{{ groups['k3s_controllers'] | map('extract', hostvars, ['k3s_agent', 'node-ip']) }}"
         serviceMonitor:
           https: true
-          insecureSkipVerify: true
           metricRelabelings:
             - action: drop
               regex: (apiserver_request_duration_seconds_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket|apiserver_request_sli_duration_seconds_bucket)
@@ -241,7 +240,6 @@
         endpoints: "{{ groups['k3s_controllers'] | map('extract', hostvars, ['k3s_agent', 'node-ip']) }}"
         serviceMonitor:
           https: true
-          insecureSkipVerify: true
           metricRelabelings:
             - action: drop
               regex: (apiserver_request_duration_seconds_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_sizes_bucket|apiserver_watch_events_sizes_bucket|apiserver_request_sli_duration_seconds_bucket)
