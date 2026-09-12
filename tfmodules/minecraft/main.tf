@@ -137,7 +137,7 @@ resource "helm_release" "minecraft" {
       }
 
       serviceAnnotations = var.dns == null ? {} : {
-        "external-dns.alpha.kubernetes.io/hostname" = "minecraft-svc.${var.dns.hostname}"
+        "external-dns.kubernetes.io/hostname" = "minecraft-svc.${var.dns.hostname}"
       }
 
       affinity = var.prefer_nodes != "" ? {
