@@ -47,7 +47,7 @@ dependencies:
     version: 26.10.0
     repository: https://helm.mariadb.com/mariadb-operator
   - name: mariadb-operator-crds
-    version: 26.10.0
+    version: 26.10.1
     repository: https://helm.mariadb.com/mariadb-operator
   - name: plugin-barman-cloud
     version: 0.8.0
