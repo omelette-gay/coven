@@ -53,7 +53,7 @@ dependencies:
     version: 0.8.0
     repository: https://cloudnative-pg.github.io/charts
   - name: prometheus-blackbox-exporter
-    version: 11.18.0
+    version: 11.19.1
     repository: https://prometheus-community.github.io/helm-charts/
   - name: planka
     version: 2.1.0
