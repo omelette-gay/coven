@@ -14,7 +14,7 @@ dependencies:
     version: 0.29.1
     repository: https://cloudnative-pg.github.io/charts
   - name: cluster
-    version: 0.8.1
+    version: 0.9.0
     repository: https://cloudnative-pg.github.io/charts
   - name: external-dns
     version: 1.23.0
