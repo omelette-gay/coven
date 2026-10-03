@@ -59,7 +59,7 @@ dependencies:
     version: 2.1.0
     repository: http://plankanban.github.io/planka/
   - name: rustfs
-    version: 1.0.0
+    version: 1.0.1
     repository: https://charts.rustfs.com
   - name: vault
     version: 0.34.1
