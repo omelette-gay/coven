@@ -32,7 +32,7 @@ dependencies:
     version: 7.3.2
     repository: https://codecentric.github.io/helm-charts/
   - name: kube-prometheus-stack
-    version: 92.2.0
+    version: 92.3.0
     repository: https://prometheus-community.github.io/helm-charts/
   - name: loki
     version: 18.15.1
