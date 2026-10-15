@@ -89,7 +89,7 @@ resource "helm_release" "this" {
   namespace     = kubernetes_namespace_v1.this.metadata[0].name
   repository    = "https://gitlab.com/api/v4/projects/16325141/packages/helm/stable"
   chart         = "glitchtip"
-  version       = "9.0.1"
+  version       = "9.1.1"
   timeout       = 900
   wait          = true
   wait_for_jobs = true
