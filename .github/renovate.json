@@ -3,5 +3,17 @@
   "extends": [
     "config:recommended",
     ":preserveSemverRanges"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+?)(?:\\s+depName=(?<depName>[^\\s]+?))?(?:\\s+packageName=(?<packageName>[^\\s]+?))?(?:\\s+versioning=(?<versioning>[^\\s]+?))?(?:\\s+extractVersion=(?<extractVersion>[^\\s]+?))?\\n\\s*(?:tag|version):\\s*[\"']?(?<currentValue>[^\"'\\s]+?)[\"']?",
+        "(?:tag|version):\\s*[\"']?(?<currentValue>[^\"'\\s]+?)[\"']?\\s*#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+?)(?:\\s+depName=(?<depName>[^\\s]+?))?(?:\\s+packageName=(?<packageName>[^\\s]+?))?(?:\\s+versioning=(?<versioning>[^\\s]+?))?(?:\\s+extractVersion=(?<extractVersion>[^\\s]+?))?"
+      ]
+    }
   ]
 }

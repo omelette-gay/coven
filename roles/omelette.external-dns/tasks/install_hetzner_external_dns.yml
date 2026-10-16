@@ -13,7 +13,8 @@
         webhook:
           image:
             repository: docker.io/hetzner/external-dns-hetzner-webhook
-            tag: v0.3.2 # x-releaser-pleaser-version
+            # renovate: datasource=docker depName=docker.io/hetzner/external-dns-hetzner-webhook
+            tag: v0.3.2
           env:
             - name: HETZNER_TOKEN
               valueFrom:
