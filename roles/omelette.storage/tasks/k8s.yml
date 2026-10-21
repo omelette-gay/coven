@@ -24,6 +24,14 @@
       metrics:
         serviceMonitor:
           enabled: "{% if bootstrap|default(false) == false %}true{% else %}{{ omit }}{% endif %}"
+      networkPolicy:
+        metricsScrapeSources:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: monitoring
+            podSelector:
+              matchLabels:
+                prometheus: kube-prometheus-kube-prome-prometheus
     wait: true
 
 - name: make Longhorn the default storage class
