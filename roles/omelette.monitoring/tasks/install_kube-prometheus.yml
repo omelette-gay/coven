@@ -101,6 +101,14 @@
                 editable: true
                 options:
                   path: /var/lib/grafana/dashboards/minecraft
+              - name: trivy
+                orgId: 1
+                folder: ''
+                type: file
+                disableDeletion: false
+                editable: true
+                options:
+                  path: /var/lib/grafana/dashboards/trivy
         dashboards:
           mariadb:
             mysql-overview:
@@ -125,6 +133,15 @@
               datasource: Prometheus
             minecraft-players:
               url: https://raw.githubusercontent.com/sladkoff/minecraft-prometheus-exporter/master/dashboards/minecraft-players-dashboard.json
+              datasource: Prometheus
+          trivy:
+            trivy-operator-reports:
+              gnetId: 17214
+              revision: 1
+              datasource: Prometheus
+            trivy-operator-dashboard:
+              gnetId: 21398
+              revision: 1
               datasource: Prometheus
 
         persistence:
