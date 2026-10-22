@@ -1,5 +1,5 @@
 k3s_server:
-  token: "{{ lookup('google.cloud.gcp_secret_manager', key='k3s-cluster-token', project='coven-omelette-gay') }}"
+  token: "{{ lookup('google.cloud.gcp_secret_manager', key='k3s-cluster-token', project='coven-omelette-gay', auth_kind='application') }}"
   secrets-encryption: true
   kube-controller-manager-arg:
     - "bind-address=0.0.0.0"
