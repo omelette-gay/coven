@@ -6,6 +6,7 @@
     - omelette.auto-updates
     - omelette.ssh-users
     - omelette.wireguard
+    - omelette.k3s-backup
     - role: xanmanning.k3s
       vars:
         k3s_become: true

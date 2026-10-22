@@ -1,0 +1,5 @@
+---
+- name: Restart litestream
+  ansible.builtin.systemd:
+    name: litestream
+    state: restarted
