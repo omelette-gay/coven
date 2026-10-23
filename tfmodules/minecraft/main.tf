@@ -71,7 +71,7 @@ resource "helm_release" "minecraft" {
   namespace  = resource.kubernetes_namespace_v1.this.metadata[0].name
   repository = "https://itzg.github.io/minecraft-server-charts/"
   chart      = "minecraft"
-  version    = "5.2.0"
+  version    = "5.3.1"
   values = [
     yamlencode({
       minecraftServer = {
