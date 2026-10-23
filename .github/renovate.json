@@ -7,13 +7,14 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "\\.ya?ml$"
+      "fileMatch": [
+        "(^|/)tasks/.*\\.ya?ml$",
+        "(^|/)roles/.*\\.ya?ml$"
       ],
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+?)(?:\\s+depName=(?<depName>[^\\s]+?))?(?:\\s+packageName=(?<packageName>[^\\s]+?))?(?:\\s+versioning=(?<versioning>[^\\s]+?))?(?:\\s+extractVersion=(?<extractVersion>[^\\s]+?))?\\n\\s*(?:tag|version):\\s*[\"']?(?<currentValue>[^\"'\\s]+?)[\"']?",
-        "(?:tag|version):\\s*[\"']?(?<currentValue>[^\"'\\s]+?)[\"']?\\s*#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+?)(?:\\s+depName=(?<depName>[^\\s]+?))?(?:\\s+packageName=(?<packageName>[^\\s]+?))?(?:\\s+versioning=(?<versioning>[^\\s]+?))?(?:\\s+extractVersion=(?<extractVersion>[^\\s]+?))?"
-      ]
+        "repository:\\s*[\"']?(?<depName>[^\\s\"']+)[\"']?\\s*\\n(?:\\s*#.*\\n)?\\s*tag:\\s*[\"']?(?<currentValue>v?[0-9]+\\.[0-9]+\\.[0-9]+[^\"'\\s]*)[\"']?"
+      ],
+      "datasourceTemplate": "docker"
     }
   ]
 }
