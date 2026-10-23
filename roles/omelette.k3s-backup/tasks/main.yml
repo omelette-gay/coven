@@ -1,0 +1,72 @@
+---
+- name: Configure Litestream SQLite replication
+  when:
+    - "'k3s_controllers' in group_names"
+    - k3s_backup_gcp_service_account_json is defined
+  block:
+    - name: Install Litestream via official RPM package
+      ansible.builtin.dnf:
+        name: "https://github.com/benbjohnson/litestream/releases/download/v{{ litestream_version }}/litestream-{{ litestream_version }}-linux-x86_64.rpm"
+        state: present
+        disable_gpg_check: true # GitHub releases are unsigned RPMs
+
+    - name: Write GCP Service Account credentials file
+      ansible.builtin.copy:
+        content: "{{ k3s_backup_gcp_service_account_json }}"
+        dest: "{{ k3s_backup_gcp_key_path }}"
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Deploy Litestream configuration
+      ansible.builtin.template:
+        src: litestream.yml.j2
+        dest: /etc/litestream.yml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart litestream
+
+    - name: Ensure systemd override directory exists for Litestream
+      ansible.builtin.file:
+        path: /etc/systemd/system/litestream.service.d
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Configure environment variable drop-in for Litestream
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/litestream.service.d/gcp-credentials.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          [Service]
+          Environment=GOOGLE_APPLICATION_CREDENTIALS={{ k3s_backup_gcp_key_path }}
+      notify: Restart litestream
+
+    # --- DISASTER RECOVERY RESTORE STEP ---
+    - name: Check if K3s database already exists
+      ansible.builtin.stat:
+        path: "{{ k3s_backup_db_path }}"
+      register: k3s_db_stat
+
+    - name: Restore SQLite DB from GCP backup if DB is missing
+      ansible.builtin.command: >
+        litestream restore
+        -if-db-not-exists
+        -if-replica-exists
+        -config /etc/litestream.yml
+        {{ k3s_backup_db_path }}
+      environment:
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ k3s_backup_gcp_key_path }}"
+      when: not k3s_db_stat.stat.exists
+    # ------------------------------------
+
+    - name: Enable and start Litestream systemd service
+      ansible.builtin.systemd:
+        name: litestream
+        enabled: true
+        state: started
+        daemon_reload: true

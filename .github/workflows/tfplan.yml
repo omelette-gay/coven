@@ -15,8 +15,6 @@ jobs:
     defaults:
       run:
         working-directory: coven/
-    concurrency:
-      group: coven-terraform
     steps:
       - name: checkout code
         uses: actions/checkout@v7
@@ -81,7 +79,7 @@ jobs:
 
       - name: Terraform plan
         id: plan
-        run: terraform plan -no-color -input=false
+        run: terraform plan -no-color -input=false -lock-timeout=10m
         continue-on-error: true
 
       - name: comment on PR

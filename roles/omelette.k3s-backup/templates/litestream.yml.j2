@@ -1,0 +1,9 @@
+# /etc/litestream.yml
+dbs:
+  - path: {{ k3s_backup_db_path }}
+    replicas:
+      - type: gs
+        bucket: {{ gcp_backup_bucket_name }}
+        path: {{ k3s_backup_gcs_path }}
+        snapshot-interval: 12h
+        retention: 7d

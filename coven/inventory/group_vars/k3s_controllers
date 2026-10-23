@@ -1,4 +1,5 @@
 k3s_server:
+  token: "{{ lookup('google.cloud.gcp_secret_manager', key='k3s-cluster-token', project='coven-omelette-gay', auth_kind='application') }}"
   secrets-encryption: true
   kube-controller-manager-arg:
     - "bind-address=0.0.0.0"
@@ -7,3 +8,5 @@ k3s_server:
   kube-scheduler-arg:
     - "bind-address=0.0.0.0"
   etcd-expose-metrics: true
+
+k3s_backup_gcp_service_account_json: "{{ lookup('hashivault', 'backups/service-account-key', 'APPLICATION_CREDENTIALS', mount_point='secret', version=2, url=vault_url|default('vault.' + cluster_domain), verify=kubeconfig_require_secure|default(true)) }}"

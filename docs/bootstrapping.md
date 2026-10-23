@@ -79,6 +79,9 @@ As default Terraform is configured to store state in a GCP bucket, when initiall
 disable the `backend "gcs"` block, then run Terraform locally, reenable the `backend "gcs"` block and migrate state with
 `terraform init -migrate-state`.
 
+Once the initial project is created, you will also need to populate the secret `k3s-cluster-token` in GCP with the
+token for the cluster (in `/var/lib/rancher/k3s/server/token` on a controller).
+
 # GitHub actions
 
 GitHub's SSH keys are deployed onto the servers via Ansible, however GitHub needs also to be configured to trust

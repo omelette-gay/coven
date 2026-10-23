@@ -15,6 +15,13 @@
         "repository:\\s*[\"']?(?<depName>[^\\s\"']+)[\"']?\\s*\\n(?:\\s*#.*\\n)?\\s*tag:\\s*[\"']?(?<currentValue>v?[0-9]+\\.[0-9]+\\.[0-9]+[^\"'\\s]*)[\"']?"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["defaults/main\\.yml$"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)\\n.*_version:\\s*\"(?<currentValue>.*?)\""
+      ]
     }
   ]
 }

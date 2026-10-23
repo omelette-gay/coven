@@ -1,0 +1,7 @@
+---
+# renovate: datasource=github-releases depName=benbjohnson/litestream
+litestream_version: "0.5.14"
+
+k3s_backup_db_path: "{{ k3s_data_dir }}/server/db/state.db"
+k3s_backup_gcs_path: "k3s/{{ inventory_hostname }}/state.db"
+k3s_backup_gcp_key_path: "/etc/litestream-gcp-key.json"

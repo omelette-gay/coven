@@ -116,3 +116,15 @@ recreate it specifying the backup to restore in the Helm values:
 
 Once this is done, you can then revert the values change to remove the bootstrapFrom block and back to the previous
 values.
+
+## K3s control plane & SQLite state
+
+The K3s API datastore (`state.db`) is continuously replicated to GCP Cloud Storage using Litestream running as a
+systemd service on the controller node. This file is encrypted with the cluster token, which is stored as a GCP secret
+to avoid circular dependencies.
+
+In the event of complete controller failure, the state will be restored from the bucket, and then Longhorn should start
+re-replicating the volumes over from a surviving worker (if needed) once that re-connects to the cluster.
+You will need to provide the GCP service account credentials to allow the restore to happen (assuming Vault is down,
+and therefore they cannot be fetched from Vault as per usual). You can do this by passing the following additional
+arg to ansible-playbook: `--extra-vars "vault_gcp_litestream_service_account_json='{{ lookup(\"file\", \"path/to/gcp-service-account.json\") }}'"`.
