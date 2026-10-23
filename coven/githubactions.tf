@@ -44,10 +44,20 @@ resource "google_iam_workload_identity_pool_provider" "omelette_gay_github_actio
   }
 }
 
+locals {
+  gitops_repo = "omelette-gay/gitops"
+}
+
 resource "google_project_iam_member" "gitops_repo_role" {
   project = var.project_id
   role    = "roles/editor"
-  member  = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.omelette_gay_github_actions.name}/attribute.repository/omelette-gay/gitops"
+  member  = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.omelette_gay_github_actions.name}/attribute.repository/${local.gitops_repo}"
+}
+
+resource "google_secret_manager_secret_iam_member" "gitops_repo_k3s_token_accessor" {
+  secret_id = google_secret_manager_secret.k3s_token.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.omelette_gay_github_actions.name}/attribute.repository/${local.gitops_repo}"
 }
 
 # trust the gitops repo to acquire a role in the kubernetes cluster
