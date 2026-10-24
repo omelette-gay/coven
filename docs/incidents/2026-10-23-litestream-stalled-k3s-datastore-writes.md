@@ -3,7 +3,8 @@
 | | |
 |---|---|
 | **Status** | Resolved |
-| **Impact started** | 2026-10-23 19:19 UTC (first alert). Litestream had been running since it was deployed by hand on 2026-10-22, so writes may have been stalling for a while before that without alerting. |
+| **Detected** | 2026-10-23 19:19 UTC (first `KubePodCrashLooping` alert) |
+| **Impact started** | Not known. Litestream had been running since it was deployed by hand on 2026-10-22, so writes may have been stalling for a while before the first alert. |
 | **Resolved** | 2026-10-24, about 22:10 UTC (fix deployed; first snapshot taken at 22:11 UTC) |
 | **Severity** | Major |
 | **Alerts** | `KubePodCrashLooping` (flapping) |
@@ -37,10 +38,12 @@ kept flapping. Stopping Litestream by hand mitigated it, and it was then removed
 | 2026-10-24 13:52 | #801 merged: Litestream's sync and compaction frequency reduced, to cut GCS operation costs. |
 | 2026-10-24 14:32 | #804 merged: Litestream config updated to the 0.5 format. |
 | 2026-10-24, time not recorded | Cause identified as Litestream. Litestream stopped by hand on strix, and the `Slow SQL` count drops dramatically within the hour. |
-| 2026-10-24 | Fix to replace Litestream with periodic snapshots opened for review as the `we-hate-litestream` pull request. |
+| 2026-10-24 | Fix to replace Litestream with periodic snapshots opened for review as #808. |
 | 2026-10-24 ~22:10 | Fix deployed to coven by running Ansible from the branch, ahead of merging, to save GitHub Actions minutes in case it needed several attempts. Litestream removed from strix. |
 | 2026-10-24 22:11 | First snapshot taken (`state-20261024T221107Z.db.gz`). |
 | 2026-10-24 ~22:16 | Post-deploy checks run. `k3s-datastore-backup-verify` passes every check except one: 1 of 473 Secrets in the snapshot isn't encrypted (see [follow-up actions](#follow-up-actions)). |
+| 2026-10-24 22:40 | #808 merged, so `main` matches what's running on coven again. |
+| After 22:40, time not recorded | `monitoring/kube-prometheus-kube-prome-admission` rewritten so it's stored encrypted. A new backup passes every `k3s-datastore-backup-verify` check. |
 
 ## Root cause
 
@@ -77,12 +80,13 @@ restarted, and failed again.
 
 - **Mitigation:** Litestream was stopped by hand on strix. Note that it would have been started again by the next
   merge to `main`, as the role set it to `state: started`.
-- **Fix:** the `we-hate-litestream` pull request removes Litestream from strix completely. It replaces it with a
-  systemd timer that takes a consistent snapshot of the datastore every 6 hours and uploads it to GCS, with alerts
-  if the backups stop. See [ADR 001](../adr/001-replace-litestream-with-snapshots.md) for why, and
+- **Fix:** #808 removes Litestream from strix completely. It replaces it with a systemd timer that takes a consistent
+  snapshot of the datastore every 6 hours and uploads it to GCS, with alerts if the backups stop. See
+  [ADR 001](../adr/001-replace-litestream-with-snapshots.md) for why, and
   [backups and recovery](../backups-and-recovery.md#k3s-control-plane--sqlite-state) for how it works.
-- The fix was deployed from the branch before it was merged. Until it's merged, `main` still contains the Litestream
-  role, so any other merge to `main` would reinstall and restart Litestream.
+- The fix was deployed from the branch about half an hour before it was merged. Until the merge, `main` still
+  contained the Litestream role, so any other merge to `main` in that window would have reinstalled and restarted
+  Litestream.
 
 ## Lessons
 
@@ -114,15 +118,23 @@ restarted, and failed again.
 
 ## Follow-up actions
 
-- [x] Deploy the `we-hate-litestream` fix and run the post-deploy checks in its description, including
+- [x] Deploy the fix (#808) and run the post-deploy checks in its description, including
       `sudo k3s-datastore-backup-verify` on strix.
 - [x] Confirm the leader-election restart counts stop climbing and `Slow SQL` warnings stop after the deploy.
 - [x] Remove the Litestream clean-up tasks (`remove_litestream.yml`) now they've run on coven.
-- [ ] Merge the `we-hate-litestream` pull request **before any other pull request**, so `main` matches what's on
-      coven and a deploy from `main` can't bring Litestream back.
-- [ ] Find the one Secret that isn't stored encrypted and rewrite it so that it is. We think it predates enabling
-      `secrets-encryption`, as Secrets are only encrypted when they're written; this hasn't been confirmed yet.
-      `k3s-datastore-backup-verify` now lists the names of any unencrypted Secrets.
+- [x] Merge #808 before any other pull request, so `main` matches what's on coven and a deploy from `main` can't bring
+      Litestream back.
+- [x] Find the one Secret that isn't stored encrypted. It's `monitoring/kube-prometheus-kube-prome-admission`, the
+      Prometheus Operator admission webhook's TLS certificate and key. A Helm hook job creates it once and skips it if
+      it already exists, so it hasn't been written since before `secrets-encryption` was enabled, and Secrets are only
+      encrypted when they're written.
+- [x] Rewrite it unchanged so it's stored encrypted, with
+      `kubectl -n monitoring get secret kube-prometheus-kube-prome-admission -o json | kubectl replace -f -`, then take
+      a backup and check `sudo k3s-datastore-backup-verify` passes. Don't delete it to have it recreated: the new
+      certificate wouldn't match the webhook configuration until the Helm hooks run again.
+- [x] Decide what to do about the snapshots taken before the rewrite, which contain that private key in plaintext.
+      We're happy to let them expire under the 14-day lifecycle rule (by about 2026-11-07), rather than delete them
+      early.
 
 The times of the manual Litestream deploy, the diagnosis and the manual stop weren't recorded.
 
@@ -130,4 +142,4 @@ The times of the manual Litestream deploy, the diagnosis and the manual stop wer
 
 - [ADR 001: Replace Litestream with periodic datastore snapshots](../adr/001-replace-litestream-with-snapshots.md)
 - [Backups and recovery: k3s control plane & SQLite state](../backups-and-recovery.md#k3s-control-plane--sqlite-state)
-- Pull requests #787 (added Litestream), #794, #801 and #804
+- Pull requests #787 (added Litestream), #794, #801, #804 and #808 (replaced it with snapshots)

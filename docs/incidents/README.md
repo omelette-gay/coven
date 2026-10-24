@@ -14,9 +14,11 @@ Write it while the details are fresh, ideally as part of the pull request that f
 
 ## File names
 
-`YYYY-MM-DD-short-description.md`, for example `2026-10-22-litestream-stalled-k3s-datastore-writes.md`.
+`YYYY-MM-DD-short-description.md`, for example `2026-10-23-litestream-stalled-k3s-datastore-writes.md`.
 
-- The date is when the impact started, in UTC. If that isn't known, use the date the change that caused it went live.
+- The date is when the incident was first noticed, in UTC: when the first alert fired, or when someone first reported
+  a problem, whichever came first. It isn't when the root cause started, as that's often only found later (and can
+  change as you investigate). Record that in the timeline instead.
 - The description says what happened, in lowercase words separated by hyphens. Describe the cause where it's known,
   rather than just the alert that fired.
 
@@ -32,7 +34,8 @@ system allowed it, not who did it.
 | | |
 |---|---|
 | **Status** | Ongoing / Mitigated / Resolved |
-| **Impact started** | YYYY-MM-DD HH:MM UTC |
+| **Detected** | YYYY-MM-DD HH:MM UTC, and how (first alert, or who reported it) |
+| **Impact started** | YYYY-MM-DD HH:MM UTC, if known |
 | **Resolved** | YYYY-MM-DD HH:MM UTC |
 | **Severity** | Minor / Major / Critical |
 | **Alerts** | `AlertName`, ... |
@@ -78,4 +81,4 @@ Links to pull requests, ADRs and docs.
 
 | Date | Incident | Status |
 |---|---|---|
-| 2026-10-22 | [Litestream stalled k3s datastore writes, crash-looping leader-elected controllers](./2026-10-22-litestream-stalled-k3s-datastore-writes.md) | Resolved |
+| 2026-10-23 | [Litestream stalled k3s datastore writes, crash-looping leader-elected controllers](./2026-10-23-litestream-stalled-k3s-datastore-writes.md) | Resolved |
