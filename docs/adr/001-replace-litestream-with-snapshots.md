@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Accepted |
 | **Date** | 2026-10-24 |
-| **Related** | [Incident: Litestream stalled k3s datastore writes](../incidents/2026-10-22-litestream-stalled-k3s-datastore-writes.md), pull requests #787 and `we-hate-litestream` |
+| **Related** | [Incident: Litestream stalled k3s datastore writes](../incidents/2026-10-23-litestream-stalled-k3s-datastore-writes.md), pull requests #787 and #808 |
 
 ## Context
 
@@ -12,7 +12,7 @@ The k3s datastore is a SQLite database on strix, our only controller. It holds a
 the cluster has to be rebuilt. We need it backed up off the host.
 
 From 2026-10-22 we used Litestream to replicate it continuously to GCS. That caused an
-[incident](../incidents/2026-10-22-litestream-stalled-k3s-datastore-writes.md). Litestream holds a long-running read
+[incident](../incidents/2026-10-23-litestream-stalled-k3s-datastore-writes.md). Litestream holds a long-running read
 transaction and takes over WAL checkpointing. Because kine (k3s's SQLite layer) writes constantly, SQLite's own
 checkpoints couldn't complete, the WAL grew to 186 MB, and forced checkpoints stalled writes for up to 17 seconds.
 Every leader-elected controller then failed to renew its lease and restarted, on both nodes. Litestream was also

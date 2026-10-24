@@ -343,7 +343,7 @@ Leases have to be renewed within a few seconds, so even short write stalls cause
 (the node-exporter disk dashboards in Grafana) or whether something else is holding the SQLite database open or locked. Check the size of
 `/var/lib/rancher/k3s/server/db/state.db-wal` too: it should normally stay small. This happened in October 2026
 because of Litestream; see the
-[incident write-up](./incidents/2026-10-22-litestream-stalled-k3s-datastore-writes.md).
+[incident write-up](./incidents/2026-10-23-litestream-stalled-k3s-datastore-writes.md).
 
 ### `ExternalSecretSyncError`
 
