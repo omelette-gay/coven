@@ -92,12 +92,17 @@ else
   fail "no bootstrap data at $expected_key (bootstrap keys in snapshot: $(query "SELECT group_concat(name) FROM kine WHERE name LIKE '/bootstrap/%';"))"
 fi
 
-# with secrets-encryption enabled every secret should be stored encrypted (k8s:enc:<provider>:v1:<key name>:...)
-unencrypted=$(query "SELECT COUNT(*) FROM ($LATEST_ROWS) WHERE deleted = 0 AND name LIKE '/registry/secrets/%' AND CAST(substr(value, 1, 8) AS TEXT) != 'k8s:enc:';")
-if [ "$unencrypted" -eq 0 ]; then
+# With secrets-encryption enabled every secret should be stored encrypted (k8s:enc:<provider>:v1:<key name>:...).
+# Secrets are only encrypted when they're written, so one that hasn't changed since encryption was enabled is still
+# stored in plaintext until it's rewritten. This only prints their names, never their contents.
+unencrypted=$(query "SELECT substr(name, length('/registry/secrets/') + 1) FROM ($LATEST_ROWS) WHERE deleted = 0 AND name LIKE '/registry/secrets/%' AND CAST(substr(value, 1, 8) AS TEXT) != 'k8s:enc:' ORDER BY name;")
+if [ -z "$unencrypted" ]; then
   pass "all secrets in the snapshot are encrypted"
 else
-  fail "$unencrypted secrets in the snapshot are not encrypted"
+  fail "$(echo "$unencrypted" | wc -l) secrets in the snapshot are not encrypted (<namespace>/<name>):"
+  while read -r secret; do
+    echo "        $secret"
+  done <<<"$unencrypted"
 fi
 
 # 5. the temporary directory is cleaned up by the trap
