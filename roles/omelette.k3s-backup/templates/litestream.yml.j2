@@ -7,3 +7,8 @@ dbs:
         path: {{ k3s_backup_gcs_path }}
         snapshot-interval: 12h
         retention: 7d
+        sync-interval: 1m
+        levels:
+          - interval: 15m
+          - interval: 1h
+          - interval: 6h
