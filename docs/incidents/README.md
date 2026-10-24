@@ -78,4 +78,4 @@ Links to pull requests, ADRs and docs.
 
 | Date | Incident | Status |
 |---|---|---|
-| 2026-10-22 | [Litestream stalled k3s datastore writes, crash-looping leader-elected controllers](./2026-10-22-litestream-stalled-k3s-datastore-writes.md) | Mitigated |
+| 2026-10-22 | [Litestream stalled k3s datastore writes, crash-looping leader-elected controllers](./2026-10-22-litestream-stalled-k3s-datastore-writes.md) | Resolved |

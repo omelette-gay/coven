@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Status** | Mitigated (Litestream stopped by hand on strix; permanent fix in review) |
+| **Status** | Resolved |
 | **Impact started** | 2026-10-23 19:19 UTC (first alert). Litestream had been running since it was deployed by hand on 2026-10-22, so writes may have been stalling for a while before that without alerting. |
-| **Resolved** | Not yet (see [follow-up actions](#follow-up-actions)) |
+| **Resolved** | 2026-10-24, about 22:10 UTC (fix deployed; first snapshot taken at 22:11 UTC) |
 | **Severity** | Major |
 | **Alerts** | `KubePodCrashLooping` (flapping) |
 
@@ -13,7 +13,7 @@
 Litestream, added to continuously replicate the k3s SQLite datastore to GCS, stopped SQLite from checkpointing the WAL
 normally. The WAL grew to 186 MB, and the forced checkpoints stalled kine's writes for up to 17 seconds. Every controller
 using leader election missed its 5-second lease renewal deadline and exited, on both nodes, so `KubePodCrashLooping`
-kept flapping. Stopping Litestream by hand mitigated it. It's being replaced by periodic snapshots
+kept flapping. Stopping Litestream by hand mitigated it, and it was then removed and replaced by periodic snapshots
 ([ADR 001](../adr/001-replace-litestream-with-snapshots.md)).
 
 ## Impact
@@ -28,10 +28,6 @@ kept flapping. Stopping Litestream by hand mitigated it. It's being replaced by 
 
 ## Timeline
 
-> [!NOTE]
-> The times of the manual deploy, the diagnosis and the manual stop weren't recorded. They may be in strix's
-> journal (`journalctl -u litestream`). Please fill them in.
-
 | Time (UTC) | Event |
 |---|---|
 | 2026-10-22, time not recorded | Litestream deployed to strix by hand, before #787 had been reviewed or merged. The change was committed at 21:14 UTC. |
@@ -40,8 +36,11 @@ kept flapping. Stopping Litestream by hand mitigated it. It's being replaced by 
 | 2026-10-23 19:19 | First `KubePodCrashLooping` alert for leader-elected controllers; it keeps flapping from then on. This was about 1h15m after the 0.5.17 upgrade deployed. Whether the upgrade made things worse, or the stalls had just built up enough to trip the alert, isn't known. |
 | 2026-10-24 13:52 | #801 merged: Litestream's sync and compaction frequency reduced, to cut GCS operation costs. |
 | 2026-10-24 14:32 | #804 merged: Litestream config updated to the 0.5 format. |
-| 2026-10-24, time unknown | Cause identified as Litestream. Litestream stopped by hand on strix, and the `Slow SQL` count drops dramatically within the hour. |
-| 2026-10-24 | Fix to replace Litestream with periodic snapshots opened for review. |
+| 2026-10-24, time not recorded | Cause identified as Litestream. Litestream stopped by hand on strix, and the `Slow SQL` count drops dramatically within the hour. |
+| 2026-10-24 | Fix to replace Litestream with periodic snapshots opened for review as the `we-hate-litestream` pull request. |
+| 2026-10-24 ~22:10 | Fix deployed to coven by running Ansible from the branch, ahead of merging, to save GitHub Actions minutes in case it needed several attempts. Litestream removed from strix. |
+| 2026-10-24 22:11 | First snapshot taken (`state-20261024T221107Z.db.gz`). |
+| 2026-10-24 ~22:16 | Post-deploy checks run. `k3s-datastore-backup-verify` passes every check except one: 1 of 473 Secrets in the snapshot isn't encrypted (see [follow-up actions](#follow-up-actions)). |
 
 ## Root cause
 
@@ -82,6 +81,8 @@ restarted, and failed again.
   systemd timer that takes a consistent snapshot of the datastore every 6 hours and uploads it to GCS, with alerts
   if the backups stop. See [ADR 001](../adr/001-replace-litestream-with-snapshots.md) for why, and
   [backups and recovery](../backups-and-recovery.md#k3s-control-plane--sqlite-state) for how it works.
+- The fix was deployed from the branch before it was merged. Until it's merged, `main` still contains the Litestream
+  role, so any other merge to `main` would reinstall and restart Litestream.
 
 ## Lessons
 
@@ -100,7 +101,9 @@ restarted, and failed again.
 - Litestream was deployed to coven by hand before its pull request was reviewed and merged. So it ran for about a day
   without review, and the merge time (the obvious place to look when asking "what changed?") was a day later than
   when it actually started. Changes should reach coven through GitHub Actions on merge to `main`, so that `git log`
-  tells the truth about what is running.
+  tells the truth about what is running. The fix was also deployed from a branch (to save GitHub Actions minutes),
+  which leaves `main` out of step with coven until it's merged. If we keep running low on minutes, it's worth finding
+  a way to iterate that doesn't involve this.
 - The mitigation was fragile: the role would have restarted Litestream on any merge to `main`.
 - The cost of GCS operations wasn't considered up front.
 
@@ -111,12 +114,17 @@ restarted, and failed again.
 
 ## Follow-up actions
 
-- [ ] Merge the `we-hate-litestream` pull request and run the post-deploy checks in its description, including
+- [x] Deploy the `we-hate-litestream` fix and run the post-deploy checks in its description, including
       `sudo k3s-datastore-backup-verify` on strix.
-- [ ] Confirm the leader-election restart counts stop climbing and `Slow SQL` warnings stop after the deploy, and after
-      the first scheduled backup.
-- [ ] In a later pull request, delete `roles/omelette.k3s-backup/tasks/remove_litestream.yml` once it has run on coven.
-- [ ] Fill in the unknown times in the [timeline](#timeline), then mark this incident resolved.
+- [x] Confirm the leader-election restart counts stop climbing and `Slow SQL` warnings stop after the deploy.
+- [x] Remove the Litestream clean-up tasks (`remove_litestream.yml`) now they've run on coven.
+- [ ] Merge the `we-hate-litestream` pull request **before any other pull request**, so `main` matches what's on
+      coven and a deploy from `main` can't bring Litestream back.
+- [ ] Find the one Secret that isn't stored encrypted and rewrite it so that it is. We think it predates enabling
+      `secrets-encryption`, as Secrets are only encrypted when they're written; this hasn't been confirmed yet.
+      `k3s-datastore-backup-verify` now lists the names of any unencrypted Secrets.
+
+The times of the manual Litestream deploy, the diagnosis and the manual stop weren't recorded.
 
 ## References
 
