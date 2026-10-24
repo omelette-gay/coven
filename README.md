@@ -104,6 +104,9 @@ The tfstate for the testlab is local, stored in a gitignored file.
 
 # How To
 
+For an overview of how the cluster is put together, see [the cluster overview](./docs/cluster-overview.md). For a
+guide to investigating alerts and errors, see [diagnosing issues](./docs/diagnosing-issues.md).
+
 ## Restart and unseal Vault after a deploy or reboot
 
 Our Vault is not configured to "auto-unseal", so on first boot, it requires unseal codes (which are stored offline) to
