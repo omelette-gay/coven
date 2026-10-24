@@ -1,0 +1,135 @@
+---
+- name: Check the backup interval can be expressed as a calendar timer
+  ansible.builtin.assert:
+    that:
+      - k3s_backup_interval_hours | int > 0
+      - 24 % (k3s_backup_interval_hours | int) == 0
+    fail_msg: k3s_backup_interval_hours must divide 24 (1, 2, 3, 4, 6, 8, 12 or 24)
+
+# rclone comes from EPEL, which is enabled by omelette.hostbase
+- name: Install backup tools
+  ansible.builtin.dnf:
+    name:
+      - rclone
+      - sqlite
+      - gzip
+
+- name: Create backup config directory
+  ansible.builtin.file:
+    path: /etc/k3s-backup
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Write GCP service account credentials
+  ansible.builtin.copy:
+    content: "{{ k3s_backup_gcp_service_account_json }}"
+    dest: "{{ k3s_backup_gcp_key_path }}"
+    owner: root
+    group: root
+    mode: '0600'
+  diff: false # don't print the key when run with --diff
+
+- name: Write backup configuration
+  ansible.builtin.template:
+    src: k3s-backup.env.j2
+    dest: /etc/k3s-backup/k3s-backup.env
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create backup script library directory
+  ansible.builtin.file:
+    path: /usr/local/lib/k3s-backup
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install backup script library
+  ansible.builtin.copy:
+    src: common.sh
+    dest: /usr/local/lib/k3s-backup/common.sh
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install backup scripts
+  ansible.builtin.copy:
+    src: "{{ item }}.sh"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - k3s-datastore-backup
+    - k3s-datastore-restore
+    - k3s-datastore-backup-verify
+
+# --- DISASTER RECOVERY RESTORE STEP ---
+# This has to happen before k3s is installed and started, which is why this role runs before xanmanning.k3s in
+# plays/configure-hosts.yml. The script also checks for the datastore itself, so it can never overwrite one.
+- name: Check if the k3s datastore already exists
+  ansible.builtin.stat:
+    path: "{{ k3s_backup_db_path }}"
+  register: k3s_backup_db_stat
+
+- name: Restore the k3s datastore from the newest backup if it is missing
+  ansible.builtin.command: /usr/local/bin/k3s-datastore-restore
+  register: k3s_backup_restore
+  changed_when: k3s_backup_restore.stdout.startswith('restored ')
+  when: not k3s_backup_db_stat.stat.exists
+# ------------------------------------
+
+- name: Install backup systemd units
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - k3s-datastore-backup.service
+    - k3s-datastore-backup-metrics.service
+  register: k3s_backup_install_units
+
+- name: Install backup systemd timer
+  ansible.builtin.template:
+    src: k3s-datastore-backup.timer.j2
+    dest: /etc/systemd/system/k3s-datastore-backup.timer
+    owner: root
+    group: root
+    mode: '0644'
+  register: k3s_backup_install_timer
+
+- name: Enable restoring backup metrics on boot
+  ansible.builtin.systemd_service:
+    name: k3s-datastore-backup-metrics.service
+    enabled: true
+    daemon_reload: "{{ k3s_backup_install_units.changed or k3s_backup_install_timer.changed }}"
+
+# restart it if the schedule changed, so the new schedule definitely takes effect
+- name: Enable backup timer
+  ansible.builtin.systemd_service:
+    name: k3s-datastore-backup.timer
+    state: "{{ 'restarted' if k3s_backup_install_timer.changed else 'started' }}"
+    enabled: true
+
+- name: Check whether a backup has ever succeeded on this host
+  ansible.builtin.stat:
+    path: /var/lib/k3s-backup/k3s-datastore-backup.prom
+  register: k3s_backup_metrics_stat
+
+# Rather than waiting up to a whole interval for the first backup, start one now. This doesn't wait for the backup to
+# finish, so a slow or failing backup can't hold up or fail the rest of the play. This is skipped if the datastore has
+# only just been created or restored (k3s isn't running yet, and backing up a restored datastore would just re-upload
+# the old snapshot with a new timestamp), so the timer takes the first backup instead.
+- name: Take the first backup
+  ansible.builtin.systemd_service:
+    name: k3s-datastore-backup.service
+    state: started
+    no_block: true
+  when:
+    - not k3s_backup_metrics_stat.stat.exists
+    - k3s_backup_db_stat.stat.exists

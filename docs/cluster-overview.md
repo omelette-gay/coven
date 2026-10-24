@@ -44,13 +44,14 @@ prefer Terraform; host-level configuration stays in Ansible.
 
 Host level (runs against every node, as root):
 
-- `omelette.hostbase` - hostname and timezone (UTC)
+- `omelette.hostbase` - hostname, timezone (UTC) and the EPEL repository
 - `omelette.auto-updates` - `dnf-automatic` applying OS updates automatically, plus a textfile exporter that reports
   when a reboot is needed (feeds the `NodeNeedsRestarting` alert)
 - `omelette.ssh-users` - SSH users and keys (the `ssh_users` group var)
 - `omelette.wireguard` - the WireGuard tunnel from strix to the home network (see [Networking](#networking)), plus a
   textfile exporter for handshake metrics
-- `omelette.k3s-backup` - Litestream continuously replicating the k3s datastore to GCS (controller only)
+- `omelette.k3s-backup` - a systemd timer snapshotting the k3s datastore to GCS every 6 hours, and restoring it if it's
+  missing (controller only)
 - `xanmanning.k3s` - installs and configures k3s
 - `omelette.storage` (host part) - iSCSI tools needed by Longhorn
 
@@ -78,7 +79,8 @@ roughly reflects their dependencies:
 Terraform state is stored in the `coven-tfstate` GCS bucket. The `coven/` folder is production; `testlab/` is the
 local Vagrant VM.
 
-- GCP project resources: APIs, the `coven-backups` bucket and backup service account (with keys rotated every 30
+- GCP project resources: APIs, the `coven-backups` bucket (with a 14-day expiry on objects under `k3s/` only) and backup
+  service account (with keys rotated every 30
   days and written into Vault), the `k3s-cluster-token` secret, GitHub Actions workload identity, billing budget alerts
 - Hetzner DNS zones and static records (Fastmail, Bluesky verification)
 - `glitchtip` namespace - GlitchTip error tracking (errors.omelette.gay)
@@ -117,9 +119,13 @@ that only affect one node, or that started after an OS update on one node.
   Kubernetes API is down.
 - The controller is not tainted, so it runs normal workloads as well as the control plane. Pods can be scheduled
   on either node unless they have a node selector or affinity.
-- The k3s datastore is **SQLite** (`/var/lib/rancher/k3s/server/db/state.db`), not etcd. It is replicated to
-  `gs://coven-backups/k3s/strix/state.db` by Litestream (a systemd service on strix). See
-  [backups and recovery](./backups-and-recovery.md).
+- The k3s datastore is **SQLite** (`/var/lib/rancher/k3s/server/db/state.db`), not etcd. A snapshot of it is uploaded
+  to `gs://coven-backups/k3s/strix/` every 6 hours by the `k3s-datastore-backup` systemd timer on strix. See
+  [backups and recovery](./backups-and-recovery.md#k3s-control-plane--sqlite-state).
+- kine, k3s's SQLite layer, writes to the datastore constantly (mostly lease renewals), so anything that holds the
+  database open or locks it for long will stall the API server's writes. When that happens, controllers that use
+  leader election (CNPG, barman-cloud, the Longhorn CSI sidecars) fail to renew their leases and restart, on both
+  nodes, and k3s logs `Slow SQL` warnings.
 - Only strix has `svccontroller.k3s.cattle.io/enablelb=true`, so **all external traffic enters through strix**
   (public IPs 168.119.4.112 and 2a01:4f8:242:4f21::2), including traffic for pods running on grimhilde.
 - Workloads that must use a datacentre IP (e.g. outbound mail, the Minecraft server) are pinned or prefer
@@ -211,7 +217,7 @@ API on strix, Vault and cloud APIs, so they don't need the tunnel.
   Grafana-managed alerts also go to the same Discord channel.
 - Host-level metrics that aren't available from a normal exporter are written by systemd timers into
   `/run/node-exporter/*.prom` on each host and read by node-exporter's textfile collector (`node_reboot_required`,
-  `wireguard_*`).
+  `wireguard_*`, `k3s_datastore_backup_*`).
 
 ## Maintenance that happens automatically
 
@@ -222,6 +228,8 @@ These are worth knowing about as they can explain alerts and restarts:
   (which switches over CNPG primaries, drains, reboots and uncordons each node in turn).
 - **Longhorn backups** of labelled volumes run at 07:30 and 19:30 UTC, keeping 14.
 - **CNPG and MariaDB backups** run on per-database schedules defined in their Helm values.
+- **k3s datastore snapshots** are taken on strix every 6 hours (00:00, 06:00, 12:00 and 18:00 UTC, plus up to 30
+  minutes of random delay), and kept for 14 days.
 - **Backup service account keys** are rotated every 30 days by Terraform, which rewrites the secrets in Vault; the
   External Secrets Operator then syncs them into k8s.
 - **Renovate** raises PRs for new chart, provider and Ansible collection versions; once merged these deploy

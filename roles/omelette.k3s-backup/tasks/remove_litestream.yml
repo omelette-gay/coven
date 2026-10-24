@@ -1,0 +1,29 @@
+---
+- name: Check whether Litestream is installed
+  ansible.builtin.service_facts:
+
+- name: Stop and disable Litestream
+  ansible.builtin.systemd_service:
+    name: litestream
+    state: stopped
+    enabled: false
+  when: "'litestream.service' in ansible_facts.services"
+
+- name: Remove the Litestream package
+  ansible.builtin.dnf:
+    name: litestream
+    state: absent
+
+# The last one is Litestream's local metadata directory, which sits next to the datastore. We leave the
+# _litestream_seq and _litestream_lock tables it created inside state.db, as removing them would mean writing to the
+# live datastore, and kine never reads them.
+- name: Remove Litestream's config, credentials and local state
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/litestream.yml
+    - /etc/systemd/system/litestream.service.d
+    - /etc/litestream-gcp-key.json
+    - "{{ k3s_backup_db_path | dirname }}/.{{ k3s_backup_db_path | basename }}-litestream"
+  notify: Reload systemd

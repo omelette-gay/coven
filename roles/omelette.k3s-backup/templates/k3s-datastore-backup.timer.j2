@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Back up the k3s datastore to GCS every {{ k3s_backup_interval_hours }} hours
+
+[Timer]
+OnCalendar=*-*-* 00/{{ k3s_backup_interval_hours }}:00:00
+RandomizedDelaySec={{ k3s_backup_randomized_delay }}
+# run straight away after boot if a backup was missed while the host was down
+Persistent=true
+
+[Install]
+WantedBy=timers.target

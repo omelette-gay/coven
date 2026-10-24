@@ -30,7 +30,7 @@ is put together.
 | Alertmanager         | Active alerts with all their labels, silences                           | port-forward (below)                                   |
 | Grafana              | Dashboards, and Explore for both Prometheus and Loki                    | https://monitoring.coven.omelette.gay (SSO)            |
 | Loki                 | Pod logs, host systemd journals, Kubernetes events (kept for 12 weeks)  | Grafana Explore, or port-forward and `logcli`          |
-| SSH                  | Host-level issues: k3s itself, WireGuard, disks, OS updates, Litestream | `ssh strix.xdc.omelette.gay`; grimhilde at 192.168.178.36 from the home network (see below) |
+| SSH                  | Host-level issues: k3s itself, WireGuard, disks, OS updates, k3s datastore backups | `ssh strix.xdc.omelette.gay`; grimhilde at 192.168.178.36 from the home network (see below) |
 | Traefik dashboard    | Routing problems: which routers/services/middlewares exist and their errors | port-forward (below)                                |
 | Longhorn UI          | Volume, replica, node and backup health                                 | port-forward (below)                                   |
 | GlitchTip            | Application exceptions from apps that report to it                      | https://errors.omelette.gay                            |
@@ -157,6 +157,7 @@ Some useful starting queries:
 | Node memory available                     | `node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes`          |
 | Node disk space                           | `node_filesystem_avail_bytes{fstype!~"tmpfs\|overlay"} / node_filesystem_size_bytes` |
 | WireGuard last handshake age (seconds)    | `time() - wireguard_latest_handshake_seconds`                          |
+| k3s datastore backup age (seconds)        | `time() - k3s_datastore_backup_last_success_timestamp_seconds`         |
 | Does a node need a reboot?                | `node_reboot_required`                                                 |
 | Longhorn volume health                    | `longhorn_volume_robustness`                                           |
 | Helm release states                       | `helm_chart_info` (negative is failed, 0 unknown, above 4 pending)     |
@@ -206,10 +207,11 @@ sudo k3s kubectl get nodes              # on strix only - works even when Vault/
 sudo k3s crictl ps -a                   # containers on this node, even if the API server is down
 sudo k3s crictl logs <container-id>
 sudo wg show                            # strix only - WireGuard peer and last handshake
-cat /run/node-exporter/*.prom           # our textfile metrics (reboot required, WireGuard)
+cat /run/node-exporter/*.prom           # our textfile metrics (reboot required, WireGuard, k3s datastore backups)
 needs-restarting -r                     # whether the node needs a reboot
 dnf history | head                      # recent automatic updates
-systemctl status litestream             # strix only - k3s datastore replication
+systemctl list-timers k3s-datastore-backup.timer  # strix only - when the k3s datastore was last/next backed up
+journalctl -u k3s-datastore-backup      # strix only - output of the k3s datastore backups
 ```
 
 From strix, you can check the tunnel to the home network with `ping 192.168.178.36` (grimhilde) and
@@ -286,7 +288,59 @@ kubectl cnpg status <cluster> -n <namespace>
 kubectl get physicalbackups -A
 ```
 
-For the k3s datastore, check `systemctl status litestream` and `journalctl -u litestream` on strix.
+For the k3s datastore, see [`K3sDatastoreBackupStale`](#k3sdatastorebackupstale--k3sdatastorebackupmissing).
+
+### `K3sDatastoreBackupStale` / `K3sDatastoreBackupMissing`
+
+The k3s datastore is snapshotted to GCS by the `k3s-datastore-backup` systemd timer on strix (see
+[backups and recovery](./backups-and-recovery.md#k3s-control-plane--sqlite-state)). `K3sDatastoreBackupStale` fires
+when the last successful backup is more than twice the backup interval old (12 hours by default).
+`K3sDatastoreBackupMissing` fires when there's no record of a backup ever succeeding. The success time is kept on disk
+and restored after a reboot, so a reboot alone won't trigger it. It normally means the very first backup on a host
+failed, or node-exporter isn't being scraped on strix (in which case other alerts will be firing too).
+
+These alerts aren't urgent in themselves, as nothing is broken until the datastore is lost, but don't leave them: old
+snapshots are deleted after 14 days whether or not there are newer ones.
+
+On strix:
+
+```shell
+systemctl list-timers k3s-datastore-backup.timer      # is the timer scheduled?
+systemctl status k3s-datastore-backup                  # did the last run fail?
+journalctl -u k3s-datastore-backup --since "1 day ago" # why?
+cat /run/node-exporter/k3s-datastore-backup.prom
+```
+
+Common causes:
+
+- **Authentication errors from rclone.** Terraform rotates the backup service account key every 30 days and deletes the
+  old one, but strix only gets the new key when Ansible runs. Re-run the "Configure Coven hosts" GitHub Actions
+  workflow.
+- **"not enough free space".** The backup won't run unless there's at least twice the size of the datastore free in
+  `/var/tmp`, so that it can never fill the disk the datastore is on. Check `df -h /var`.
+- **Integrity check failures.** The snapshot is checked with `PRAGMA integrity_check` before it's uploaded. A failure
+  here could mean the live datastore is corrupt, which is serious: tell a human straight away, and don't restart k3s.
+- **The GCP project has a problem** (e.g. billing), as with the other backups.
+
+Running `sudo systemctl start k3s-datastore-backup` takes a backup straight away (it's safe to run at any time, but
+confirm with a human first as with any change). To check that the newest backup could be restored, without touching
+the live datastore, run `sudo k3s-datastore-backup-verify`.
+
+### Leader-election controllers restarting on both nodes, `Slow SQL` in the k3s logs
+
+If controllers that use leader election (the CNPG operator, plugin-barman-cloud, the Longhorn CSI sidecars, etc.) keep
+restarting on both nodes with errors about failing to renew their lease, and `KubePodCrashLooping` flaps for them, the
+k3s datastore is probably too slow to write to. Check the k3s logs on strix for `Slow SQL` warnings:
+
+```logql
+{service="systemd-journal", node_name="strix.xdc.omelette.gay"} |= "Slow SQL"
+```
+
+Leases have to be renewed within a few seconds, so even short write stalls cause this. Check whether the disk is slow
+(the node-exporter disk dashboards in Grafana) or whether something else is holding the SQLite database open or locked. This happened in
+October 2026 because of Litestream, which was replicating the datastore continuously; its long-running read
+transaction meant the WAL couldn't be checkpointed normally, and the forced checkpoints stalled every write. Check the
+size of `/var/lib/rancher/k3s/server/db/state.db-wal` too: it should normally stay small.
 
 ### `ExternalSecretSyncError`
 
@@ -382,8 +436,8 @@ strix is the only controller, so:
 4. If `./login.sh` is what's failing, the API might be fine but Vault or Keycloak might not be. Try
    `./bootstrap-auth.sh --coven` and then `kubectl get nodes`, or run `sudo k3s kubectl get nodes` on strix.
 
-If the datastore is lost, it can be restored from Litestream - see [backups and recovery](./backups-and-recovery.md).
-This needs a human.
+If the datastore is lost, it can be restored from the snapshots in GCS - see
+[backups and recovery](./backups-and-recovery.md#disaster-recovery-rebuilding-the-controller). This needs a human.
 
 ### Vulnerability reports
 
