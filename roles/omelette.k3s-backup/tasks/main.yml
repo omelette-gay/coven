@@ -1,11 +1,4 @@
 ---
-# Litestream used to replicate the datastore continuously, but its long-running read transaction blocked k3s's WAL
-# checkpoints, which stalled writes and broke leader election for controllers across the cluster. This cleans it up
-# from existing hosts. Once it has run on coven, this (and remove_litestream.yml) can be deleted.
-- name: Remove Litestream
-  ansible.builtin.include_tasks: remove_litestream.yml
-  when: "'k3s_controllers' in group_names"
-
 - name: Configure k3s datastore backups
   ansible.builtin.include_tasks: backup.yml
   when:
