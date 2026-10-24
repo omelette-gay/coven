@@ -1,14 +1,14 @@
 # /etc/litestream.yml
 dbs:
   - path: {{ k3s_backup_db_path }}
-    replicas:
-      - type: gs
-        bucket: {{ gcp_backup_bucket_name }}
-        path: {{ k3s_backup_gcs_path }}
-        snapshot-interval: 12h
-        retention: 7d
-        sync-interval: 1m
-        levels:
-          - interval: 15m
-          - interval: 1h
-          - interval: 6h
+    replica:
+      url: gs://{{ gcp_backup_bucket_name }}/{{ k3s_backup_gcs_path }}
+      sync-interval: 1m
+    snapshot:
+      interval: 12h
+      retention: 7d
+
+levels:
+  - interval: 15m
+  - interval: 1h
+  - interval: 6h
