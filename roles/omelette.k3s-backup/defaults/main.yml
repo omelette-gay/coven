@@ -1,7 +1,11 @@
 ---
-# renovate: datasource=github-releases depName=benbjohnson/litestream
-litestream_version: "0.5.17"
-
 k3s_backup_db_path: "{{ k3s_data_dir }}/server/db/state.db"
-k3s_backup_gcs_path: "k3s/{{ inventory_hostname }}/state.db"
-k3s_backup_gcp_key_path: "/etc/litestream-gcp-key.json"
+k3s_backup_gcs_prefix: "k3s/{{ inventory_hostname }}"
+k3s_backup_gcp_key_path: /etc/k3s-backup/gcp-key.json
+
+# how often to snapshot the datastore - this needs to divide 24 so that it can be expressed as a calendar timer.
+# the alert for stale backups fires at twice this interval.
+k3s_backup_interval_hours: 6
+
+# spread the backup start time so it doesn't line up with other scheduled jobs
+k3s_backup_randomized_delay: 30min

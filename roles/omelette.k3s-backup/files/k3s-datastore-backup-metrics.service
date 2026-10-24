@@ -1,0 +1,11 @@
+[Unit]
+Description=Restore k3s datastore backup metrics into the node-exporter textfile directory after boot
+# nothing to restore before the first backup has succeeded - the K3sDatastoreBackupMissing alert covers that case
+ConditionPathExists=/var/lib/k3s-backup/k3s-datastore-backup.prom
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/install -D -m 0644 /var/lib/k3s-backup/k3s-datastore-backup.prom /run/node-exporter/k3s-datastore-backup.prom
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=Back up the k3s datastore to GCS
+# deliberately no dependency on k3s in either direction, so a failing backup can never stop or restart k3s
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/k3s-datastore-backup
+# stay out of the way of k3s and workloads
+Nice=10
+IOSchedulingClass=idle
+PrivateTmp=true

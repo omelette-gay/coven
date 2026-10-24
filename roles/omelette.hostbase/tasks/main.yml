@@ -6,3 +6,7 @@
 - name: set timezone
   community.general.timezone:
     name: "{{ host_timezone }}"
+
+- name: enable EPEL
+  ansible.builtin.dnf:
+    name: epel-release

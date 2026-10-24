@@ -5,6 +5,19 @@ resource "google_storage_bucket" "backup_bucket" {
 
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
+
+  # k3s datastore snapshots are taken every few hours by the omelette.k3s-backup Ansible role, which doesn't clean up
+  # after itself, so expire them here. matches_prefix only matches from the start of the object name, so this can't
+  # touch the cnpg/, mariadb/ or Longhorn backups, which manage their own retention.
+  lifecycle_rule {
+    condition {
+      age            = 14
+      matches_prefix = ["k3s/"]
+    }
+    action {
+      type = "Delete"
+    }
+  }
 }
 
 resource "google_service_account" "backup_service_account" {
