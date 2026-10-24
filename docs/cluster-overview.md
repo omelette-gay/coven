@@ -20,6 +20,9 @@ For the practical "how do I start investigating" guide, see [diagnosing issues](
 - **Secrets live in Vault, never in the repo.** See [secrets](./secrets.md).
 - **New features go to the testlab first.** We prefer to develop new features on the Vagrant testlab before
   deploying them to coven. Bug fixes can go straight to coven. See [Testlab](#testlab).
+- **Significant decisions are recorded as ADRs** in [adr/](./adr/README.md), which say why things are the way they are.
+  Check there before reversing a deliberate choice, and add one for any new decision that's hard to undo.
+- **Incidents are written up** in the [incident log](./incidents/README.md), one file per incident.
 
 ## Ansible vs Terraform
 

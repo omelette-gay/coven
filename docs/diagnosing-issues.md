@@ -122,6 +122,9 @@ Most incidents follow a change. Check:
 - Whether a node has recently rebooted or had OS updates (`uptime`, `dnf history` on the host)
 - Whether backup credentials have just been rotated (every 30 days by Terraform)
 
+It's also worth searching the [incident log](./incidents/README.md) for the alert or symptom, in case it's happened
+before.
+
 ### 3. Look at the current state
 
 ```shell
@@ -337,10 +340,10 @@ k3s datastore is probably too slow to write to. Check the k3s logs on strix for 
 ```
 
 Leases have to be renewed within a few seconds, so even short write stalls cause this. Check whether the disk is slow
-(the node-exporter disk dashboards in Grafana) or whether something else is holding the SQLite database open or locked. This happened in
-October 2026 because of Litestream, which was replicating the datastore continuously; its long-running read
-transaction meant the WAL couldn't be checkpointed normally, and the forced checkpoints stalled every write. Check the
-size of `/var/lib/rancher/k3s/server/db/state.db-wal` too: it should normally stay small.
+(the node-exporter disk dashboards in Grafana) or whether something else is holding the SQLite database open or locked. Check the size of
+`/var/lib/rancher/k3s/server/db/state.db-wal` too: it should normally stay small. This happened in October 2026
+because of Litestream; see the
+[incident write-up](./incidents/2026-10-22-litestream-stalled-k3s-datastore-writes.md).
 
 ### `ExternalSecretSyncError`
 
@@ -454,3 +457,7 @@ When you've finished investigating, report:
 - Whether it has resolved itself or is ongoing
 - Suggested fixes, split into immediate mitigations (needing human approval) and durable changes (which file in
   this repo, or which app repo, should change)
+
+If it was a real incident (see [when to write one](./incidents/README.md#when-to-write-one)), draft a write-up for the
+[incident log](./incidents/README.md) from what you found, using the template there, and include it in the pull
+request for the fix. If the fix involves a significant decision, draft an [ADR](./adr/README.md) for it too.

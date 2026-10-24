@@ -133,6 +133,9 @@ CNPG and MariaDB (above).
 To take a backup straight away, run `sudo systemctl start k3s-datastore-backup` on strix, and check how it went with
 `journalctl -u k3s-datastore-backup`.
 
+For why we take snapshots rather than replicating continuously, and what does and doesn't protect a snapshot, see
+[ADR 001](./adr/001-replace-litestream-with-snapshots.md).
+
 ### Checking a backup can be restored
 
 `k3s-datastore-backup-verify` checks the newest snapshot without touching the live datastore. Run it on strix whenever
