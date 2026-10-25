@@ -28,6 +28,11 @@ this repo (see [the agent instructions](./docs/agents.md)) do more without needi
 - [ansible-lint](https://docs.ansible.com/projects/lint/installing/): `uv tool install ansible-lint`
 - [ShellCheck](https://github.com/koalaman/shellcheck#installing)
 
+If you run an AI agent natively on Windows (e.g. Claude Code in VS Code without the WSL extension), it will run these
+tools through `wsl <command>`. That uses a non-login shell, so check from PowerShell that `wsl uv --version` and
+`wsl kubectl version --client` both work. If they don't, the tool is probably only on your `PATH` through your shell
+profile (`uv` installs to `~/.local/bin` by default), and symlinking it into `/usr/local/bin` fixes it.
+
 Our setup uses some external roles for deploying k3s. Run `uv run ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
 

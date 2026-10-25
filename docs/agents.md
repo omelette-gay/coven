@@ -48,10 +48,11 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 We work on Windows, but **everything in this repo runs under WSL** (Ansible doesn't run on Windows). The only
 exception is Vagrant, which runs on the Windows side and is driven from WSL with `./vagrant.ps1` (see the README).
 
-If you find you're running on Windows (PowerShell, `C:\` paths, `wsl.exe` available but no `uv`/`ansible`), don't
-try to run the tooling through `wsl -e`, as this bypasses the permission rules and quoting gets fragile. Stop and ask
-the human to reopen the project inside WSL instead (in VS Code: **WSL: Connect to WSL**, then open the folder; in
-JetBrains IDEs: WSL remote development).
+Agents may be running either inside WSL or natively on Windows (e.g. VS Code on Windows), so check which before
+running anything. On Windows (`C:\` paths, PowerShell or Git Bash, no `uv`/`ansible`), run each tool through WSL by
+prefixing the command with exactly `wsl ` (e.g. `wsl kubectl get pods -A`). Don't use `wsl.exe`, `wsl -e`,
+`wsl --` or `bash -c '...'`: read-only commands are only pre-approved in the plain `wsl <command>` form. Git and file
+editing work fine from the Windows side.
 
 ## Rules for agents
 
