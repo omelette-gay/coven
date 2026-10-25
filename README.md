@@ -4,7 +4,8 @@ This repo contains all the infrastructure-as-code stuff for deploying and managi
 
 # Getting Started
 
-NOTE: If you are running this on Windows, Ansible only runs under WSL, so run everything under WSL.
+You can work on this from macOS or Windows. NOTE: On Windows, Ansible only runs under WSL, so run everything under
+WSL.
 
 You will need to have the following installed (in your WSL environment if on Windows):
 
@@ -28,10 +29,16 @@ this repo (see [the agent instructions](./docs/agents.md)) do more without needi
 - [ansible-lint](https://docs.ansible.com/projects/lint/installing/): `uv tool install ansible-lint`
 - [ShellCheck](https://github.com/koalaman/shellcheck#installing)
 
-If you run an AI agent natively on Windows (e.g. Claude Code in VS Code without the WSL extension), it will run these
-tools through `wsl <command>`. That uses a non-login shell, so check from PowerShell that `wsl uv --version` and
-`wsl kubectl version --client` both work. If they don't, the tool is probably only on your `PATH` through your shell
-profile (`uv` installs to `~/.local/bin` by default), and symlinking it into `/usr/local/bin` fixes it.
+If you run an AI agent natively on Windows (e.g. Claude Code in VS Code without the WSL extension), it runs these
+tools through WSL with `wsl --shell-type login <command>`, so they need to be on your `PATH` in a login shell. Check
+from PowerShell that both of these work:
+
+    wsl --shell-type login uv --version
+    wsl --shell-type login kubectl version --client
+
+If one doesn't, make sure the directory it's installed in is added to your `PATH` in `~/.profile` (not just
+`~/.bashrc`, which isn't read by non-interactive shells). `uv` and tools installed with `uv tool install` live in
+`~/.local/bin`, which Ubuntu's default `~/.profile` already adds if the directory exists.
 
 Our setup uses some external roles for deploying k3s. Run `uv run ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.

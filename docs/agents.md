@@ -45,14 +45,33 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 
 ## Environment
 
-We work on Windows, but **everything in this repo runs under WSL** (Ansible doesn't run on Windows). The only
-exception is Vagrant, which runs on the Windows side and is driven from WSL with `./vagrant.ps1` (see the README).
+We work on macOS or Windows. **On Windows, everything in this repo runs under WSL** (Ansible doesn't run on
+Windows). The only exception there is Vagrant, which runs on the Windows side and is driven from WSL with
+`./vagrant.ps1` (see the README).
 
-Agents may be running either inside WSL or natively on Windows (e.g. VS Code on Windows), so check which before
-running anything. On Windows (`C:\` paths, PowerShell or Git Bash, no `uv`/`ansible`), run each tool through WSL by
-prefixing the command with exactly `wsl ` (e.g. `wsl kubectl get pods -A`). Don't use `wsl.exe`, `wsl -e`,
-`wsl --` or `bash -c '...'`: read-only commands are only pre-approved in the plain `wsl <command>` form. Git and file
-editing work fine from the Windows side.
+Check where you're running before running anything:
+
+- **macOS or Linux (including inside WSL)**: run commands directly.
+- **Natively on Windows** (`C:\` paths, PowerShell or Git Bash, no `uv`/`ansible`), e.g. VS Code without the WSL
+  extension: run each tool through WSL by prefixing the command with exactly `wsl --shell-type login `
+  (e.g. `wsl --shell-type login kubectl get pods -A`). The login shell loads the user's profile, so tools in
+  `~/.local/bin` such as `uv` are found. Don't use other spellings (`wsl.exe`, `wsl -e`, `bash -c '...'`): read-only
+  commands are only pre-approved in this exact form. Git and file editing work fine from the Windows side.
+
+## Fixing your environment
+
+If a tool is missing, out of date or misconfigured, **fix the environment rather than working around it**, using
+the setup steps in the [README](../README.md#getting-started). The aim is that the next session doesn't hit the same
+problem.
+
+- User-level fixes are pre-approved, so just do them and say what you did: `uv sync`, `uv tool install`,
+  `uv run ansible-galaxy install -r requirements.yml`, `terraform init`, `brew install` on macOS, and fixing `PATH`
+  in the user's shell profile.
+- Anything that needs root (`sudo apt install`, `wsl -u root`) needs a password or confirmation. Give the human the
+  exact command to run.
+- Don't change versions pinned in the repo (`uv.lock`, `.terraform.lock.hcl`, `Chart.yaml`) to make something work
+  locally. That's a change for a pull request.
+- If the fix was a step missing from the README, add it to the README so it's documented for everyone.
 
 ## Rules for agents
 
