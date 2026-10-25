@@ -43,6 +43,16 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 - **Secrets live in Vault, never in the repo.**
 - **New features go to the testlab first**; bug fixes can go straight to coven.
 
+## Environment
+
+We work on Windows, but **everything in this repo runs under WSL** (Ansible doesn't run on Windows). The only
+exception is Vagrant, which runs on the Windows side and is driven from WSL with `./vagrant.ps1` (see the README).
+
+If you find you're running on Windows (PowerShell, `C:\` paths, `wsl.exe` available but no `uv`/`ansible`), don't
+try to run the tooling through `wsl -e`, as this bypasses the permission rules and quoting gets fragile. Stop and ask
+the human to reopen the project inside WSL instead (in VS Code: **WSL: Connect to WSL**, then open the folder; in
+JetBrains IDEs: WSL remote development).
+
 ## Rules for agents
 
 - **Read-only commands are fine to run without asking** (`kubectl get`/`describe`/`logs`, `helm list`/`history`,
