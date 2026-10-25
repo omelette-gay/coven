@@ -17,6 +17,17 @@ You will need to have the following installed (in your WSL environment if on Win
 - [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 - [gcloud CLI](https://cloud.google.com/sdk/docs/install#deb)
 
+The following are optional, but are useful for diagnosing issues and checking changes, and let AI agents working in
+this repo (see [the agent instructions](./docs/agents.md)) do more without needing a human to step in:
+
+- [GitHub CLI](https://cli.github.com/) (`gh`), then run `gh auth login`. For checking pull requests, Terraform plans
+  and GitHub Actions deploys
+- [logcli](https://grafana.com/docs/loki/latest/query/logcli/getting-started/) for querying Loki
+- [jq](https://jqlang.org/download/) and [yq](https://github.com/mikefarah/yq#install) for picking apart JSON and YAML
+- [TFLint](https://github.com/terraform-linters/tflint#installation)
+- [ansible-lint](https://docs.ansible.com/projects/lint/installing/): `uv tool install ansible-lint`
+- [ShellCheck](https://github.com/koalaman/shellcheck#installing)
+
 Our setup uses some external roles for deploying k3s. Run `uv run ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
 
