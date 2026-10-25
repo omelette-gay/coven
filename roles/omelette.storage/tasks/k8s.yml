@@ -24,7 +24,7 @@
       metrics:
         serviceMonitor:
           enabled: "{% if bootstrap|default(false) == false %}true{% else %}{{ omit }}{% endif %}"
-      networkPolicy:
+      networkPolicies:
         metricsScrapeSources:
           - namespaceSelector:
               matchLabels:
