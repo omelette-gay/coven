@@ -24,7 +24,8 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 - `plays/` - Ansible playbooks. `configure-hosts.yml` configures hosts then cluster services; `rolling-reboot.yml`
   reboots nodes safely.
 - `roles/omelette.*` - our Ansible roles. External roles (e.g. `xanmanning.k3s`) come from `requirements.yml`.
-- `coven/` - production: Terraform (`*.tf`) and the Ansible inventory (`coven/inventory/`).
+- `coven/` - production: Terraform (`*.tf`) and the Ansible inventory (`coven/inventory/`). `coven/apps/` is the
+  apps stack, applied after `coven/` (see [ADR 002](./adr/002-three-stack-terraform-for-cluster-configuration.md)).
 - `testlab/` - the local Vagrant VM: same shape as `coven/`, with local Terraform state.
 - `tfmodules/` - Terraform modules used by `coven/` and `testlab/`.
 - `Chart.yaml` - not a real chart. It pins Helm chart versions so Renovate can bump them; Ansible reads them with the

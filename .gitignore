@@ -2,5 +2,5 @@
 /.venv
 __pycache__
 .terraform
-/testlab/terraform.tfstate*
+/testlab/**/terraform.tfstate*
 /.claude/settings.local.json

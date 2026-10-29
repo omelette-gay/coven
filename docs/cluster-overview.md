@@ -80,7 +80,10 @@ roughly reflects their dependencies:
 ### What Terraform manages
 
 Terraform state is stored in the `coven-tfstate` GCS bucket. The `coven/` folder is production; `testlab/` is the
-local Vagrant VM.
+local Vagrant VM. We're moving to three stacks per environment (see
+[ADR 002](./adr/002-three-stack-terraform-for-cluster-configuration.md)). So far only the apps stack exists, in
+`coven/apps/` and `testlab/apps/`, with its own state (prefix `terraform/apps`). It's applied after `coven/`, and holds
+leaf services that nothing else depends on. It's empty for now; apps move into it as they're migrated.
 
 - GCP project resources: APIs, the `coven-backups` bucket (with a 14-day expiry on objects under `k3s/` only) and backup
   service account (with keys rotated every 30

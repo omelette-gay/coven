@@ -156,15 +156,16 @@ If external-dns is configured with `domainFilters`, adding a zone for a new app 
 
 ### Layout and state
 
-The content of each stack lives in a shared module. Each environment has a thin root module that sets the backend,
-providers and variables, calls the shared module, and holds that environment's extra resources (on coven, the GCP and
-DNS resources above):
+The content of the bootstrap and platform stacks lives in a shared module. Each environment has a thin root module
+that sets the backend, providers and variables, calls the shared module, and holds that environment's extra resources
+(on coven, the GCP and DNS resources above). The apps stack has no shared module: which apps run differs between coven
+and the testlab, so each environment's `apps/` root module defines its apps directly, using the modules in
+`tfmodules/`:
 
 ```
 tfmodules/
   stack-bootstrap/
   stack-platform/
-  stack-apps/
   keycloak-client/, vault-k8s-secret/, ...   (existing modules)
 coven/
   bootstrap/
@@ -176,7 +177,7 @@ testlab/
   apps/
 ```
 
-This stops coven and the testlab drifting apart. `coven/bootstrap` takes over the existing `coven/` state (same bucket
+This stops the platform the apps run on drifting apart between coven and the testlab. `coven/bootstrap` takes over the existing `coven/` state (same bucket
 and prefix), so the resources that stay in bootstrap don't need importing. `coven/platform` and `coven/apps` get their
 own prefixes in `coven-tfstate`. Testlab state stays local and gitignored.
 

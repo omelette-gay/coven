@@ -459,6 +459,7 @@
       "PowerShell(*login.sh*)",
       "PowerShell(*vault* operator*)",
       "Read(./testlab/terraform.tfstate*)",
+      "Read(./testlab/*/terraform.tfstate*)",
       "Read(./.vagrant/**)"
     ]
   }
