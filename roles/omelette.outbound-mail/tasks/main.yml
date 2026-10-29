@@ -98,9 +98,8 @@
           mountPath: /etc/opendkim/keys
           readOnly: true
       nodeSelector: "{{ outbound_mail_node_selector | default(omit) }}"
-# disabled for now - see https://github.com/omelette-gay/gitops/issues/358
-#      metrics:
-#        enabled: true
-#        serviceMonitor:
-#          enabled: true
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
     wait: true

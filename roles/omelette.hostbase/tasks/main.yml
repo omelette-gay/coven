@@ -10,3 +10,13 @@
 - name: enable EPEL
   ansible.builtin.dnf:
     name: epel-release
+
+- name: raise inotify limits for container workloads
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/90-inotify.conf
+    reload: true
+  loop:
+    - { name: fs.inotify.max_user_instances, value: "8192" }
+    - { name: fs.inotify.max_user_watches,   value: "524288" }
