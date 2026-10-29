@@ -32,13 +32,32 @@
           failed_when: false
           changed_when: false
 
-        - name: Scale down matter server on strix which blocks drain
+        - name: Scale down matter server on grimhilde which blocks drain
           delegate_to: localhost
           become: false
           ansible.builtin.command: >
             kubectl -n home-assistant scale statefulset gs-home-assistant-matter-server --replicas=0
           failed_when: false
           when: inventory_hostname == "grimhilde"
+
+        # After a node reboots, its Longhorn replicas are stale and get rebuilt from the other node over the WireGuard
+        # tunnel, which can take a while. Until that finishes, the other node holds the only healthy replica, and
+        # Longhorn's instance-manager PodDisruptionBudget blocks it from being drained. So wait for every attached
+        # volume to be healthy before draining. (Detached volumes report "unknown" and don't block drains, so they're
+        # ignored here.)
+        - name: Wait for Longhorn volumes to be healthy before draining
+          delegate_to: localhost
+          become: false
+          ansible.builtin.command: >
+            kubectl -n longhorn-system get volumes.longhorn.io
+            -o jsonpath='{range .items[?(@.status.state=="attached")]}{.metadata.name}={.status.robustness}{"\n"}{end}'
+          register: longhorn_volumes
+          until: >-
+            longhorn_volumes.rc == 0 and
+            (longhorn_volumes.stdout_lines | reject('search', '=healthy$') | list | length) == 0
+          retries: 180 # 180 x 20s = 1 hour
+          delay: 20
+          changed_when: false
 
         - name: Drain node before reboot
           delegate_to: localhost
@@ -48,6 +67,7 @@
             --ignore-daemonsets
             --delete-emptydir-data
             --force
+            --timeout=30m
           register: drain_result
           changed_when: "'drained' in drain_result.stdout or 'cordoned' in drain_result.stdout"
 
