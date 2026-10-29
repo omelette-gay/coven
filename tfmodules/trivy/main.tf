@@ -21,7 +21,7 @@ resource "helm_release" "trivy_operator" {
   name             = "trivy-operator"
   repository       = "https://aquasecurity.github.io/helm-charts"
   chart            = "trivy-operator"
-  version          = "0.37.0"
+  version          = "0.38.1"
   namespace        = kubernetes_namespace_v1.trivy_system.metadata[0].name
   create_namespace = false
 
