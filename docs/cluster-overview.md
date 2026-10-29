@@ -63,7 +63,7 @@ roughly reflects their dependencies:
 
 | Role                            | Namespace(s)                          | What it deploys                                                              |
 |---------------------------------|---------------------------------------|------------------------------------------------------------------------------|
-| `omelette.storage`              | `longhorn-system`                     | Longhorn (default storage class), nightly backup recurring job               |
+| `omelette.storage`              | `longhorn-system`                     | Longhorn (default storage class), nightly backup and daily snapshot recurring jobs |
 | `omelette.monitoring`           | `monitoring`                          | kube-prometheus-stack, Loki (+ RustFS object store), Alloy, blackbox exporter, helm-exporter, alert rules, Traefik metrics config |
 | `omelette.cert-manager`         | `cert-manager`                        | cert-manager with Let's Encrypt and Vault PKI issuers, HTTPS redirect middleware |
 | `omelette.postgres`             | `cnpg-system`                         | CloudNativePG operator and barman-cloud backup plugin                        |
@@ -174,7 +174,7 @@ API on strix, Vault and cloud APIs, so they don't need the tunnel.
 | Ingress / reverse proxy | Traefik (k3s built-in). See [HTTPS](./https.md)                                              |
 | TLS certificates     | cert-manager, `letsencrypt` ClusterIssuer (prod), `vault` issuer for the testlab                  |
 | DNS                  | Hetzner DNS; zones in Terraform, records from Ingresses created by external-dns                 |
-| Block storage        | Longhorn, 2 replicas by default (one per node), best-effort data locality, replica timeout increased to 30s because replication goes over the internet |
+| Block storage        | Longhorn, 2 replicas by default (one per node), best-effort data locality, replica timeout increased to 30s because replication goes over the internet, snapshots checksummed on creation (fast-check) and fast replica rebuild enabled |
 | Object storage       | RustFS (S3-compatible), currently used as Loki's backend                                        |
 | PostgreSQL           | CloudNativePG clusters, backed up to GCS via barman-cloud                                       |
 | MySQL                | MariaDB operator, physical backups to GCS                                                       |
@@ -230,6 +230,10 @@ These are worth knowing about as they can explain alerts and restarts:
   rebooting, `NodeNeedsRestarting` fires and a human runs [plays/rolling-reboot.yml](../plays/rolling-reboot.yml)
   (which switches over CNPG primaries, drains, reboots and uncordons each node in turn).
 - **Longhorn backups** of labelled volumes run at 07:30 and 19:30 UTC, keeping 14.
+- **Longhorn snapshots** of every volume that has no recurring job of its own (Longhorn's `default` group) are
+  taken by the `daily-snapshot` job at 03:00 UTC, keeping 2. This is so that replica rebuilds after a node reboot
+  only copy what's changed since the last checksummed snapshot over the WireGuard tunnel, rather than the whole
+  volume. Backed-up volumes already get a snapshot with each backup.
 - **CNPG and MariaDB backups** run on per-database schedules defined in their Helm values.
 - **k3s datastore snapshots** are taken on strix every 6 hours (00:00, 06:00, 12:00 and 18:00 UTC, plus up to 30
   minutes of random delay), and kept for 14 days.

@@ -266,7 +266,12 @@ kubectl -n longhorn-system get nodes.longhorn.io
 ```
 
 The Longhorn UI gives a clearer picture of rebuild progress. Replication goes over the WireGuard tunnel, so a slow
-or flapping home connection can cause repeated degradation. Restoring from backup is covered in
+or flapping home connection can cause repeated degradation.
+
+Degraded volumes are expected for a while after a node reboot (including a rolling reboot) while replicas rebuild.
+Rebuilds only copy data written since the volume's last checksummed snapshot, so they're usually quick, but a
+volume with a lot of churn since its last snapshot can take a while. Rebuilding replicas on strix is limited by the
+home internet upload speed (about 109 Mbps), as the data comes from grimhilde. Restoring from backup is covered in
 [backups and recovery](./backups-and-recovery.md), and needs a human.
 
 ### `LonghornNodeStorageWarning` / `LonghornDiskStorageWarning`
