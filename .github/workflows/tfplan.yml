@@ -15,8 +15,6 @@ jobs:
           - coven/bootstrap
           - coven/platform
           - coven/apps
-          # the old root module, until the removals in it have been applied
-          - coven
     permissions:
       contents: read
       id-token: write

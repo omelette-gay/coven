@@ -26,8 +26,7 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 - `roles/omelette.*` - our Ansible roles. External roles (e.g. `xanmanning.k3s`) come from `requirements.yml`.
 - `coven/` - production: the Ansible inventory (`coven/inventory/`) and three Terraform stacks, applied in order:
   `coven/bootstrap/`, `coven/platform/` and `coven/apps/` (see
-  [ADR 002](./adr/002-three-stack-terraform-for-cluster-configuration.md)). The `*.tf` files directly in `coven/` are
-  the old root module, which only has `removed` blocks left and is deleted once they're applied.
+  [ADR 002](./adr/002-three-stack-terraform-for-cluster-configuration.md)).
 - `testlab/` - the local Vagrant VM: same shape as `coven/`, with local Terraform state.
 - `tfmodules/` - Terraform modules used by `coven/` and `testlab/`. `stack-bootstrap/` and `stack-platform/` hold the
   content of those stacks, shared by both environments; apps differ between environments, so each environment's

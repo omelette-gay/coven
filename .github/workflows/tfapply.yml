@@ -33,18 +33,10 @@ jobs:
     with:
       stack: coven/apps
 
-  # The old root module, which only removes resources from its state now they've moved into the stacks above. Delete
-  # this job along with the coven/*.tf files once it's been applied.
-  legacy:
-    needs: apps
-    uses: ./.github/workflows/tfapply-stack.yml
-    with:
-      stack: coven
-
   # Cluster services still configured by Ansible. These run last, as Terraform-managed services never depend on them.
   configure-cluster:
     name: Configure Coven cluster
-    needs: legacy
+    needs: apps
     runs-on: ubuntu-latest
     environment: coven
     # shared with host_config.yml, as both connect with the same WireGuard peer
