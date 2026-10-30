@@ -11,11 +11,6 @@ module "cjn_me_uk_fastmail" {
   zone = hcloud_zone.cjn_me_uk
 }
 
-moved {
-  from = module.fastmail["cjn.me.uk"]
-  to   = module.cjn_me_uk_fastmail
-}
-
 module "cjn_me_uk_decommissioned" {
   source = "../../tfmodules/decommissioned-domain"
 
