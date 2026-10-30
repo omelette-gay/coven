@@ -1,5 +1,5 @@
 variable "name" {
-  description = "Name of the namespace holding the redirects, usually the domain with dots replaced by dashes"
+  description = "Name of the namespace and Ingress holding the redirect, usually the domain with dots replaced by dashes"
   type        = string
 }
 

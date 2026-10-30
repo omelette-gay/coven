@@ -32,13 +32,11 @@ resource "kubernetes_service_v1" "noop" {
 }
 
 resource "kubernetes_manifest" "redirect" {
-  for_each = toset(var.hostnames)
-
   manifest = {
     apiVersion = "traefik.io/v1alpha1"
     kind       = "Middleware"
     metadata = {
-      name      = "${replace(each.key, ".", "-")}-redirect"
+      name      = "redirect"
       namespace = kubernetes_namespace_v1.this.metadata[0].name
     }
     spec = {
@@ -52,31 +50,33 @@ resource "kubernetes_manifest" "redirect" {
 }
 
 resource "kubernetes_ingress_v1" "this" {
-  for_each = toset(var.hostnames)
-
   metadata {
-    name      = replace(each.key, ".", "-")
+    name      = var.name
     namespace = kubernetes_namespace_v1.this.metadata[0].name
     annotations = {
       "cert-manager.io/cluster-issuer"                   = var.cluster_issuer
-      "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd,${kubernetes_namespace_v1.this.metadata[0].name}-${kubernetes_manifest.redirect[each.key].manifest.metadata.name}@kubernetescrd"
+      "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd,${kubernetes_namespace_v1.this.metadata[0].name}-${kubernetes_manifest.redirect.manifest.metadata.name}@kubernetescrd"
     }
   }
 
   spec {
     ingress_class_name = "traefik"
 
-    rule {
-      host = each.key
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service_v1.noop.metadata[0].name
-              port {
-                name = "http"
+    dynamic "rule" {
+      for_each = var.hostnames
+
+      content {
+        host = rule.value
+        http {
+          path {
+            path      = "/"
+            path_type = "Prefix"
+            backend {
+              service {
+                name = kubernetes_service_v1.noop.metadata[0].name
+                port {
+                  name = "http"
+                }
               }
             }
           }
@@ -84,9 +84,10 @@ resource "kubernetes_ingress_v1" "this" {
       }
     }
 
+    # one certificate covering every hostname
     tls {
-      hosts       = [each.key]
-      secret_name = "${replace(each.key, ".", "-")}-tls"
+      hosts       = var.hostnames
+      secret_name = "${var.name}-tls"
     }
   }
 }
