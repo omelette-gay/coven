@@ -13,6 +13,12 @@
         engineReplicaTimeout: 30 # network connections in our cluster are over the internet, so can be slower, so increase the timeout from default
         nodeDrainPolicy: allow-if-replica-is-stopped
         defaultDataLocality: best-effort
+        # Fast replica rebuild can only skip data in snapshots that have a checksum, so hash new snapshots straight away
+        # rather than waiting for the integrity check cron job. This keeps rebuilds after a reboot small, as most data
+        # crosses the WireGuard tunnel.
+        snapshotDataIntegrity: fast-check
+        snapshotDataIntegrityImmediateCheckAfterSnapshotCreation: true
+        fastReplicaRebuildEnabled: true
       defaultBackupStore:
         backupTarget: "s3://{{ gcp_backup_bucket_name }}@europe-west2/"
         backupTargetCredentialSecret: "{{ longhorn_k8s_backup_creds_secret }}"
@@ -69,4 +75,24 @@
         cron: "30 7,19 * * *"
         task: "backup"
         retain: 14
+        concurrency: 2
+
+# Replica rebuilds (e.g. after a node reboot) copy everything written since the volume's last snapshot, so volumes that
+# are never snapshotted get copied in full over the WireGuard tunnel. The "default" group applies this job to every
+# volume that has no recurring job of its own; volumes labelled for the backup job above already get a snapshot with
+# each backup. Only a couple are kept, as on volumes with a lot of churn (e.g. RustFS for Loki) each snapshot holds on
+# to data that has since been deleted.
+- name: Create Longhorn recurring snapshot job
+  kubernetes.core.k8s:
+    name: "{{ longhorn_k8s_snapshot_job_name }}"
+    namespace: "{{ longhorn_k8s_namespace }}"
+    definition:
+      apiVersion: longhorn.io/v1beta2
+      kind: RecurringJob
+      spec:
+        cron: "0 3 * * *"
+        task: "snapshot"
+        groups:
+          - default
+        retain: 2
         concurrency: 2

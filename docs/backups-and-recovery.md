@@ -16,6 +16,10 @@ You can now rollback the volume in the Longhorn UI (access this with `kubectl -n
 and accessing http://localhost:8000/). Find the volume you want to restore and then you can revert to a previous snapshot
 if you want to do so in place using the menu options. You can now restart the service that was using the volume.
 
+Volumes without the labels above aren't backed up, but they do have the last two daily snapshots (taken at 03:00 UTC
+by the `daily-snapshot` job), which can be reverted to in the same way. These are only kept on the cluster, so
+don't rely on them as a backup.
+
 ## PostgreSQL databases
 
 Postgres databases are backed up using the cloudnative-pg operator. You will first need to ensure that the
