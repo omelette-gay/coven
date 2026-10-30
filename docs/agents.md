@@ -21,20 +21,25 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 
 ## Repo layout
 
-- `plays/` - Ansible playbooks. `configure-hosts.yml` configures hosts then cluster services; `rolling-reboot.yml`
-  reboots nodes safely.
+- `plays/` - Ansible playbooks. `configure-hosts.yml` configures hosts; `configure-cluster.yml` configures the cluster
+  services that haven't moved to Terraform yet; `rolling-reboot.yml` reboots nodes safely.
 - `roles/omelette.*` - our Ansible roles. External roles (e.g. `xanmanning.k3s`) come from `requirements.yml`.
-- `coven/` - production: Terraform (`*.tf`) and the Ansible inventory (`coven/inventory/`).
+- `coven/` - production: the Ansible inventory (`coven/inventory/`) and three Terraform stacks, applied in order:
+  `coven/bootstrap/`, `coven/platform/` and `coven/apps/` (see
+  [ADR 002](./adr/002-three-stack-terraform-for-cluster-configuration.md)). The `*.tf` files directly in `coven/` are
+  the old root module, which only has `removed` blocks left and is deleted once they're applied.
 - `testlab/` - the local Vagrant VM: same shape as `coven/`, with local Terraform state.
-- `tfmodules/` - Terraform modules used by `coven/` and `testlab/`.
+- `tfmodules/` - Terraform modules used by `coven/` and `testlab/`. `stack-bootstrap/` and `stack-platform/` hold the
+  content of those stacks, shared by both environments; apps differ between environments, so each environment's
+  `apps/` defines them directly.
 - `Chart.yaml` - not a real chart. It pins Helm chart versions so Renovate can bump them; Ansible reads them with the
   `helm_chart` lookup plugin in `lookup_plugins/`.
 - `.github/workflows/` - CI/CD (see below).
 
 ## Key facts
 
-- **Deploys happen from GitHub Actions on merge to `main`**: `host_config.yml` runs the Ansible playbook and
-  `tfapply.yml` runs `terraform apply` in `coven/`. `tfplan.yml` posts a Terraform plan on every PR. A change isn't
+- **Deploys happen from GitHub Actions on merge to `main`**: `host_config.yml` runs `plays/configure-hosts.yml`, and
+  `tfapply.yml` applies the Terraform stacks in order, then runs `plays/configure-cluster.yml`. `tfplan.yml` posts a Terraform plan on every PR. A change isn't
   done until it's in code and merged; manual changes on the cluster get reverted or cause drift.
 - **Ansible → Terraform migration is in progress.** Host config stays in Ansible; cluster services are moving to
   Terraform, and new work should prefer Terraform. Some things exist in both (see the cluster overview).
@@ -92,7 +97,8 @@ problem.
 There's no test suite. Before proposing a change:
 
 - Terraform: `terraform fmt -check` and `terraform validate` in the affected folder (CI runs both, plus `plan`).
-- Ansible: `uv run ansible-playbook --syntax-check -i testlab/inventory plays/configure-hosts.yml`.
+- Ansible: `uv run ansible-playbook --syntax-check -i testlab/inventory plays/configure-hosts.yml`, and the same for
+  `plays/configure-cluster.yml`.
 - To actually exercise a change, use the testlab (see the README). Confirm with a human before running it.
 
 ## Conventions

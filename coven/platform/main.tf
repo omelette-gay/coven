@@ -1,0 +1,120 @@
+variable "project_id" {
+  description = "The project ID"
+  type        = string
+  default     = "coven-omelette-gay"
+}
+
+terraform {
+  backend "gcs" {
+    bucket = "coven-tfstate"
+    prefix = "terraform/platform"
+  }
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "8.9.0"
+    }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "5.13.0"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = "0.14.2"
+    }
+    hcloud = {
+      source  = "hetznercloud/hcloud"
+      version = "1.70.2"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "3.3.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "3.4.0"
+    }
+    keycloak = {
+      source  = "keycloak/keycloak"
+      version = "5.10.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.9.1"
+    }
+  }
+}
+
+provider "google" {
+  project               = var.project_id
+  region                = "europe-west2"
+  user_project_override = true
+  billing_project       = var.project_id
+}
+
+provider "vault" {
+  address = "https://vault.coven.omelette.gay"
+}
+
+ephemeral "vault_kv_secret_v2" "hetzner" {
+  mount = "secret"
+  name  = "gitops/hetzner"
+}
+
+provider "hcloud" {
+  token = ephemeral.vault_kv_secret_v2.hetzner.data["api_token"]
+}
+
+provider "helm" {
+  kubernetes = {
+    config_path = "~/.kube/config"
+  }
+}
+
+provider "kubernetes" {
+  config_path = "~/.kube/config"
+}
+
+ephemeral "vault_kv_secret_v2" "keycloak" {
+  mount = "secret"
+  name  = "gitops/keycloak-master-credentials"
+}
+
+locals {
+  keycloak_url       = "https://auth.coven.omelette.gay"
+  keycloak_base_path = "/auth"
+}
+
+provider "keycloak" {
+  url       = local.keycloak_url
+  base_path = local.keycloak_base_path
+  realm     = "master"
+  client_id = "admin-cli"
+  username  = ephemeral.vault_kv_secret_v2.keycloak.data["username"]
+  password  = ephemeral.vault_kv_secret_v2.keycloak.data["password"]
+}
+
+# GlitchTip's current secrets, copied here by hand so that importing it writes back the same values instead of rotating
+# them. Remove this, and the glitchtip_existing_secrets argument below, once the import has been applied, then delete
+# the secret from Vault.
+ephemeral "vault_kv_secret_v2" "glitchtip_migration" {
+  mount = "secret"
+  name  = "gitops/glitchtip-migration"
+}
+
+module "platform" {
+  source = "../../tfmodules/stack-platform"
+
+  keycloak_url   = "${local.keycloak_url}${local.keycloak_base_path}"
+  cluster_issuer = "letsencrypt"
+
+  glitchtip_domain               = "errors.omelette.gay"
+  glitchtip_postgresql_instances = 2
+  glitchtip_sender_email         = "glitchtip@coven.omelette.gay"
+  glitchtip_existing_secrets = {
+    secret_key              = ephemeral.vault_kv_secret_v2.glitchtip_migration.data["secret_key"]
+    keycloak_client_secret  = ephemeral.vault_kv_secret_v2.glitchtip_migration.data["keycloak_client_secret"]
+    object_store_access_key = ephemeral.vault_kv_secret_v2.glitchtip_migration.data["object_store_access_key"]
+    object_store_secret_key = ephemeral.vault_kv_secret_v2.glitchtip_migration.data["object_store_secret_key"]
+  }
+}

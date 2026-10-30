@@ -1,74 +1,71 @@
-name: Apply Terraform changes
+name: Deploy cluster configuration
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
 
+# Covers every job, so two merges can't apply at the same time
+concurrency:
+  group: coven-terraform
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
-  tfapply:
-    name: apply Terraform changes
+  bootstrap:
+    uses: ./.github/workflows/tfapply-stack.yml
+    with:
+      stack: coven/bootstrap
+
+  platform:
+    needs: bootstrap
+    uses: ./.github/workflows/tfapply-stack.yml
+    with:
+      stack: coven/platform
+
+  apps:
+    needs: platform
+    uses: ./.github/workflows/tfapply-stack.yml
+    with:
+      stack: coven/apps
+
+  # The old root module, which only removes resources from its state now they've moved into the stacks above. Delete
+  # this job along with the coven/*.tf files once it's been applied.
+  legacy:
+    needs: apps
+    uses: ./.github/workflows/tfapply-stack.yml
+    with:
+      stack: coven
+
+  # Cluster services still configured by Ansible. These run last, as Terraform-managed services never depend on them.
+  configure-cluster:
+    name: Configure Coven cluster
+    needs: legacy
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    defaults:
-      run:
-        working-directory: coven/
+    environment: coven
+    # shared with host_config.yml, as both connect with the same WireGuard peer
     concurrency:
-      group: coven-terraform
+      group: coven-ansible
     steps:
       - name: checkout code
         uses: actions/checkout@v7
 
-      - name: login to Vault
-        uses: hashicorp/vault-action@v4
+      - name: set up Ansible
+        uses: ./.github/actions/ansible-setup
         with:
-          url: https://vault.coven.omelette.gay
-          method: jwt
-          path: github
-          role: gitops
-          exportToken: true
+          wireguard-private-key: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+          wireguard-server-public-key: ${{ secrets.WIREGUARD_SERVER_PUBLIC_KEY }}
+          wireguard-server-preshared-key: ${{ secrets.WIREGUARD_SERVER_PRESHARED_KEY }}
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
 
-      - name: log in to k8s
-        id: k8s_auth
-        uses: omelette-gay/vault-k8s-login-action@v1
-        with:
-          vault-github-role: github-gitops
-          vault-k8s-role: github-gitops
-          vault-server: https://vault.coven.omelette.gay
-          cluster-role-binding: "true"
-          k8s-controller-url: https://strix.xdc.omelette.gay:6443
-          k8s-controller-ca: |
-            -----BEGIN CERTIFICATE-----
-            MIIBdjCCAR2gAwIBAgIBADAKBggqhkjOPQQDAjAjMSEwHwYDVQQDDBhrM3Mtc2Vy
-            dmVyLWNhQDE3MzM0NDE5MzkwHhcNMjQxMjA1MjMzODU5WhcNMzQxMjAzMjMzODU5
-            WjAjMSEwHwYDVQQDDBhrM3Mtc2VydmVyLWNhQDE3MzM0NDE5MzkwWTATBgcqhkjO
-            PQIBBggqhkjOPQMBBwNCAAStSdti1Jm75qbFBu/1/d/KUEr6g8Fv/Ppsq+sd8YNJ
-            wzLdW8vlLn4GW9ScVwzkUP6l9uAOSCCtxSkS6LlPmj/xo0IwQDAOBgNVHQ8BAf8E
-            BAMCAqQwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUku8WL0M88576doqpq+Ie
-            mZVIDV4wCgYIKoZIzj0EAwIDRwAwRAIgO+dcJF/aO0G0bRpYwX6sIzSoK4jD809f
-            vCyvWCodXqQCIFn+wIsfK9e2QFftm/idiRRRhpqHVcP4F0HUaTuNNsz2
-            -----END CERTIFICATE-----
-      
-      - name: write kubeconfig out
-        run: |
-          mkdir ~/.kube
-          cat >~/.kube/config <<EOF
-          ${{ steps.k8s_auth.outputs.kubeconfig }}
-          EOF
+      - name: run Ansible
+        run: uv run ansible-playbook -u github -i coven/inventory plays/configure-cluster.yml
 
-      - name: login to GCP
-        uses: google-github-actions/auth@v3
-        with:
-          project_id: coven-omelette-gay
-          workload_identity_provider: projects/211831137824/locations/global/workloadIdentityPools/omelette-gay-github-actions/providers/omelette-gay-github-actions
-
-      - name: setup Terraform
-        uses: hashicorp/setup-terraform@v4
-
-      - name: Terraform init
-        run: terraform init -input=false
-
-      - name: Terraform apply
-        run: terraform apply -no-color -auto-approve -input=false
+      - name: close down Wireguard connection
+        if: always()
+        run: sudo wg-quick down wg0

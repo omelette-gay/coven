@@ -10,7 +10,7 @@ For the practical "how do I start investigating" guide, see [diagnosing issues](
   app's own repo). Manual changes made with `kubectl edit`/`kubectl apply`/`helm upgrade` or by hand on the hosts will
   either be reverted on the next run of Ansible/Terraform, or cause drift that breaks the next run. A fix is only
   really a fix once it is in code.
-- **Changes are deployed by GitHub Actions on merge to `main`.** Both the Ansible playbook and `terraform apply` run
+- **Changes are deployed by GitHub Actions on merge to `main`.** The Ansible playbooks and `terraform apply` run
   automatically on every push to `main` (see [.github/workflows/](../.github/workflows/)). Terraform also runs a plan on
   every pull request. So "what changed recently?" can usually be answered with `git log` on this repo.
 - **Dependency versions are bumped automatically by Renovate.** Helm chart versions are pinned in
@@ -30,11 +30,11 @@ We currently use two IaC tools, and are part way through a migration:
 
 | Layer                                  | Tool          | Where                                                                  | Long-term plan            |
 |----------------------------------------|---------------|------------------------------------------------------------------------|---------------------------|
-| Host OS configuration                  | Ansible       | first play in [plays/configure-hosts.yml](../plays/configure-hosts.yml) | **Stays in Ansible**      |
+| Host OS configuration                  | Ansible       | [plays/configure-hosts.yml](../plays/configure-hosts.yml)              | **Stays in Ansible**      |
 | k3s installation                       | Ansible       | `xanmanning.k3s` role (external, see [requirements.yml](../requirements.yml)) | Stays in Ansible          |
-| Cluster-level services (Helm releases etc) | Ansible   | `localhost` play in `plays/configure-hosts.yml`, roles in [roles/](../roles/) | Migrating to Terraform    |
-| Newer cluster services                 | Terraform     | [coven/](../coven/) using modules in [tfmodules/](../tfmodules/)        | Terraform                 |
-| GCP project, DNS zones, cloud resources | Terraform    | [coven/](../coven/)                                                    | Terraform                 |
+| Cluster-level services (Helm releases etc) | Ansible   | [plays/configure-cluster.yml](../plays/configure-cluster.yml), roles in [roles/](../roles/) | Migrating to Terraform    |
+| Newer cluster services                 | Terraform     | `coven/platform/` and `coven/apps/`, using modules in [tfmodules/](../tfmodules/) | Terraform                 |
+| GCP project, DNS zones, cloud resources | Terraform    | Mostly `coven/bootstrap/`; DNS records for apps in `coven/apps/`        | Terraform                 |
 | Self-deploying apps                    | The app's own repo | GitHub Actions in each app repo, deploying with Helm into its own namespace | Unchanged         |
 
 When working out how to fix something, first find out which of these owns it, as that tells you where the change
@@ -80,7 +80,19 @@ roughly reflects their dependencies:
 ### What Terraform manages
 
 Terraform state is stored in the `coven-tfstate` GCS bucket. The `coven/` folder is production; `testlab/` is the
-local Vagrant VM.
+local Vagrant VM. Each environment has three stacks, each with its own state, applied in order (see
+[ADR 002](./adr/002-three-stack-terraform-for-cluster-configuration.md) for what goes where):
+
+- `bootstrap/` - operators, CRDs and base services, and on coven the cloud resources everything else needs. It can't
+  use Vault, so on coven it reads the Hetzner token from `HCLOUD_TOKEN`.
+- `platform/` - configures Vault and Keycloak, and runs services that apps depend on.
+- `apps/` - leaf services that nothing else in the cluster depends on.
+
+The bootstrap and platform stacks are shared modules (`tfmodules/stack-bootstrap/` and `tfmodules/stack-platform/`),
+so both environments run the same platform. Apps differ between environments, so each environment's `apps/` defines
+them directly.
+
+Between them, they manage:
 
 - GCP project resources: APIs, the `coven-backups` bucket (with a 14-day expiry on objects under `k3s/` only) and backup
   service account (with keys rotated every 30
@@ -161,11 +173,12 @@ grimhilde has no public address, so how you reach it depends on where you are:
 | GitHub Actions            | Over the internet                       | Through a WireGuard tunnel to janus, which the workflow brings up |
 | Anywhere else             | Over the internet                       | Not directly reachable; jump through strix, which is on the home LAN via its own tunnel |
 
-The Ansible workflow ([.github/workflows/host_config.yml](../.github/workflows/host_config.yml)) brings up its own
-WireGuard peer (192.168.178.204) to janus before running the playbook, so it can configure grimhilde, and takes it
-down again afterwards. If that tunnel can't be established (for example because janus or the home internet
-connection is down), the host configuration workflow will fail. The Terraform workflows only talk to the Kubernetes
-API on strix, Vault and cloud APIs, so they don't need the tunnel.
+The Ansible jobs (in [.github/workflows/host_config.yml](../.github/workflows/host_config.yml), and the
+"Configure Coven cluster" job at the end of [.github/workflows/tfapply.yml](../.github/workflows/tfapply.yml)) bring up
+their own WireGuard peer (192.168.178.204) to janus before running the playbook, so they can reach grimhilde, and take
+it down again afterwards. They share a concurrency group, so only one uses the peer at a time. If that tunnel can't be
+established (for example because janus or the home internet connection is down), they will fail. The Terraform jobs
+only talk to the Kubernetes API on strix, Vault and cloud APIs, so they don't need the tunnel.
 
 ## Platform services
 

@@ -12,67 +12,21 @@ jobs:
       contents: read
       id-token: write
     environment: coven
+    # shared with the cluster job in tfapply.yml, as both connect with the same WireGuard peer
     concurrency:
       group: coven-ansible
     steps:
       - name: checkout code
         uses: actions/checkout@v7
 
-      - name: connect to janus
-        run: |
-          sudo apt-get install -y wireguard
-
-          cat <<EOF | sudo tee /etc/wireguard/wg0.conf >/dev/null
-          [Interface]
-          PrivateKey = ${{ secrets.WIREGUARD_PRIVATE_KEY }}
-          Address = 192.168.178.204/24,fd1e:6349:c40a::204/64
-          MTU = 1392
-          
-          [Peer]
-          PublicKey = ${{ secrets.WIREGUARD_SERVER_PUBLIC_KEY }}
-          PresharedKey = ${{ secrets.WIREGUARD_SERVER_PRESHARED_KEY }}
-          AllowedIPs = 192.168.178.0/24,fd1e:6349:c40a::/64
-          Endpoint = janus.gs.omelette.gay:59384
-          PersistentKeepalive = 25
-          EOF
-          
-          sudo wg-quick up wg0
-
-      - name: login to Vault
-        uses: hashicorp/vault-action@v4
+      - name: set up Ansible
+        uses: ./.github/actions/ansible-setup
         with:
-          url: https://vault.coven.omelette.gay
-          method: jwt
-          path: github
-          role: gitops
-          exportToken: true
-
-      - name: login to GCP
-        uses: google-github-actions/auth@v3
-        with:
-          project_id: coven-omelette-gay
-          workload_identity_provider: projects/211831137824/locations/global/workloadIdentityPools/omelette-gay-github-actions/providers/omelette-gay-github-actions
-
-      - name: provision SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo -e "${{secrets.SSH_KEY}}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          echo -e "${{secrets.SSH_KNOWN_HOSTS}}" > ~/.ssh/known_hosts
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v10.3.3
-
-      - name: Install Helm
-        uses: azure/setup-helm@v5
-        with:
-          version: v4.3.1
-
-      - name: install dependencies
-        run: |
-          uv sync --locked --all-extras --dev
-          helm plugin install https://github.com/databus23/helm-diff --verify=false
-          uv run ansible-galaxy install -r requirements.yml
+          wireguard-private-key: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+          wireguard-server-public-key: ${{ secrets.WIREGUARD_SERVER_PUBLIC_KEY }}
+          wireguard-server-preshared-key: ${{ secrets.WIREGUARD_SERVER_PRESHARED_KEY }}
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
 
       - name: run Ansible
         run: uv run ansible-playbook -u github -i coven/inventory plays/configure-hosts.yml

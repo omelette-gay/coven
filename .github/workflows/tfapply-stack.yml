@@ -1,0 +1,32 @@
+name: Apply a Terraform stack
+
+on:
+  workflow_call:
+    inputs:
+      stack:
+        description: The root module to apply, e.g. coven/bootstrap
+        required: true
+        type: string
+
+jobs:
+  tfapply:
+    name: apply ${{ inputs.stack }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: ${{ inputs.stack }}/
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v7
+
+      - name: log in
+        uses: ./.github/actions/terraform-login
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform apply
+        run: terraform apply -no-color -auto-approve -input=false

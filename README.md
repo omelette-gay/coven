@@ -43,8 +43,8 @@ If one doesn't, make sure the directory it's installed in is added to your `PATH
 Our setup uses some external roles for deploying k3s. Run `uv run ansible-galaxy install -r requirements.yml` to bring down
 these dependencies.
 
-You will need to run `terraform init` in each environment's folder (`coven/` and `testlab/`) to set up your
-Terraform sessions. You will need to re-run this if the Terraform lock file changes (you will be warned of
+You will need to run `terraform init` in each Terraform stack's folder (`bootstrap/`, `platform/` and `apps/` in both
+`coven/` and `testlab/`) to set up your Terraform sessions. You will need to re-run this if the Terraform lock file changes (you will be warned of
 this if you run `terraform` without doing so).
 
 In the event you are setting up new things from scratch, then read [the bootstrapping doc](./docs/bootstrapping.md).
@@ -56,15 +56,19 @@ This will also log you in to allow you to use kubectl locally.
 
     ./login.sh --coven
 
-Now you can run the playbook:
+Now you can run the playbooks:
 
     uv run ansible-playbook -i coven/inventory plays/configure-hosts.yml
+    uv run ansible-playbook -i coven/inventory plays/configure-cluster.yml
 
 If you want to run Terraform locally, you will also need to log in to GCP.
 
     gcloud auth application-default login
 
-Now you can run `terraform apply` in the `coven/` folder to apply any Terraform changes.
+Now you can run `terraform apply` in `coven/bootstrap/`, `coven/platform/` and `coven/apps/`, in that order, to apply
+any Terraform changes. The bootstrap stack can't read Vault, so give it the Hetzner API token first:
+
+    export HCLOUD_TOKEN=$(vault kv get -field=api_token secret/gitops/hetzner)
 
 # Testlab
 
@@ -121,9 +125,11 @@ to specify the inventory as `testlab/inventory`. Following this, you can specify
 
     ./login.sh --local
     uv run ansible-playbook -i testlab/inventory plays/configure-hosts.yml
+    uv run ansible-playbook -i testlab/inventory plays/configure-cluster.yml
 
-Now you can run `terraform apply` in the `testlab/` folder to apply any Terraform changes.
-The tfstate for the testlab is local, stored in a gitignored file.
+Now you can run `terraform apply` in `testlab/bootstrap/`, `testlab/platform/` and `testlab/apps/`, in that order, to
+apply any Terraform changes.
+The tfstate for the testlab is local, stored in gitignored files.
 
 # How To
 

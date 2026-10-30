@@ -53,14 +53,9 @@ ephemeral "vault_kv_secret_v2" "keycloak" {
   name  = "gitops/keycloak-master-credentials"
 }
 
-locals {
-  keycloak_url       = "https://auth.coven.local"
-  keycloak_base_path = "/auth"
-}
-
 provider "keycloak" {
-  url                      = local.keycloak_url
-  base_path                = local.keycloak_base_path
+  url                      = "https://auth.coven.local"
+  base_path                = "/auth"
   realm                    = "master"
   client_id                = "admin-cli"
   username                 = ephemeral.vault_kv_secret_v2.keycloak.data["username"]

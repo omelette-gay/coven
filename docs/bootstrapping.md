@@ -9,7 +9,7 @@ might be.
 When first deploying the SSO configuration, you will need to specify the initial user for Keycloak
 on the command line and enable the bootstrapping flag:
 
-    uv run ansible-playbook -i INSERT-INVENTORY -e 'bootstrap=true keycloak_username=USERNAME keycloak_password=PASSWORD' plays/configure-hosts.yml
+    uv run ansible-playbook -i INSERT-INVENTORY -e 'bootstrap=true keycloak_username=USERNAME keycloak_password=PASSWORD' plays/configure-cluster.yml
 
 You will now be able to go to Keycloak and log in using that username and password. You should change
 this password after bootstrapping as it is stored in plaintext in the config for Keycloak.
@@ -76,7 +76,7 @@ and store this in Vault under the `gitops/hetzner` secret in the key `api_key`.
 ## Initialising new GCP account / project with Terraform
 
 As default Terraform is configured to store state in a GCP bucket, when initially setting up the project you will have to
-disable the `backend "gcs"` block, then run Terraform locally, reenable the `backend "gcs"` block and migrate state with
+disable the `backend "gcs"` block in `coven/bootstrap/`, then run Terraform locally, reenable the `backend "gcs"` block and migrate state with
 `terraform init -migrate-state`.
 
 Once the initial project is created, you will also need to populate the secret `k3s-cluster-token` in GCP with the

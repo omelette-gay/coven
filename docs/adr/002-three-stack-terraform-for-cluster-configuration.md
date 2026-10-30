@@ -156,15 +156,16 @@ If external-dns is configured with `domainFilters`, adding a zone for a new app 
 
 ### Layout and state
 
-The content of each stack lives in a shared module. Each environment has a thin root module that sets the backend,
-providers and variables, calls the shared module, and holds that environment's extra resources (on coven, the GCP and
-DNS resources above):
+The content of the bootstrap and platform stacks lives in a shared module. Each environment has a thin root module
+that sets the backend, providers and variables, calls the shared module, and holds that environment's extra resources
+(on coven, the GCP and DNS resources above). The apps stack has no shared module: which apps run differs between coven
+and the testlab, so each environment's `apps/` root module defines its apps directly, using the modules in
+`tfmodules/`:
 
 ```
 tfmodules/
   stack-bootstrap/
   stack-platform/
-  stack-apps/
   keycloak-client/, vault-k8s-secret/, ...   (existing modules)
 coven/
   bootstrap/
@@ -176,9 +177,11 @@ testlab/
   apps/
 ```
 
-This stops coven and the testlab drifting apart. `coven/bootstrap` takes over the existing `coven/` state (same bucket
-and prefix), so the resources that stay in bootstrap don't need importing. `coven/platform` and `coven/apps` get their
-own prefixes in `coven-tfstate`. Testlab state stays local and gitignored.
+This stops the platform the apps run on drifting apart between coven and the testlab. Each of `coven/bootstrap`,
+`coven/platform` and `coven/apps` has its own prefix in `coven-tfstate` (`terraform/bootstrap`, `terraform/platform` and
+`terraform/apps`). Every stack starts with empty state, and everything in the existing `coven/` root module (prefix
+`terraform/state`) is moved into the stacks explicitly (see [Migration](#migration)). Testlab state stays local and
+gitignored.
 
 Each root module has its own `.terraform.lock.hcl`, locked for both `linux_amd64` and `darwin_arm64` (`terraform
 providers lock -platform=...`), so lock files made on a Mac work in CI and WSL. Renovate updates all six together.
@@ -219,7 +222,8 @@ stack's merged and applied first.
 has changes, so drift and missed applies are noticed.
 
 **Ansible.** In the long run, the host configuration workflow and the Terraform workflow are independent. Until the
-migration is complete, the Ansible cluster play runs after the apps stack.
+migration is complete, the cluster-level Ansible play (`plays/configure-cluster.yml`, split out of
+`plays/configure-hosts.yml`) runs as a job in the Terraform workflow after the apps stack.
 
 **Credentials.** Provider blocks don't contain credentials; they read them from the environment. In CI, the workflow
 logs in to Vault with GitHub JWT auth, and sets environment variables for a short-lived Kubernetes token (for the
@@ -299,9 +303,17 @@ never depends on one still in Ansible.
 - Has a plan showing the imports and **no other changes** to the imported resources before it's merged. If an import
   doesn't plan cleanly, fix the configuration until it does.
 
-Resources moving out of the existing `coven/` state into `coven/platform` or `coven/apps` use a `removed` block with
-`lifecycle { destroy = false }` in `coven/bootstrap` and an `import` block in the new stack, in the same pull request,
-so nothing is destroyed. (`moved` blocks only work within one root module; use them for resources that move into the
+Resources moving out of the existing `coven/` root module use a `removed` block with `lifecycle { destroy = false }`
+in `coven/` and an `import` block in the new stack, in the same pull request, so nothing is destroyed. CI applies
+`coven/` after the three stacks, so nothing is ever unmanaged. Everything in `coven/` moves in the first pull request,
+which also creates the stacks. Once that's applied, `coven/` and its state are deleted. Resources that can't be
+imported (the backup service account's keys, Minecraft's RCON password) are created fresh in the new stack, and the
+old ones destroyed with `removed` blocks with `lifecycle { destroy = true }`.
+
+Importing a resource with a write-only secret (`data_wo` on a Kubernetes Secret, `client_secret_wo` on a Keycloak
+client) doesn't record its revision, so the first apply writes the secret again, which would rotate it. To keep the
+existing value, copy it into Vault by hand before the import, and pass it into the module through an ephemeral input,
+so the same value is written back. Remove the input once the import has been applied. (`moved` blocks only work within one root module; use them for resources that move into the
 shared module within the same stack.)
 
 A service with data (Vault, Keycloak's database, anything with Longhorn volumes) must never be migrated by uninstalling

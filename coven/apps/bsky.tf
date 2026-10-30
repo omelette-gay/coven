@@ -12,7 +12,7 @@ resource "hcloud_zone_rrset" "chris_bsky" {
 resource "hcloud_zone_rrset" "dizzy_bsky" {
   name = "_atproto.dizzy"
   type = "TXT"
-  zone = hcloud_zone.omelette_gay.id
+  zone = data.hcloud_zone.omelette_gay.id
   records = [
     { value = provider::hcloud::txt_record("did=did:plc:mzojqfcqta5qv3mqunoxojcg") }
   ]
@@ -21,7 +21,7 @@ resource "hcloud_zone_rrset" "dizzy_bsky" {
 resource "hcloud_zone_rrset" "emily_bsky" {
   name = "_atproto.emily"
   type = "TXT"
-  zone = hcloud_zone.omelette_gay.id
+  zone = data.hcloud_zone.omelette_gay.id
   records = [
     { value = provider::hcloud::txt_record("did=did:plc:jeobzen65n6ugbzawbvrunxu") }
   ]

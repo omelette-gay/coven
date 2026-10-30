@@ -248,8 +248,9 @@ itself, or the tunnel. Check:
 - Whether grimhilde is up and reachable from the home network (ping or SSH to 192.168.178.36). If it can be reached
   from home but not from strix, the problem is the tunnel or janus, not grimhilde.
 
-If this happens during a deploy, the "Configure Coven hosts" GitHub Actions workflow will also fail, because it
-needs its own WireGuard tunnel to janus to reach grimhilde.
+If this happens during a deploy, the "Configure Coven hosts" GitHub Actions workflow, and the "Configure Coven
+cluster" job at the end of the "Deploy cluster configuration" workflow, will also fail, because they need their own
+WireGuard tunnel to janus to reach grimhilde.
 
 Expect Longhorn volumes to go degraded and HTTP probes for anything running on grimhilde to fail at the same time.
 Once connectivity is restored, Longhorn will rebuild replicas on its own.
