@@ -18,11 +18,6 @@ resource "hcloud_zone" "chrisn_xyz" {
   mode = "primary"
 }
 
-resource "hcloud_zone" "cjn_me_uk" {
-  name = "cjn.me.uk"
-  mode = "primary"
-}
-
 resource "hcloud_zone" "dxhosting_co_uk" {
   name = "dxhosting.co.uk"
   mode = "primary"

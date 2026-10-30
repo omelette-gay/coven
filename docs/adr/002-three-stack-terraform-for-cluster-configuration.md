@@ -119,7 +119,10 @@ Leaf services that consume the platform. Nothing else in the cluster depends on 
 
 Each app gets its own `.tf` file that composes the modules it needs (e.g. `app-deployment` for the namespace and Vault
 trust, `keycloak-client` for SSO, `vault-k8s-secret` for secrets). This is preferred over a single `for_each` because
-apps have different requirements. An app's own DNS zone, if it has one, lives in its file.
+apps have different requirements. Everything that belongs to an app lives in its file, including its DNS zone and
+records (such as Fastmail's) if it has one, rather than being spread across files by resource type. A domain we own
+counts as an app, so a retired domain's file holds its zone, its mail records and its redirect. Only things shared by
+several apps, such as the providers and the `omelette.gay` zone, live in shared files.
 
 Contains: per-app GitHub deployment configs, Planka, Minecraft, Factorio, Trivy, decommissioned domain redirects, and,
 on coven, the Fastmail and Bluesky DNS records and the zones for domains other than `omelette.gay`.

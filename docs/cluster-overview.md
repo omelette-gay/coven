@@ -73,7 +73,6 @@ roughly reflects their dependencies:
 | `omelette.outbound-mail`        | `mail`                                | Postfix SMTP relay used by Grafana, Alertmanager and apps                    |
 | `omelette.mariadb`              | `mariadb-system`                      | MariaDB operator                                                             |
 | `omelette.apps`                 | per app                               | Namespaces, Vault roles, secret syncing and Keycloak clients for self-deploying apps (see [deploying apps](./deploying-apps.md)) |
-| `omelette.decommissioned-domains` | `decommissioned-domains`            | Redirects for retired domains                                                |
 | `omelette.factorio`             | `factorio-<server_id>`                | Factorio servers                                                             |
 | `omelette.planka`               | `planka`                              | Planka (boards.omelette.gay) and its Postgres cluster                        |
 
@@ -101,6 +100,7 @@ Between them, they manage:
 - `glitchtip` namespace - GlitchTip error tracking (errors.omelette.gay)
 - `minecraft-<server_id>` namespaces - Minecraft servers
 - `trivy-system` namespace - Trivy Operator vulnerability scanning
+- A namespace per retired domain (e.g. `cjn-me-uk`) - redirects to the domain that replaced it
 
 ### Self-deploying apps
 
