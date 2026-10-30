@@ -36,3 +36,16 @@ variable "sender_email" {
   description = "email address to send emails from"
   default     = "glitchtip@coven.local"
 }
+
+variable "existing_secrets" {
+  description = "Secrets to write instead of generating new ones. Only for importing an existing GlitchTip without rotating its secrets"
+  type = object({
+    secret_key              = string
+    keycloak_client_secret  = string
+    object_store_access_key = string
+    object_store_secret_key = string
+  })
+  default   = null
+  sensitive = true
+  ephemeral = true
+}

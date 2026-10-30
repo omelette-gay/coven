@@ -25,6 +25,11 @@ ephemeral "random_password" "secret_key" {
   special = false
 }
 
+locals {
+  access_key = var.existing_credentials != null ? var.existing_credentials.access_key : ephemeral.random_password.access_key.result
+  secret_key = var.existing_credentials != null ? var.existing_credentials.secret_key : ephemeral.random_password.secret_key.result
+}
+
 resource "kubernetes_secret_v1" "credentials" {
   metadata {
     name      = "${var.name}-object-store-credentials"
@@ -32,8 +37,8 @@ resource "kubernetes_secret_v1" "credentials" {
   }
 
   data_wo = {
-    RUSTFS_ACCESS_KEY = ephemeral.random_password.access_key.result
-    RUSTFS_SECRET_KEY = ephemeral.random_password.secret_key.result
+    RUSTFS_ACCESS_KEY = local.access_key
+    RUSTFS_SECRET_KEY = local.secret_key
   }
 
   data_wo_revision = 1
