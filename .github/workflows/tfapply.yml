@@ -1,57 +1,71 @@
-name: Apply Terraform changes
+name: Deploy cluster configuration
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
 
-# Covers every stack's job, so two merges can't apply at the same time
+# Covers every job, so two merges can't apply at the same time
 concurrency:
   group: coven-terraform
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
-  tfapply:
-    name: apply Terraform changes
+  bootstrap:
+    uses: ./.github/workflows/tfapply-stack.yml
+    with:
+      stack: coven/bootstrap
+
+  platform:
+    needs: bootstrap
+    uses: ./.github/workflows/tfapply-stack.yml
+    with:
+      stack: coven/platform
+
+  apps:
+    needs: platform
+    uses: ./.github/workflows/tfapply-stack.yml
+    with:
+      stack: coven/apps
+
+  # The old root module, which only removes resources from its state now they've moved into the stacks above. Delete
+  # this job along with the coven/*.tf files once it's been applied.
+  legacy:
+    needs: apps
+    uses: ./.github/workflows/tfapply-stack.yml
+    with:
+      stack: coven
+
+  # Cluster services still configured by Ansible. These run last, as Terraform-managed services never depend on them.
+  configure-cluster:
+    name: Configure Coven cluster
+    needs: legacy
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    defaults:
-      run:
-        working-directory: coven/
+    environment: coven
+    # shared with host_config.yml, as both connect with the same WireGuard peer
+    concurrency:
+      group: coven-ansible
     steps:
       - name: checkout code
         uses: actions/checkout@v7
 
-      - name: log in
-        uses: ./.github/actions/terraform-login
+      - name: set up Ansible
+        uses: ./.github/actions/ansible-setup
+        with:
+          wireguard-private-key: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+          wireguard-server-public-key: ${{ secrets.WIREGUARD_SERVER_PUBLIC_KEY }}
+          wireguard-server-preshared-key: ${{ secrets.WIREGUARD_SERVER_PRESHARED_KEY }}
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
 
-      - name: Terraform init
-        run: terraform init -input=false
+      - name: run Ansible
+        run: uv run ansible-playbook -u github -i coven/inventory plays/configure-cluster.yml
 
-      - name: Terraform apply
-        run: terraform apply -no-color -auto-approve -input=false
-
-  tfapply-apps:
-    name: apply Terraform changes (apps)
-    needs: tfapply
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    defaults:
-      run:
-        working-directory: coven/apps/
-    steps:
-      - name: checkout code
-        uses: actions/checkout@v7
-
-      - name: log in
-        uses: ./.github/actions/terraform-login
-
-      - name: Terraform init
-        run: terraform init -input=false
-
-      - name: Terraform apply
-        run: terraform apply -no-color -auto-approve -input=false
+      - name: close down Wireguard connection
+        if: always()
+        run: sudo wg-quick down wg0

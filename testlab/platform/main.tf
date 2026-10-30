@@ -67,3 +67,7 @@ provider "keycloak" {
   password                 = ephemeral.vault_kv_secret_v2.keycloak.data["password"]
   tls_insecure_skip_verify = true
 }
+
+module "platform" {
+  source = "../../tfmodules/stack-platform"
+}

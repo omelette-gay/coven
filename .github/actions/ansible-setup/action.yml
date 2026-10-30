@@ -1,0 +1,82 @@
+name: Set up Ansible
+description: Connects to the coven network over WireGuard, logs in to Vault and GCP, and installs Ansible and its dependencies. Run `sudo wg-quick down wg0` at the end of the job.
+
+inputs:
+  wireguard-private-key:
+    description: The WIREGUARD_PRIVATE_KEY secret
+    required: true
+  wireguard-server-public-key:
+    description: The WIREGUARD_SERVER_PUBLIC_KEY secret
+    required: true
+  wireguard-server-preshared-key:
+    description: The WIREGUARD_SERVER_PRESHARED_KEY secret
+    required: true
+  ssh-key:
+    description: The SSH_KEY secret
+    required: true
+  ssh-known-hosts:
+    description: The SSH_KNOWN_HOSTS secret
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: connect to janus
+      shell: bash
+      run: |
+        sudo apt-get install -y wireguard
+
+        cat <<EOF | sudo tee /etc/wireguard/wg0.conf >/dev/null
+        [Interface]
+        PrivateKey = ${{ inputs.wireguard-private-key }}
+        Address = 192.168.178.204/24,fd1e:6349:c40a::204/64
+        MTU = 1392
+
+        [Peer]
+        PublicKey = ${{ inputs.wireguard-server-public-key }}
+        PresharedKey = ${{ inputs.wireguard-server-preshared-key }}
+        AllowedIPs = 192.168.178.0/24,fd1e:6349:c40a::/64
+        Endpoint = janus.gs.omelette.gay:59384
+        PersistentKeepalive = 25
+        EOF
+
+        sudo wg-quick up wg0
+
+    - name: login to Vault
+      uses: hashicorp/vault-action@v4
+      with:
+        url: https://vault.coven.omelette.gay
+        method: jwt
+        path: github
+        role: gitops
+        exportToken: true
+
+    - name: login to GCP
+      uses: google-github-actions/auth@v3
+      with:
+        project_id: coven-omelette-gay
+        workload_identity_provider: projects/211831137824/locations/global/workloadIdentityPools/omelette-gay-github-actions/providers/omelette-gay-github-actions
+
+    - name: provision SSH key
+      shell: bash
+      run: |
+        mkdir -p ~/.ssh
+        echo -e "${{ inputs.ssh-key }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        echo -e "${{ inputs.ssh-known-hosts }}" > ~/.ssh/known_hosts
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10.3.3
+
+    - name: Install Helm
+      uses: azure/setup-helm@v5
+      with:
+        version: v4.3.1
+
+    - name: install dependencies
+      shell: bash
+      run: |
+        uv sync --locked --all-extras --dev
+        helm plugin install https://github.com/databus23/helm-diff --verify=false
+        uv run ansible-galaxy install -r requirements.yml
+

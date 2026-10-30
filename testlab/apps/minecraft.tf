@@ -1,5 +1,5 @@
 # module "minecraft" {
-#   source    = "../tfmodules/minecraft"
+#   source    = "../../tfmodules/minecraft"
 #   server_id = "testlab"
 #   port      = 25565
 #

@@ -1,0 +1,63 @@
+---
+# Configures services on the cluster. These are moving to Terraform (see docs/adr/002-three-stack-terraform-for-cluster-configuration.md),
+# and this playbook will be removed once they've all moved. Run configure-hosts.yml first on a new cluster.
+
+# gets credentials for the cluster, which the play below uses
+- hosts: k3s_controllers
+  roles:
+    - omelette.kubeconfig
+  become: true
+  any_errors_fatal: true
+
+# the roles defined in this section are for roles which run on the cluster, rather than the individual hosts
+- hosts: localhost
+  gather_facts: no
+  vars:
+    kubeconfig:
+      apiVersion: v1
+      kind: Config
+      current-context: default
+      contexts:
+        - name: default
+          context:
+            cluster: default
+            user: default
+      clusters:
+        - name: default
+          cluster:
+            server: "https://{{ hostvars[groups.k3s_controllers[0]].ansible_ssh_host }}:6443"
+            certificate-authority-data: "{{ hostvars[groups.k3s_controllers[0]].kubeconfig_ca_data }}"
+      users:
+        - name: default
+          user:
+            client-certificate-data: "{{ hostvars[groups.k3s_controllers[0]].kubeconfig_client_cert_data }}"
+            client-key-data: "{{ hostvars[groups.k3s_controllers[0]].kubeconfig_client_key_data }}"
+
+  module_defaults:
+    group/kubernetes.core.k8s:
+      kubeconfig: "{{ kubeconfig }}"
+      validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    group/kubernetes.core.helm:
+      kubeconfig: "{{ kubeconfig }}"
+      validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+    group/community.general.keycloak:
+      auth_keycloak_url: "{{ keycloak_url }}"
+      auth_username: "{{ keycloak_username }}"
+      auth_password: "{{ keycloak_password }}"
+      auth_realm: master
+      validate_certs: "{{ kubeconfig_require_secure|default(true) }}"
+
+  roles:
+    - omelette.storage
+    - omelette.monitoring
+    - omelette.cert-manager
+    - omelette.postgres
+    - omelette.sso
+    - omelette.secrets
+    - omelette.external-dns
+    - omelette.outbound-mail
+    - omelette.mariadb
+    - omelette.apps
+    - omelette.decommissioned-domains
+    - omelette.factorio
+    - omelette.planka

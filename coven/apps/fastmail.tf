@@ -1,7 +1,7 @@
 # delegate some domains to Chris's Fastmail account
 
 module "fastmail" {
-  source = "../tfmodules/fastmail"
+  source = "../../tfmodules/fastmail"
 
   for_each = {
     for zone in [

@@ -9,4 +9,8 @@ resource "google_storage_bucket" "tfstate_bucket" {
   versioning {
     enabled = true
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }

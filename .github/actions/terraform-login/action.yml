@@ -12,6 +12,9 @@ runs:
         path: github
         role: gitops
         exportToken: true
+        # the bootstrap stack can't read Vault itself, so give it the Hetzner token through the environment
+        secrets: |
+          secret/data/gitops/hetzner api_token | HCLOUD_TOKEN
 
     - name: log in to k8s
       id: k8s_auth

@@ -1,11 +1,11 @@
 module "girlsclub_minecraft" {
-  source = "../tfmodules/minecraft"
+  source = "../../tfmodules/minecraft"
 
   server_id = "girlsclub"
   port      = 21585
   dns = {
     hostname = "omelette.gay"
-    zone     = hcloud_zone.omelette_gay
+    zone     = data.hcloud_zone.omelette_gay
   }
   prefer_nodes = "coven.omelette.gay/location=xdc"
 

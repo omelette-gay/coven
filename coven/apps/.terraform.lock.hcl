@@ -47,7 +47,7 @@ provider "registry.terraform.io/hashicorp/kubernetes" {
 
 provider "registry.terraform.io/hashicorp/random" {
   version     = "3.9.1"
-  constraints = ">= 3.9.0, 3.9.1"
+  constraints = ">= 3.7.2, 3.9.1"
   hashes = [
     "h1:PlW+UZ4EElQF3NQwf41KQwavFujab3Czc51zu9dyVM8=",
     "h1:g40qr7yDmIpaur4SsK5BcOda3HSo1RJ6zHVMqN4EJ+0=",
@@ -69,7 +69,7 @@ provider "registry.terraform.io/hashicorp/random" {
 
 provider "registry.terraform.io/hashicorp/vault" {
   version     = "5.13.0"
-  constraints = ">= 5.10.1, 5.13.0"
+  constraints = "5.13.0"
   hashes = [
     "h1:3i0ilxMnMgfh9ioYsnxOMXBFi5C3eOK01GPndR0lZ6E=",
     "h1:9GWBEdKhbbNxmiLNld9ol6r31TQIullKQhk3kktUIpU=",
@@ -113,7 +113,7 @@ provider "registry.terraform.io/hetznercloud/hcloud" {
 
 provider "registry.terraform.io/keycloak/keycloak" {
   version     = "5.10.0"
-  constraints = ">= 5.9.0, 5.10.0"
+  constraints = "5.10.0"
   hashes = [
     "h1:uvFYbKh1KbxxRpblW9MIkqAXJo6Ox+sLmma/VYeEVIM=",
     "h1:xD0HKSB567pqMZzXoBctOVghJy0wrsUDojc2ZDfkZdU=",

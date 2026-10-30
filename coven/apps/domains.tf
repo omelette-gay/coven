@@ -1,6 +1,6 @@
-resource "hcloud_zone" "omelette_gay" {
+# omelette.gay is in the bootstrap stack, as some of its records are needed before the cluster is configured
+data "hcloud_zone" "omelette_gay" {
   name = "omelette.gay"
-  mode = "primary"
 }
 
 resource "hcloud_zone" "animebots_co_uk" {
