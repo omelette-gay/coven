@@ -220,14 +220,6 @@ k8s_github_deployment_roles:
       - resident
     keycloak_k8s_secret: home-assistant-sso-secrets
 
-decommissioned_domains:
-  - name: cjn-me-uk
-    domain: cjn.me.uk
-    redirect_target: https://chrisn.xyz/
-  - name: www-cjn-me-uk
-    domain: www.cjn.me.uk
-    redirect_target: https://chrisn.xyz/
-
 planka_hostname: boards.omelette.gay
 
 # increase storage for logs in prod

@@ -8,7 +8,6 @@ module "fastmail" {
       hcloud_zone.animebots_co_uk,
       hcloud_zone.barcampmanchester_co_uk,
       hcloud_zone.chrisn_xyz,
-      hcloud_zone.cjn_me_uk,
       hcloud_zone.dxhosting_co_uk,
       hcloud_zone.manchestertechnights_org,
       hcloud_zone.pling_org_uk,
