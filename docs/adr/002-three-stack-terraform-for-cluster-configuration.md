@@ -308,7 +308,12 @@ in `coven/` and an `import` block in the new stack, in the same pull request, so
 `coven/` after the three stacks, so nothing is ever unmanaged. Everything in `coven/` moves in the first pull request,
 which also creates the stacks. Once that's applied, `coven/` and its state are deleted. Resources that can't be
 imported (the backup service account's keys, Minecraft's RCON password) are created fresh in the new stack, and the
-old ones destroyed with `removed` blocks with `lifecycle { destroy = true }`. (`moved` blocks only work within one root module; use them for resources that move into the
+old ones destroyed with `removed` blocks with `lifecycle { destroy = true }`.
+
+Importing a resource with a write-only secret (`data_wo` on a Kubernetes Secret, `client_secret_wo` on a Keycloak
+client) doesn't record its revision, so the first apply writes the secret again, which would rotate it. To keep the
+existing value, copy it into Vault by hand before the import, and pass it into the module through an ephemeral input,
+so the same value is written back. Remove the input once the import has been applied. (`moved` blocks only work within one root module; use them for resources that move into the
 shared module within the same stack.)
 
 A service with data (Vault, Keycloak's database, anything with Longhorn volumes) must never be migrated by uninstalling

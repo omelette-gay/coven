@@ -1,5 +1,6 @@
-# Everything in this root module except GlitchTip has moved into the bootstrap, platform and apps stacks (ADR 002),
-# which import it. These blocks stop this root module managing it, without destroying anything.
+# Everything in this root module has moved into the bootstrap, platform and apps stacks (ADR 002), which import it.
+# These blocks stop this root module managing it, without destroying anything. Once this has been applied, this root
+# module (and its state, in the terraform/state prefix of coven-tfstate) can be deleted.
 
 removed {
   from = google_project_service.iam
@@ -195,6 +196,14 @@ removed {
 
 removed {
   from = vault_kv_secret_v2.backup_service_account_key
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+removed {
+  from = module.glitchtip
 
   lifecycle {
     destroy = false

@@ -70,4 +70,11 @@ provider "keycloak" {
 
 module "platform" {
   source = "../../tfmodules/stack-platform"
+
+  keycloak_url   = "${local.keycloak_url}${local.keycloak_base_path}"
+  cluster_issuer = "vault"
+
+  glitchtip_domain               = "errors.coven.local"
+  glitchtip_postgresql_instances = 1
+  glitchtip_sender_email         = "glitchtip@coven.local"
 }

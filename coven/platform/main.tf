@@ -94,6 +94,27 @@ provider "keycloak" {
   password  = ephemeral.vault_kv_secret_v2.keycloak.data["password"]
 }
 
+# GlitchTip's current secrets, copied here by hand so that importing it writes back the same values instead of rotating
+# them. Remove this, and the glitchtip_existing_secrets argument below, once the import has been applied, then delete
+# the secret from Vault.
+ephemeral "vault_kv_secret_v2" "glitchtip_migration" {
+  mount = "secret"
+  name  = "gitops/glitchtip-migration"
+}
+
 module "platform" {
   source = "../../tfmodules/stack-platform"
+
+  keycloak_url   = "${local.keycloak_url}${local.keycloak_base_path}"
+  cluster_issuer = "letsencrypt"
+
+  glitchtip_domain               = "errors.omelette.gay"
+  glitchtip_postgresql_instances = 2
+  glitchtip_sender_email         = "glitchtip@coven.omelette.gay"
+  glitchtip_existing_secrets = {
+    secret_key              = ephemeral.vault_kv_secret_v2.glitchtip_migration.data["secret_key"]
+    keycloak_client_secret  = ephemeral.vault_kv_secret_v2.glitchtip_migration.data["keycloak_client_secret"]
+    object_store_access_key = ephemeral.vault_kv_secret_v2.glitchtip_migration.data["object_store_access_key"]
+    object_store_secret_key = ephemeral.vault_kv_secret_v2.glitchtip_migration.data["object_store_secret_key"]
+  }
 }
