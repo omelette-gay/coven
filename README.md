@@ -21,8 +21,11 @@ You will need to have the following installed (in your WSL environment if on Win
 The following are optional, but are useful for diagnosing issues and checking changes, and let AI agents working in
 this repo (see [the agent instructions](./docs/agents.md)) do more without needing a human to step in:
 
-- [GitHub CLI](https://cli.github.com/) (`gh`), then run `gh auth login`. For checking pull requests, Terraform plans
-  and GitHub Actions deploys
+- [GitHub CLI](https://cli.github.com/) (`gh`) 2.90.0 or later, then run `gh auth login`. For checking pull requests,
+  Terraform plans and GitHub Actions deploys. On Ubuntu (including WSL), install it from
+  [GitHub's apt repository](https://github.com/cli/cli/blob/trunk/docs/install_linux.md), as Ubuntu's own package is
+  too old. For [stacked pull requests](https://docs.github.com/en/pull-requests), also run
+  `gh extension install github/gh-stack`
 - [logcli](https://grafana.com/docs/loki/latest/query/logcli/getting-started/) for querying Loki
 - [jq](https://jqlang.org/download/) and [yq](https://github.com/mikefarah/yq#install) for picking apart JSON and YAML
 - [TFLint](https://github.com/terraform-linters/tflint#installation)
