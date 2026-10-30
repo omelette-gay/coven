@@ -18,14 +18,3 @@ variable "buckets" {
   description = "Buckets to create in the object store"
   type        = set(string)
 }
-
-variable "existing_credentials" {
-  description = "RustFS credentials to write instead of generating new ones. Only for importing an existing object store without rotating its credentials"
-  type = object({
-    access_key = string
-    secret_key = string
-  })
-  default   = null
-  sensitive = true
-  ephemeral = true
-}

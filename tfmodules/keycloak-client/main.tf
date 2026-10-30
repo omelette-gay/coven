@@ -20,10 +20,6 @@ ephemeral "random_password" "client_secret" {
   special = false
 }
 
-locals {
-  client_secret = var.existing_client_secret != null ? var.existing_client_secret : ephemeral.random_password.client_secret.result
-}
-
 resource "keycloak_openid_client" "this" {
   realm_id              = var.realm_id
   client_id             = var.client_id
@@ -33,7 +29,7 @@ resource "keycloak_openid_client" "this" {
   standard_flow_enabled = true
   valid_redirect_uris   = var.valid_redirect_uris
 
-  client_secret_wo         = local.client_secret
+  client_secret_wo         = ephemeral.random_password.client_secret.result
   client_secret_wo_version = "1"
 }
 
@@ -65,7 +61,7 @@ resource "kubernetes_secret_v1" "this" {
 
   data_wo = {
     client_id     = var.client_id
-    client_secret = local.client_secret
+    client_secret = ephemeral.random_password.client_secret.result
   }
 
   data_wo_revision = 1

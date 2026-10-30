@@ -33,11 +33,3 @@ variable "k8s_secret_name" {
   description = "Name of the Kubernetes Secret containing client_id and client_secret"
   type        = string
 }
-
-variable "existing_client_secret" {
-  description = "Client secret to write instead of generating a new one. Only for importing an existing client without rotating its secret"
-  type        = string
-  default     = null
-  sensitive   = true
-  ephemeral   = true
-}

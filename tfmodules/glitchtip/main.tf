@@ -30,10 +30,6 @@ ephemeral "random_password" "secret_key" {
   special = false
 }
 
-locals {
-  secret_key = var.existing_secrets != null ? var.existing_secrets.secret_key : ephemeral.random_password.secret_key.result
-}
-
 resource "kubernetes_secret_v1" "secret" {
   metadata {
     name      = "glitchtip-secrets"
@@ -41,7 +37,7 @@ resource "kubernetes_secret_v1" "secret" {
   }
 
   data_wo = {
-    SECRET_KEY = local.secret_key
+    SECRET_KEY = ephemeral.random_password.secret_key.result
   }
 
   data_wo_revision = 1
@@ -57,8 +53,6 @@ module "keycloak_client" {
   k8s_namespace       = kubernetes_namespace_v1.this.metadata[0].name
   k8s_secret_name     = "glitchtip-oidc"
 
-  existing_client_secret = var.existing_secrets != null ? var.existing_secrets.keycloak_client_secret : null
-
   depends_on = [kubernetes_namespace_v1.this]
 }
 
@@ -68,11 +62,6 @@ module "object_store" {
   name      = "glitchtip"
   namespace = kubernetes_namespace_v1.this.metadata[0].name
   buckets   = ["glitchtip"]
-
-  existing_credentials = var.existing_secrets != null ? {
-    access_key = var.existing_secrets.object_store_access_key
-    secret_key = var.existing_secrets.object_store_secret_key
-  } : null
 
   depends_on = [kubernetes_namespace_v1.this]
 }
