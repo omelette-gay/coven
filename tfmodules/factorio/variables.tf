@@ -1,5 +1,5 @@
 variable "server_id" {
-  description = "Unique identifier for the Factorio server on the cluster"
+  description = "Unique identifier for the Factorio server on the cluster. Used in the namespace (factorio-<server_id>), Helm release and Vault names"
   type        = string
   validation {
     condition     = can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.server_id)) && length(var.server_id) <= 53
@@ -41,7 +41,7 @@ variable "password_protected" {
 }
 
 variable "dns" {
-  description = "Optional DNS configuration for the Factorio server"
+  description = "Optional DNS configuration. If set, external-dns publishes factorio-svc.<hostname> and an SRV record lets players join with just the hostname"
   type = object({
     hostname = string
     zone = object({
@@ -53,7 +53,7 @@ variable "dns" {
 }
 
 variable "memory" {
-  description = "How much memory to request for the server"
+  description = "Memory to request for the server, as a Kubernetes quantity, e.g. 3Gi"
   type        = string
   default     = "512Mi"
   validation {
@@ -63,7 +63,7 @@ variable "memory" {
 }
 
 variable "disk_size" {
-  description = "How big a disk to assign to the Factorio data dir"
+  description = "Size of the Factorio data volume, as a Kubernetes quantity, e.g. 2Gi"
   type        = string
   default     = "1Gi"
   validation {
@@ -73,7 +73,7 @@ variable "disk_size" {
 }
 
 variable "longhorn_recurring_job_name" {
-  description = "Longhorn recurring job name to label the data PVC with. If null, no Longhorn labels are set."
+  description = "Longhorn recurring job to label the data volume with, e.g. nightly-backup. If null, no Longhorn labels are set"
   type        = string
   default     = null
 }
