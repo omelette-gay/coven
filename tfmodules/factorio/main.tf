@@ -59,10 +59,8 @@ resource "helm_release" "factorio" {
         type           = "LoadBalancer"
         ipFamilyPolicy = "PreferDualStack"
         port           = var.port
-        # FIXME: this repeats the zone (e.g. factorio-svc.omelette.gay.omelette.gay), so the record the SRV record
-        # points at isn't managed by external-dns. Kept as it was in Ansible so the import changes nothing.
         annotations = var.dns == null ? {} : {
-          "external-dns.kubernetes.io/hostname" = "factorio-svc.${var.dns.hostname}.${var.dns.zone.name}"
+          "external-dns.kubernetes.io/hostname" = "factorio-svc.${var.dns.hostname}"
         }
       }
 
