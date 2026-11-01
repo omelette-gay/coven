@@ -58,5 +58,4 @@
     - omelette.outbound-mail
     - omelette.mariadb
     - omelette.apps
-    - omelette.factorio
     - omelette.planka

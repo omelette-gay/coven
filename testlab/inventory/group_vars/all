@@ -21,14 +21,3 @@ k8s_hostaliases:
   - ip: 192.168.57.100
     hostnames:
       - "{{ keycloak_host }}"
-
-factorio_servers: []
-#  - server_id: testlab
-#    config:
-#      factorioServer:
-#        enable_space_age: false
-#      server_settings:
-#        name: Test Lab
-#        description: Just doing test things
-#      serverPassword:
-#        passwordSecret: "game-password"
