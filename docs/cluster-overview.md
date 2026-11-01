@@ -143,7 +143,7 @@ that only affect one node, or that started after an OS update on one node.
   nodes, and k3s logs `Slow SQL` warnings.
 - Only strix has `svccontroller.k3s.cattle.io/enablelb=true`, so **all external traffic enters through strix**
   (public IPs 168.119.4.112 and 2a01:4f8:242:4f21::2), including traffic for pods running on grimhilde.
-- Workloads that must use a datacentre IP (e.g. outbound mail, the Minecraft server) are pinned or prefer
+- Workloads that must use a datacentre IP (e.g. outbound mail, the Minecraft and Factorio servers) are pinned or prefer
   `coven.omelette.gay/location=xdc`.
 - See [names and numbers](./names-and-numbers.md) for naming conventions and IP ranges.
 

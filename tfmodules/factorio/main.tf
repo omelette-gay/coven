@@ -69,12 +69,38 @@ resource "helm_release" "factorio" {
         }
       }
 
+      resources = {
+        requests = {
+          cpu    = "500m"
+          memory = var.memory
+        }
+      }
+
       persistence = {
         labels = var.longhorn_recurring_job_name != null ? {
           "recurring-job.longhorn.io/source"                             = "enabled"
           "recurring-job.longhorn.io/${var.longhorn_recurring_job_name}" = "enabled"
         } : {}
       }
+
+      affinity = var.prefer_nodes != "" ? {
+        nodeAffinity = {
+          preferredDuringSchedulingIgnoredDuringExecution = [
+            {
+              weight = 100
+              preference = {
+                matchExpressions = [
+                  {
+                    key      = split("=", var.prefer_nodes)[0]
+                    operator = "In"
+                    values   = [split("=", var.prefer_nodes)[1]]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      } : {}
 
       factorioServer = {
         save_name        = var.save_name

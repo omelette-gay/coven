@@ -49,8 +49,20 @@ variable "dns" {
   default = null
 }
 
+variable "memory" {
+  description = "How much memory to request for the server"
+  type        = string
+  default     = "512Mi"
+}
+
 variable "longhorn_recurring_job_name" {
   description = "Longhorn recurring job name to label the data PVC with. If null, no Longhorn labels are set."
   type        = string
   default     = null
+}
+
+variable "prefer_nodes" {
+  description = "a node label to prefer running the server on"
+  type        = string
+  default     = ""
 }

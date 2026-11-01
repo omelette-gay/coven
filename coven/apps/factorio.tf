@@ -12,6 +12,8 @@ module "girlsclub_factorio" {
   description        = "Just doing girls things, in space"
   password_protected = true
 
+  prefer_nodes                = "coven.omelette.gay/location=xdc"
+  memory                      = "3Gi"
   longhorn_recurring_job_name = "nightly-backup"
 }
 
@@ -30,5 +32,7 @@ module "chegsworld_factorio" {
   description        = "Making a factory a home"
   password_protected = true
 
+  prefer_nodes                = "coven.omelette.gay/location=xdc"
+  memory                      = "1.5Gi"
   longhorn_recurring_job_name = "nightly-backup"
 }
