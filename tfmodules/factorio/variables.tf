@@ -1,6 +1,10 @@
 variable "server_id" {
   description = "Unique identifier for the Factorio server on the cluster"
   type        = string
+  validation {
+    condition     = can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.server_id)) && length(var.server_id) <= 53
+    error_message = "server_id must be a DNS label of at most 53 characters (lowercase letters, digits and hyphens), as it's used in namespace and Helm release names."
+  }
 }
 
 variable "port" {
@@ -53,12 +57,20 @@ variable "memory" {
   description = "How much memory to request for the server"
   type        = string
   default     = "512Mi"
+  validation {
+    condition     = can(regex("^[0-9]+(\\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$", var.memory))
+    error_message = "memory must be a Kubernetes quantity, e.g. 2Gi."
+  }
 }
 
 variable "disk_size" {
   description = "How big a disk to assign to the Factorio data dir"
   type        = string
   default     = "1Gi"
+  validation {
+    condition     = can(regex("^[0-9]+(\\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$", var.disk_size))
+    error_message = "disk_size must be a Kubernetes quantity, e.g. 2Gi."
+  }
 }
 
 variable "longhorn_recurring_job_name" {
