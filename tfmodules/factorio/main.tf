@@ -111,7 +111,7 @@ resource "helm_release" "factorio" {
       }
 
       serverPassword = var.password_protected ? {
-        passwordSecret = local.password_secret_name
+        passwordSecret = module.game_password[0].k8s_secret_name
       } : {}
 
       server_settings = {
