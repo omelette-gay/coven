@@ -140,19 +140,17 @@ resource "helm_release" "minecraft" {
         "external-dns.kubernetes.io/hostname" = "minecraft-svc.${var.dns.hostname}"
       }
 
-      affinity = var.prefer_nodes != "" ? {
+      affinity = length(var.preferred_node_labels) > 0 ? {
         nodeAffinity = {
           preferredDuringSchedulingIgnoredDuringExecution = [
             {
               weight = 100
               preference = {
-                matchExpressions = [
-                  {
-                    key      = split("=", var.prefer_nodes)[0]
-                    operator = "In"
-                    values   = [split("=", var.prefer_nodes)[1]]
-                  }
-                ]
+                matchExpressions = [for key, value in var.preferred_node_labels : {
+                  key      = key
+                  operator = "In"
+                  values   = [value]
+                }]
               }
             }
           ]

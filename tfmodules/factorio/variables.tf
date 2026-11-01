@@ -67,8 +67,8 @@ variable "longhorn_recurring_job_name" {
   default     = null
 }
 
-variable "prefer_nodes" {
-  description = "a node label to prefer running the server on"
-  type        = string
-  default     = ""
+variable "preferred_node_labels" {
+  description = "Node labels to prefer running the server on, e.g. { \"coven.omelette.gay/location\" = \"xdc\" }"
+  type        = map(string)
+  default     = {}
 }
