@@ -21,6 +21,10 @@ terraform {
 
 locals {
   password_secret_name = "game-password"
+
+  # Renovate only proposes stable-x.y.z tags (see .github/renovate.json), so experimental releases are skipped
+  # renovate: datasource=docker depName=factoriotools/factorio
+  image_tag = "stable-2.1.24"
 }
 
 resource "kubernetes_namespace_v1" "this" {
@@ -52,7 +56,8 @@ resource "helm_release" "factorio" {
     yamlencode({
       hostNetworkEnabled = false
       image = {
-        tag = "stable"
+        tag        = local.image_tag
+        pullPolicy = "IfNotPresent"
       }
 
       service = {
