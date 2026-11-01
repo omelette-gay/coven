@@ -11,6 +11,8 @@ module "girlsclub_factorio" {
   server_name        = "Girls go Space"
   description        = "Just doing girls things, in space"
   password_protected = true
+
+  longhorn_recurring_job_name = "nightly-backup"
 }
 
 module "chegsworld_factorio" {
@@ -27,4 +29,6 @@ module "chegsworld_factorio" {
   server_name        = "Chegs World"
   description        = "Making a factory a home"
   password_protected = true
+
+  longhorn_recurring_job_name = "nightly-backup"
 }

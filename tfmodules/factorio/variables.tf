@@ -48,3 +48,9 @@ variable "dns" {
   })
   default = null
 }
+
+variable "longhorn_recurring_job_name" {
+  description = "Longhorn recurring job name to label the data PVC with. If null, no Longhorn labels are set."
+  type        = string
+  default     = null
+}
