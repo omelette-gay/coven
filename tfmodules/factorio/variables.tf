@@ -55,6 +55,12 @@ variable "memory" {
   default     = "512Mi"
 }
 
+variable "disk_size" {
+  description = "How big a disk to assign to the Factorio data dir"
+  type        = string
+  default     = "1Gi"
+}
+
 variable "longhorn_recurring_job_name" {
   description = "Longhorn recurring job name to label the data PVC with. If null, no Longhorn labels are set."
   type        = string

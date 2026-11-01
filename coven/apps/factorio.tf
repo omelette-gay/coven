@@ -14,6 +14,7 @@ module "girlsclub_factorio" {
 
   prefer_nodes                = "coven.omelette.gay/location=xdc"
   memory                      = "3Gi"
+  disk_size                   = "2Gi"
   longhorn_recurring_job_name = "nightly-backup"
 }
 

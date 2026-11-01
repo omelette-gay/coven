@@ -77,6 +77,9 @@ resource "helm_release" "factorio" {
       }
 
       persistence = {
+        dataDir = {
+          Size = var.disk_size
+        }
         labels = var.longhorn_recurring_job_name != null ? {
           "recurring-job.longhorn.io/source"                             = "enabled"
           "recurring-job.longhorn.io/${var.longhorn_recurring_job_name}" = "enabled"
