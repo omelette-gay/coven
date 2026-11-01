@@ -1,6 +1,7 @@
 # module "factorio" {
 #   source    = "../../tfmodules/factorio"
 #   server_id = "testlab"
+#   port      = 31497
 #
 #   save_name          = "testlab"
 #   enable_space_age   = false

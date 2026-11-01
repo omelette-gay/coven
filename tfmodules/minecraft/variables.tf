@@ -26,7 +26,7 @@ variable "motd" {
 }
 
 variable "port" {
-  description = "Port for the Minecraft server"
+  description = "Port for the Minecraft server. Must be unique across the cluster's game servers, as they all share strix's load balancer IP"
   type        = number
 }
 

@@ -2,6 +2,7 @@ module "girlsclub_factorio" {
   source = "../../tfmodules/factorio"
 
   server_id = "girlsclub"
+  port      = 31497
   dns = {
     hostname = "omelette.gay"
     zone     = data.hcloud_zone.omelette_gay

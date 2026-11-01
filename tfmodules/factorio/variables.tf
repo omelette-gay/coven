@@ -8,9 +8,8 @@ variable "server_id" {
 }
 
 variable "port" {
-  description = "UDP port for the Factorio server"
+  description = "UDP port for the Factorio server. Must be unique across the cluster's game servers, as they all share strix's load balancer IP"
   type        = number
-  default     = 31497
 }
 
 variable "save_name" {
