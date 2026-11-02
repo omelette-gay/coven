@@ -56,6 +56,31 @@ resource "helm_release" "this" {
           pullPolicy = "IfNotPresent"
         }
 
+        resources = {
+          requests = {
+            cpu    = var.cpu_request
+            memory = var.memory_request
+          }
+        }
+
+        gameService = {
+          type = "LoadBalancer"
+        }
+
+        webService = {
+          ingress = {
+            hostname = var.hostname
+            annotations = {
+              "cert-manager.io/cluster-issuer"                   = var.cluster_issuer
+              "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
+            }
+            tls = [{
+              hosts      = [var.hostname]
+              secretName = "${var.instance_name}-ingress-tls"
+            }]
+          }
+        }
+
         # Make the chart's ExternalSecret read the server password from the SecretStore made above
         storage = {
           universe = {

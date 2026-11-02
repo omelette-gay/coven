@@ -22,6 +22,33 @@ variable "vault_secret_name" {
   type        = string
 }
 
+variable "hostname" {
+  description = "Hostname that the server's web interface is served on, with a certificate from cert-manager"
+  type        = string
+  validation {
+    condition     = can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.hostname))
+    error_message = "hostname must be a bare hostname, without https:// or a trailing slash."
+  }
+}
+
+variable "cluster_issuer" {
+  description = "cert-manager ClusterIssuer used for the web interface's TLS certificate"
+  type        = string
+  default     = "letsencrypt"
+}
+
+variable "cpu_request" {
+  description = "CPU the pod requests, as a Kubernetes quantity. There is no CPU limit, so the server can burst. The default is well above what the server has been observed to use"
+  type        = string
+  default     = "100m"
+}
+
+variable "memory_request" {
+  description = "Memory the pod requests, as a Kubernetes quantity. There is no limit. The default is about double what the server has been observed to use"
+  type        = string
+  default     = "256Mi"
+}
+
 variable "longhorn_recurring_job_name" {
   description = "Longhorn recurring job to label the universe and plugin volumes with, e.g. nightly-backup. If null, no Longhorn labels are set"
   type        = string

@@ -14,7 +14,11 @@ The chart version is pinned in the module so that Renovate can update it, and al
 The universe and plugin PVCs are annotated `helm.sh/resource-policy: keep`, so uninstalling the release doesn't delete
 the game data.
 
-Anything else goes in `values`. Don't use `templatefile()` on it, as `{{ .server_password }}` is an External Secrets
+The game service is a `LoadBalancer`, and the web interface is exposed through Traefik at `hostname` with a
+certificate from `cluster_issuer` (default `letsencrypt`) and an HTTP to HTTPS redirect. CPU and memory requests have
+defaults based on observed usage (`cpu_request`, `memory_request`), with no limits.
+
+Anything else, such as the server's config files, goes in `values`. Don't use `templatefile()` on it, as `{{ .server_password }}` is an External Secrets
 template, not Terraform or Helm syntax.
 
 The module creates the namespace, so there can only be one instance (one call of this module) per namespace. To run
