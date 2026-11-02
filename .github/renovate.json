@@ -33,7 +33,7 @@
         "/\\.tf$/"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\n\\s*\\w+\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+        "# renovate: datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\n\\s*\\w+\\s*=\\s*\"(?<currentValue>[^\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?\""
       ]
     }
   ],

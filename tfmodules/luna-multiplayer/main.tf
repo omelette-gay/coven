@@ -39,8 +39,16 @@ resource "helm_release" "this" {
 
   values = concat(
     [
-      # Make the chart's ExternalSecret read the server password from the SecretStore made above
       yamlencode({
+        # Pinned by digest, which Renovate keeps up to date. Upstream only publishes `master` (a moving tag) and a few
+        # release tags, and the running build doesn't match any release tag, so we track master.
+        image = {
+          # renovate: datasource=docker depName=ghcr.io/lunamultiplayer/lunamultiplayer/server
+          tag        = "master@sha256:b03d14534d94f832e2adf2c3735deff4840b58a1dbf7df2e54bdce49e5883c82"
+          pullPolicy = "IfNotPresent"
+        }
+
+        # Make the chart's ExternalSecret read the server password from the SecretStore made above
         storage = {
           mergeConfigFromExternalSecret = {
             secretStore = module.secret_store.secret_store_name
