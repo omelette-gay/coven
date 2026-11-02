@@ -17,17 +17,12 @@ variable "namespace" {
   }
 }
 
-variable "chart_version" {
-  description = "Version of the luna-multiplayer Helm chart to install. Bump it to upgrade"
-  type        = string
-}
-
 variable "vault_secret_name" {
-  description = "Path of the KV v2 secret in Vault, relative to the mount, that the chart reads secrets from (the chart's storage.mergeConfigFromExternalSecret.remoteKey)"
+  description = "Path of the KV v2 secret in Vault, relative to the mount, that holds server_password. The server config can refer to it as {{ .server_password }}"
   type        = string
 }
 
 variable "values" {
-  description = "Helm values for the chart, as YAML strings. Load files with file(), not templatefile(), as they can contain External Secrets templates such as {{ .server_password }}"
+  description = "Extra Helm values for the chart, as YAML strings (e.g. from yamlencode()), merged over the module's own. Don't run them through templatefile(): the config can contain External Secrets templates such as {{ .server_password }}"
   type        = list(string)
 }

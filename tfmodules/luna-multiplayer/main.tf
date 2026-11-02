@@ -35,9 +35,23 @@ resource "helm_release" "this" {
   create_namespace = false
   repository       = "https://omelette-gay.github.io/luna-multiplayer-helm-chart"
   chart            = "luna-multiplayer"
-  version          = var.chart_version
+  version          = "1.0.0"
 
-  values = var.values
+  values = concat(
+    [
+      # Make the chart's ExternalSecret read the server password from the SecretStore made above
+      yamlencode({
+        storage = {
+          mergeConfigFromExternalSecret = {
+            secretStore = module.secret_store.secret_store_name
+            remoteKey   = var.vault_secret_name
+            keys        = ["server_password"]
+          }
+        }
+      })
+    ],
+    var.values
+  )
 
   depends_on = [module.secret_store]
 }
