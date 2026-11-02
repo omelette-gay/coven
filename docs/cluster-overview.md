@@ -99,6 +99,9 @@ Between them, they manage:
 - `glitchtip` namespace - GlitchTip error tracking (errors.omelette.gay)
 - `minecraft-<server_id>` namespaces - Minecraft servers
 - `factorio-<server_id>` namespaces - Factorio servers
+- `luna-multiplayer` namespace - Luna Multiplayer (Kerbal Space Program) servers, installed from the Helm chart published
+  by [luna-multiplayer-helm-chart](https://github.com/omelette-gay/luna-multiplayer-helm-chart). To upgrade, bump
+  `chart_version` in `coven/apps/luna-multiplayer.tf`
 - `trivy-system` namespace - Trivy Operator vulnerability scanning
 - A namespace per retired domain (e.g. `cjn-me-uk`) - redirects to the domain that replaced it
 

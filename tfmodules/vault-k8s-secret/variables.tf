@@ -7,9 +7,20 @@ variable "vault_secret_name" {
   }
 }
 
+variable "create_external_secret" {
+  description = "Whether to create an ExternalSecret syncing the Vault secret into Kubernetes. Set to false if something else, such as a Helm chart, creates its own ExternalSecret against the SecretStore"
+  type        = bool
+  default     = true
+}
+
 variable "k8s_secret_name" {
-  description = "Name of the Kubernetes Secret created by External Secrets Operator"
+  description = "Name of the Kubernetes Secret created by External Secrets Operator. Required if create_external_secret is true"
   type        = string
+  default     = null
+  validation {
+    condition     = !var.create_external_secret || var.k8s_secret_name != null
+    error_message = "k8s_secret_name must be set when create_external_secret is true."
+  }
 }
 
 variable "k8s_namespace" {

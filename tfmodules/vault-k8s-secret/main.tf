@@ -72,7 +72,14 @@ resource "kubernetes_manifest" "secret_store" {
   ]
 }
 
+moved {
+  from = kubernetes_manifest.external_secret
+  to   = kubernetes_manifest.external_secret[0]
+}
+
 resource "kubernetes_manifest" "external_secret" {
+  count = var.create_external_secret ? 1 : 0
+
   manifest = {
     apiVersion = "external-secrets.io/v1"
     kind       = "ExternalSecret"

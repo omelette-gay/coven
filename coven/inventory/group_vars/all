@@ -157,16 +157,6 @@ k8s_github_deployment_roles:
         k8s_service_account_name: chrisn-xyz-gcp-backups
         vault_role_name: chrisn-xyz-gcp-backups
 
-  - github_repo: omelette-gay/luna-multiplayer-helm-chart
-    k8s_namespace: luna-multiplayer
-    role_name: luna-multiplayer
-    vault_secrets:
-      - vault_secret_name: luna-multiplayer/girlsclub
-        k8s_secret_name: girlsclub-config
-        k8s_namespace: luna-multiplayer
-        k8s_service_account_name: luna-multiplayer-girlsclub-config
-        vault_role_name: luna-multiplayer-girlsclub-config
-
   - github_repo: omelette-gay/home-assistant
     k8s_namespace: home-assistant
     role_name: home-assistant
