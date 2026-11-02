@@ -18,8 +18,9 @@ The game service is a `LoadBalancer`, and the web interface is exposed through T
 certificate from `cluster_issuer` (default `letsencrypt`) and an HTTP to HTTPS redirect. CPU and memory requests have
 defaults based on observed usage (`cpu_request`, `memory_request`), with no limits.
 
-Anything else, such as the server's config files, goes in `values`. Don't use `templatefile()` on it, as `{{ .server_password }}` is an External Secrets
-template, not Terraform or Helm syntax.
+The server's config files go in `config`, as a map of file name to contents. Files that aren't set use the chart's
+defaults. Don't use `templatefile()` on them, as `{{ .server_password }}` is an External Secrets template, not
+Terraform or Helm syntax.
 
 The module creates the namespace, so there can only be one instance (one call of this module) per namespace. To run
 more than one server, give each its own `namespace`.

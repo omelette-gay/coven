@@ -7,14 +7,14 @@ module "girlsclub_minecraft" {
     hostname = "omelette.gay"
     zone     = data.hcloud_zone.omelette_gay
   }
-  preferred_node_labels = { "coven.omelette.gay/location" = "xdc" }
+  preferred_node_labels = local.game_server_preferred_node
 
   memory    = "4G"
   disk_size = "10Gi"
 
   backups_enabled             = true
   backup_disk_size            = "20Gi"
-  longhorn_recurring_job_name = "nightly-backup"
+  longhorn_recurring_job_name = local.nightly_backup_job
 
   motd = "Girls yearn for the mines"
   whitelist = [

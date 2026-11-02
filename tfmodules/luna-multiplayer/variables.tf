@@ -61,8 +61,8 @@ variable "preferred_node_labels" {
   default     = {}
 }
 
-variable "values" {
-  description = "Extra Helm values for the chart, as YAML strings (e.g. from yamlencode()), merged over the module's own. Don't run them through templatefile(): the config can contain External Secrets templates such as {{ .server_password }}"
-  type        = list(string)
-  default     = []
+variable "config" {
+  description = "The server's config files, as a map of file name to contents (e.g. GeneralSettings.xml). Files that aren't set use the chart's defaults. Contents can refer to {{ .server_password }}, which is an External Secrets template filled in from Vault, so don't run them through templatefile()"
+  type        = map(string)
+  default     = {}
 }
