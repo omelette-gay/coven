@@ -16,3 +16,12 @@ the game data.
 
 Anything else goes in `values`. Don't use `templatefile()` on it, as `{{ .server_password }}` is an External Secrets
 template, not Terraform or Helm syntax.
+
+The module creates the namespace, so there can only be one instance (one call of this module) per namespace. To run
+more than one server, give each its own `namespace`.
+
+The release is `atomic`, so a failed upgrade rolls back. The universe and plugin volumes are labelled with
+`longhorn_recurring_job_name` (set it to `nightly-backup` for off-site backups). Deleting the namespace, for example by
+removing this module, deletes the volumes along with it, as the `keep` annotation only protects them from a Helm
+uninstall. Restore them from the Longhorn backup if that happens (see
+[backups and recovery](../../docs/backups-and-recovery.md)).

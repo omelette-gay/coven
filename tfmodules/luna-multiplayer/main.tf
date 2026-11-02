@@ -29,6 +29,13 @@ module "secret_store" {
   vault_role_name          = "${var.namespace}-${var.instance_name}-config"
 }
 
+locals {
+  backup_labels = var.longhorn_recurring_job_name != null ? {
+    "recurring-job.longhorn.io/source"                             = "enabled"
+    "recurring-job.longhorn.io/${var.longhorn_recurring_job_name}" = "enabled"
+  } : {}
+}
+
 resource "helm_release" "this" {
   name             = var.instance_name
   namespace        = kubernetes_namespace_v1.this.metadata[0].name
@@ -36,6 +43,7 @@ resource "helm_release" "this" {
   repository       = "https://omelette-gay.github.io/luna-multiplayer-helm-chart"
   chart            = "luna-multiplayer"
   version          = "1.0.0"
+  atomic           = true
 
   values = concat(
     [
@@ -50,16 +58,37 @@ resource "helm_release" "this" {
 
         # Make the chart's ExternalSecret read the server password from the SecretStore made above
         storage = {
+          universe = {
+            pvcLabels = local.backup_labels
+          }
+          plugins = {
+            pvcLabels = local.backup_labels
+          }
           mergeConfigFromExternalSecret = {
             secretStore = module.secret_store.secret_store_name
             remoteKey   = var.vault_secret_name
             keys        = ["server_password"]
           }
         }
+
+        affinity = length(var.preferred_node_labels) > 0 ? {
+          nodeAffinity = {
+            preferredDuringSchedulingIgnoredDuringExecution = [
+              {
+                weight = 100
+                preference = {
+                  matchExpressions = [for key, value in var.preferred_node_labels : {
+                    key      = key
+                    operator = "In"
+                    values   = [value]
+                  }]
+                }
+              }
+            ]
+          }
+        } : {}
       })
     ],
     var.values
   )
-
-  depends_on = [module.secret_store]
 }

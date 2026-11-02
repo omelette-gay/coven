@@ -4,8 +4,23 @@ module "luna_multiplayer_girlsclub" {
   instance_name     = "girlsclub"
   vault_secret_name = "luna-multiplayer/girlsclub"
 
+  longhorn_recurring_job_name = "nightly-backup"
+  preferred_node_labels       = { "coven.omelette.gay/location" = "xdc" }
+
   values = [
     yamlencode({
+      # Over the last 10 days or so the server has peaked at about 140Mi of memory and 0.06 CPU cores. This leaves plenty
+      # of headroom for a busier session or a bigger universe. There's no CPU limit so that it can burst
+      resources = {
+        requests = {
+          cpu    = "100m"
+          memory = "256Mi"
+        }
+        limits = {
+          memory = "512Mi"
+        }
+      }
+
       gameService = {
         type = "LoadBalancer"
       }

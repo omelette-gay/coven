@@ -22,7 +22,20 @@ variable "vault_secret_name" {
   type        = string
 }
 
+variable "longhorn_recurring_job_name" {
+  description = "Longhorn recurring job to label the universe and plugin volumes with, e.g. nightly-backup. If null, no Longhorn labels are set"
+  type        = string
+  default     = null
+}
+
+variable "preferred_node_labels" {
+  description = "Node labels to prefer running the server on, e.g. { \"coven.omelette.gay/location\" = \"xdc\" }"
+  type        = map(string)
+  default     = {}
+}
+
 variable "values" {
   description = "Extra Helm values for the chart, as YAML strings (e.g. from yamlencode()), merged over the module's own. Don't run them through templatefile(): the config can contain External Secrets templates such as {{ .server_password }}"
   type        = list(string)
+  default     = []
 }
