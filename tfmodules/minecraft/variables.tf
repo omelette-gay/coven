@@ -1,6 +1,10 @@
 variable "server_id" {
-  description = "Unique identifier for the Minecraft server on the cluster"
+  description = "Unique identifier for the Minecraft server on the cluster. Used in the namespace (minecraft-<server_id>) and Helm release names"
   type        = string
+  validation {
+    condition     = can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.server_id)) && length(var.server_id) <= 53
+    error_message = "server_id must be a DNS label of at most 53 characters (lowercase letters, digits and hyphens), as it's used in namespace and Helm release names."
+  }
 }
 
 variable "whitelist" {
@@ -22,12 +26,12 @@ variable "motd" {
 }
 
 variable "port" {
-  description = "Port for the Minecraft server"
+  description = "Port for the Minecraft server. Must be unique across the cluster's game servers, as they all share strix's load balancer IP"
   type        = number
 }
 
 variable "dns" {
-  description = "Optional DNS configuration for the Minecraft server"
+  description = "Optional DNS configuration. If set, external-dns publishes minecraft-svc.<hostname> and an SRV record lets players join with just the hostname"
   type = object({
     hostname = string
     zone = object({
@@ -39,37 +43,49 @@ variable "dns" {
 }
 
 variable "memory" {
-  description = "How much memory to assign to the server"
+  description = "Memory for the Minecraft JVM in whole gigabytes, e.g. 4G. The pod requests 1G more than this"
   type        = string
   default     = "1G"
+  validation {
+    condition     = can(regex("^[0-9]+G$", var.memory))
+    error_message = "memory must be a whole number of gigabytes, e.g. 4G, as the pod's memory request is worked out from it."
+  }
 }
 
 variable "disk_size" {
-  description = "How big a disk to assign to the Minecraft data dir"
+  description = "Size of the Minecraft data volume, as a Kubernetes quantity, e.g. 10Gi"
   type        = string
   default     = "1Gi"
+  validation {
+    condition     = can(regex("^[0-9]+(\\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$", var.disk_size))
+    error_message = "disk_size must be a Kubernetes quantity, e.g. 2Gi."
+  }
 }
 
 variable "backups_enabled" {
-  description = "Whether to enable periodic world backups"
+  description = "Whether to enable periodic world backups to a separate volume"
   type        = bool
   default     = false
 }
 
 variable "backup_disk_size" {
-  description = "How big a disk to assign to the Minecraft backup dir"
+  description = "Size of the backup volume, as a Kubernetes quantity, e.g. 20Gi"
   type        = string
   default     = "5G"
+  validation {
+    condition     = can(regex("^[0-9]+(\\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$", var.backup_disk_size))
+    error_message = "backup_disk_size must be a Kubernetes quantity, e.g. 2Gi."
+  }
 }
 
 variable "longhorn_recurring_job_name" {
-  description = "Longhorn recurring job name to label the backup PVC with. If null, no Longhorn labels are set."
+  description = "Longhorn recurring job to label the backup volume with, e.g. nightly-backup. If null, no Longhorn labels are set"
   type        = string
   default     = null
 }
 
-variable "prefer_nodes" {
-  description = "a node label to prefer running the server on"
-  type        = string
-  default     = ""
+variable "preferred_node_labels" {
+  description = "Node labels to prefer running the server on, e.g. { \"coven.omelette.gay/location\" = \"xdc\" }"
+  type        = map(string)
+  default     = {}
 }

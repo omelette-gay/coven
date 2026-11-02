@@ -24,6 +24,23 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)\\n.*_version:\\s*\"(?<currentValue>.*?)\""
       ]
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/\\.tf$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\n\\s*\\w+\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "factoriotools/factorio also tags experimental releases with plain version numbers, so only follow the stable-x.y.z tags",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["factoriotools/factorio"],
+      "versioning": "regex:^stable-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
     }
   ]
 }

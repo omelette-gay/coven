@@ -7,7 +7,7 @@ module "girlsclub_minecraft" {
     hostname = "omelette.gay"
     zone     = data.hcloud_zone.omelette_gay
   }
-  prefer_nodes = "coven.omelette.gay/location=xdc"
+  preferred_node_labels = { "coven.omelette.gay/location" = "xdc" }
 
   memory    = "4G"
   disk_size = "10Gi"

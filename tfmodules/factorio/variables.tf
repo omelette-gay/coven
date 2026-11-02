@@ -1,12 +1,15 @@
 variable "server_id" {
-  description = "Unique identifier for the Factorio server on the cluster"
+  description = "Unique identifier for the Factorio server on the cluster. Used in the namespace (factorio-<server_id>), Helm release and Vault names"
   type        = string
+  validation {
+    condition     = can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.server_id)) && length(var.server_id) <= 53
+    error_message = "server_id must be a DNS label of at most 53 characters (lowercase letters, digits and hyphens), as it's used in namespace and Helm release names."
+  }
 }
 
 variable "port" {
-  description = "UDP port for the Factorio server"
+  description = "UDP port for the Factorio server. Must be unique across the cluster's game servers, as they all share strix's load balancer IP"
   type        = number
-  default     = 31497
 }
 
 variable "save_name" {
@@ -38,7 +41,7 @@ variable "password_protected" {
 }
 
 variable "dns" {
-  description = "Optional DNS configuration for the Factorio server"
+  description = "Optional DNS configuration. If set, external-dns publishes factorio-svc.<hostname> and an SRV record lets players join with just the hostname"
   type = object({
     hostname = string
     zone = object({
@@ -47,4 +50,36 @@ variable "dns" {
     })
   })
   default = null
+}
+
+variable "memory" {
+  description = "Memory to request for the server, as a Kubernetes quantity, e.g. 3Gi"
+  type        = string
+  default     = "512Mi"
+  validation {
+    condition     = can(regex("^[0-9]+(\\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$", var.memory))
+    error_message = "memory must be a Kubernetes quantity, e.g. 2Gi."
+  }
+}
+
+variable "disk_size" {
+  description = "Size of the Factorio data volume, as a Kubernetes quantity, e.g. 2Gi"
+  type        = string
+  default     = "1Gi"
+  validation {
+    condition     = can(regex("^[0-9]+(\\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$", var.disk_size))
+    error_message = "disk_size must be a Kubernetes quantity, e.g. 2Gi."
+  }
+}
+
+variable "longhorn_recurring_job_name" {
+  description = "Longhorn recurring job to label the data volume with, e.g. nightly-backup. If null, no Longhorn labels are set"
+  type        = string
+  default     = null
+}
+
+variable "preferred_node_labels" {
+  description = "Node labels to prefer running the server on, e.g. { \"coven.omelette.gay/location\" = \"xdc\" }"
+  type        = map(string)
+  default     = {}
 }

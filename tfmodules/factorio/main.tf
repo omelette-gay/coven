@@ -21,6 +21,10 @@ terraform {
 
 locals {
   password_secret_name = "game-password"
+
+  # Renovate only proposes stable-x.y.z tags (see .github/renovate.json), so experimental releases are skipped
+  # renovate: datasource=docker depName=factoriotools/factorio
+  image_tag = "stable-2.1.24"
 }
 
 resource "kubernetes_namespace_v1" "this" {
@@ -52,19 +56,52 @@ resource "helm_release" "factorio" {
     yamlencode({
       hostNetworkEnabled = false
       image = {
-        tag = "stable"
+        tag        = local.image_tag
+        pullPolicy = "IfNotPresent"
       }
 
       service = {
         type           = "LoadBalancer"
         ipFamilyPolicy = "PreferDualStack"
         port           = var.port
-        # FIXME: this repeats the zone (e.g. factorio-svc.omelette.gay.omelette.gay), so the record the SRV record
-        # points at isn't managed by external-dns. Kept as it was in Ansible so the import changes nothing.
         annotations = var.dns == null ? {} : {
-          "external-dns.kubernetes.io/hostname" = "factorio-svc.${var.dns.hostname}.${var.dns.zone.name}"
+          "external-dns.kubernetes.io/hostname" = "factorio-svc.${var.dns.hostname}"
         }
       }
+
+      resources = {
+        requests = {
+          cpu    = "500m"
+          memory = var.memory
+        }
+      }
+
+      persistence = {
+        dataDir = {
+          Size = var.disk_size
+        }
+        labels = var.longhorn_recurring_job_name != null ? {
+          "recurring-job.longhorn.io/source"                             = "enabled"
+          "recurring-job.longhorn.io/${var.longhorn_recurring_job_name}" = "enabled"
+        } : {}
+      }
+
+      affinity = length(var.preferred_node_labels) > 0 ? {
+        nodeAffinity = {
+          preferredDuringSchedulingIgnoredDuringExecution = [
+            {
+              weight = 100
+              preference = {
+                matchExpressions = [for key, value in var.preferred_node_labels : {
+                  key      = key
+                  operator = "In"
+                  values   = [value]
+                }]
+              }
+            }
+          ]
+        }
+      } : {}
 
       factorioServer = {
         save_name        = var.save_name
@@ -72,7 +109,7 @@ resource "helm_release" "factorio" {
       }
 
       serverPassword = var.password_protected ? {
-        passwordSecret = local.password_secret_name
+        passwordSecret = module.game_password[0].k8s_secret_name
       } : {}
 
       server_settings = {
