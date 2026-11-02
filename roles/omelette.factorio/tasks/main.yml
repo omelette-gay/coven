@@ -1,7 +1,0 @@
----
-- name: deploy Factorio instance
-  include_tasks: deploy_factorio.yml
-  loop: "{{ factorio_servers }}"
-  loop_control:
-    label: "{{ factorio_server.server_id }}"
-    loop_var: factorio_server

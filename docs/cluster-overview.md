@@ -73,7 +73,6 @@ roughly reflects their dependencies:
 | `omelette.outbound-mail`        | `mail`                                | Postfix SMTP relay used by Grafana, Alertmanager and apps                    |
 | `omelette.mariadb`              | `mariadb-system`                      | MariaDB operator                                                             |
 | `omelette.apps`                 | per app                               | Namespaces, Vault roles, secret syncing and Keycloak clients for self-deploying apps (see [deploying apps](./deploying-apps.md)) |
-| `omelette.factorio`             | `factorio-<server_id>`                | Factorio servers                                                             |
 | `omelette.planka`               | `planka`                              | Planka (boards.omelette.gay) and its Postgres cluster                        |
 
 ### What Terraform manages
@@ -99,6 +98,7 @@ Between them, they manage:
 - Hetzner DNS zones and static records (Fastmail, Bluesky verification)
 - `glitchtip` namespace - GlitchTip error tracking (errors.omelette.gay)
 - `minecraft-<server_id>` namespaces - Minecraft servers
+- `factorio-<server_id>` namespaces - Factorio servers
 - `trivy-system` namespace - Trivy Operator vulnerability scanning
 - A namespace per retired domain (e.g. `cjn-me-uk`) - redirects to the domain that replaced it
 

@@ -1,0 +1,105 @@
+terraform {
+  required_providers {
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 3.2.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 3.2.1"
+    }
+    vault = {
+      source  = "hashicorp/vault"
+      version = ">= 5.10.1"
+    }
+    hcloud = {
+      source  = "hetznercloud/hcloud"
+      version = ">= 1.68.0"
+    }
+  }
+}
+
+locals {
+  password_secret_name = "game-password"
+}
+
+resource "kubernetes_namespace_v1" "this" {
+  metadata {
+    name = "factorio-${var.server_id}"
+  }
+}
+
+module "game_password" {
+  source = "../vault-k8s-secret"
+  count  = var.password_protected ? 1 : 0
+
+  vault_secret_name        = "factorio/${var.server_id}"
+  k8s_secret_name          = local.password_secret_name
+  k8s_namespace            = kubernetes_namespace_v1.this.metadata[0].name
+  k8s_service_account_name = "secret-reader"
+  vault_role_name          = "factorio-${var.server_id}"
+}
+
+resource "helm_release" "factorio" {
+  name       = var.server_id
+  namespace  = kubernetes_namespace_v1.this.metadata[0].name
+  repository = "https://sqljames.github.io/factorio-server-charts/"
+  chart      = "factorio-server-charts"
+  version    = "2.5.2"
+  atomic     = true
+
+  values = [
+    yamlencode({
+      hostNetworkEnabled = false
+      image = {
+        tag = "stable"
+      }
+
+      service = {
+        type           = "LoadBalancer"
+        ipFamilyPolicy = "PreferDualStack"
+        port           = var.port
+        # FIXME: this repeats the zone (e.g. factorio-svc.omelette.gay.omelette.gay), so the record the SRV record
+        # points at isn't managed by external-dns. Kept as it was in Ansible so the import changes nothing.
+        annotations = var.dns == null ? {} : {
+          "external-dns.kubernetes.io/hostname" = "factorio-svc.${var.dns.hostname}.${var.dns.zone.name}"
+        }
+      }
+
+      factorioServer = {
+        save_name        = var.save_name
+        enable_space_age = var.enable_space_age
+      }
+
+      serverPassword = var.password_protected ? {
+        passwordSecret = local.password_secret_name
+      } : {}
+
+      server_settings = {
+        name                = var.server_name
+        description         = var.description
+        non_blocking_saving = true
+        visibility = {
+          lan = false
+        }
+      }
+
+      rcon = {
+        external = false
+      }
+    })
+  ]
+}
+
+resource "hcloud_zone_rrset" "srv" {
+  count = var.dns == null ? 0 : 1
+
+  name = trimsuffix("_factorio._udp.${trimsuffix(var.dns.hostname, var.dns.zone.name)}", ".")
+  type = "SRV"
+  zone = var.dns.zone.id
+  records = [
+    {
+      value = "0 0 ${var.port} factorio-svc.${var.dns.hostname}."
+    }
+  ]
+}

@@ -47,36 +47,6 @@ external_dns_extra_records:
     records:
       - value: "192.168.178.36"
 
-factorio_servers:
-  - server_id: girlsclub
-    dns:
-      hostname: omelette.gay
-      zone: omelette.gay
-    config:
-      factorioServer:
-        save_name: "girls-club"
-        enable_space_age: true
-      serverPassword:
-        passwordSecret: "game-password"
-      server_settings:
-        name: Girls go Space
-        description: Just doing girls things, in space
-  - server_id: chegsworld
-    config:
-      service:
-        port: 31495
-      factorioServer:
-        save_name: "chegsworld"
-        enable_space_age: true
-      serverPassword:
-        passwordSecret: "game-password"
-      server_settings:
-        name: Chegs World
-        description: Making a factory a home
-    dns:
-      hostname: chegsworld.omelette.gay
-      zone: omelette.gay
-
 k8s_github_deployment_roles:
   - github_repo: cnorthwood/chriss-weight-tracker
     k8s_namespace: weight-tracker
