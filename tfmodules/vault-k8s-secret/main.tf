@@ -93,9 +93,10 @@ resource "kubernetes_manifest" "external_secret" {
         name = kubernetes_manifest.secret_store.manifest.metadata.name
         kind = "SecretStore"
       }
-      target = {
-        name = var.k8s_secret_name
-      }
+      target = merge(
+        { name = var.k8s_secret_name },
+        length(var.template_data) > 0 ? { template = { data = var.template_data } } : {}
+      )
       dataFrom = [{
         extract = {
           key = var.vault_secret_name

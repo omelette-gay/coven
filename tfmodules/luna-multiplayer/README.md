@@ -4,10 +4,11 @@ Installs a [Luna Multiplayer](https://github.com/LunaMultiplayer/LunaMultiplayer
 [luna-multiplayer Helm chart](https://github.com/omelette-gay/luna-multiplayer-helm-chart), which is published to
 GitHub Pages and no longer deploys itself.
 
-It creates the namespace, the Helm release, and a Vault-backed External Secrets `SecretStore` named
-`vault-<namespace>-<instance_name>-config` that the chart's own `ExternalSecret` reads from. The module sets
-`storage.mergeConfigFromExternalSecret` for you, so the server config can use `{{ .server_password }}`, which is read
-from the `server_password` key of the Vault secret at `vault_secret_name`.
+It creates the namespace, the Helm release, and what the server config needs from Vault: a Vault-backed External Secrets
+`SecretStore` named `vault-<namespace>-<instance_name>-config`, and an `ExternalSecret` that renders the files in `config`
+into a Secret named `<instance_name>-config`. The chart copies the files in that Secret over its own defaults (it is
+passed as `existingConfigSecret`), and knows nothing about External Secrets or Vault. The config files can use
+`{{ .server_password }}`, which is read from the `server_password` key of the Vault secret at `vault_secret_name`.
 
 The chart version is pinned in the module so that Renovate can update it, and all instances move together.
 
@@ -19,9 +20,10 @@ as JSON. If `hostname` is set, it's exposed through Traefik there, with a certif
 `letsencrypt`) and an HTTP to HTTPS redirect. If it isn't, there is no ingress. CPU and memory requests have
 defaults based on observed usage (`cpu_request`, `memory_request`), with no limits.
 
-The server's config files go in `config`, as a map of file name to contents. Files that aren't set use the chart's
-defaults. Don't use `templatefile()` on them, as `{{ .server_password }}` is an External Secrets template, not
-Terraform or Helm syntax.
+The server's config files that contain secrets go in `config`, as a map of file name to contents. Files that aren't set
+use the chart's defaults. Don't use `templatefile()` on them, as `{{ .server_password }}` is an External Secrets
+template, not Terraform or Helm syntax. The server only reads the Secret when the pod starts, so restart the pod after
+changing the password in Vault.
 
 The module creates the namespace, so there can only be one instance (one call of this module) per namespace. To run
 more than one server, give each its own `namespace`.
