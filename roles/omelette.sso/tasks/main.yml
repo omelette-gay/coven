@@ -161,7 +161,7 @@
   notify: restart Grafana
 
 - name: create omelette.gay realm in Keycloak
-  community.general.keycloak_realm:
+  middleware_automation.keycloak.keycloak_realm:
     id: omelette-gay
     realm: "{{ keycloak_realm }}"
     enabled: true
@@ -173,7 +173,7 @@
       ssl: "{{ smtp_relay.ssl|default(omit) }}"
 
 - name: create admin group for omelette.gay in Keycloak
-  community.general.keycloak_group:
+  middleware_automation.keycloak.keycloak_group:
     name: "{{ keycloak_admin_group }}"
     realm: "{{ keycloak_realm }}"
 
