@@ -1,5 +1,5 @@
 - name: create Keycloak client for app
-  community.general.keycloak_client:
+  middleware_automation.keycloak.keycloak_client:
     client_id: "{{ k8s_github_deployment_role.keycloak_client_id }}"
     realm: "{{ keycloak_realm }}"
     protocol: openid-connect
@@ -20,7 +20,7 @@
   register: keycloak_client
 
 - name: create roles for Keycloak client
-  community.general.keycloak_role:
+  middleware_automation.keycloak.keycloak_role:
     realm: "{{ keycloak_realm }}"
     name: "{{ keycloak_client_role }}"
     client_id: "{{ k8s_github_deployment_role.keycloak_client_id }}"
@@ -29,7 +29,7 @@
     loop_var: keycloak_client_role
 
 - name: fetch client secret from Keycloak
-  community.general.keycloak_clientsecret_info:
+  middleware_automation.keycloak.keycloak_clientsecret_info:
     id: "{{ keycloak_client.end_state.id }}"
     realm: "{{ keycloak_realm }}"
   no_log: true

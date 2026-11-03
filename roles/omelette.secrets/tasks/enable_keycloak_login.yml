@@ -1,5 +1,5 @@
 - name: create Keycloak client for Vault
-  community.general.keycloak_client:
+  middleware_automation.keycloak.keycloak_client:
     client_id: "{{ vault_keycloak_client_name }}"
     realm: "{{ keycloak_realm }}"
     protocol: openid-connect
@@ -23,14 +23,14 @@
   register: keycloak_vault_client
 
 - name: create Vault admin role in Keycloak
-  community.general.keycloak_role:
+  middleware_automation.keycloak.keycloak_role:
     realm: "{{ keycloak_realm }}"
     name: "{{ vault_keycloak_admin_role }}"
     client_id: "{{ vault_keycloak_client_name }}"
   register: keycloak_vault_admin_role
 
 - name: associate Vault admin role with admins group in Keycloak
-  community.general.keycloak_client_rolemapping:
+  middleware_automation.keycloak.keycloak_client_rolemapping:
     realm: "{{ keycloak_realm }}"
     group_name: "{{ keycloak_admin_group }}"
     client_id: "{{ vault_keycloak_client_name }}"
@@ -38,7 +38,7 @@
       - name: "{{ vault_keycloak_admin_role }}"
 
 - name: fetch Vault client secret from Keycloak
-  community.general.keycloak_clientsecret_info:
+  middleware_automation.keycloak.keycloak_clientsecret_info:
     id: "{{ keycloak_vault_client.end_state.id }}"
     realm: "{{ keycloak_realm }}"
   no_log: true

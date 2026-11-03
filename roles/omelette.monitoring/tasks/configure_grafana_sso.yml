@@ -1,5 +1,5 @@
 - name: create Keycloak client for Grafana
-  community.general.keycloak_client:
+  middleware_automation.keycloak.keycloak_client:
     client_id: "{{ grafana_keycloak_client_name }}"
     realm: "{{ keycloak_realm }}"
     protocol: openid-connect
@@ -22,14 +22,14 @@
   register: keycloak_grafana_client
 
 - name: create Grafana admin role in Keycloak
-  community.general.keycloak_role:
+  middleware_automation.keycloak.keycloak_role:
     realm: "{{ keycloak_realm }}"
     name: "{{ grafana_keycloak_admin_role }}"
     client_id: "{{ grafana_keycloak_client_name }}"
   register: keycloak_grafana_admin_role
 
 - name: associate Grafana-admin role with admins group in Keycloak
-  community.general.keycloak_client_rolemapping:
+  middleware_automation.keycloak.keycloak_client_rolemapping:
     realm: "{{ keycloak_realm }}"
     group_name: "{{ keycloak_admin_group }}"
     client_id: "{{ grafana_keycloak_client_name }}"
@@ -37,7 +37,7 @@
       - name: "{{ grafana_keycloak_admin_role }}"
 
 - name: fetch Grafana client secret from Keycloak
-  community.general.keycloak_clientsecret_info:
+  middleware_automation.keycloak.keycloak_clientsecret_info:
     id: "{{ keycloak_grafana_client.end_state.id }}"
     realm: "{{ keycloak_realm }}"
   no_log: true
