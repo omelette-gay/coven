@@ -3,7 +3,8 @@ module "luna_multiplayer_girlsclub" {
 
   instance_name     = "girlsclub"
   vault_secret_name = "luna-multiplayer/girlsclub"
-  hostname          = "spaceprogramme.omelette.gay"
+
+  # No hostname, so no web ingress: the web server only returns the server's status as JSON, and we've never used it
 
   longhorn_recurring_job_name = local.nightly_backup_job
   preferred_node_labels       = local.game_server_preferred_node

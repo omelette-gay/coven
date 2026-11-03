@@ -42,7 +42,7 @@ resource "helm_release" "this" {
   create_namespace = false
   repository       = "https://omelette-gay.github.io/luna-multiplayer-helm-chart"
   chart            = "luna-multiplayer"
-  version          = "1.0.0"
+  version          = "1.1.0"
   atomic           = true
 
   values = [
@@ -67,16 +67,18 @@ resource "helm_release" "this" {
       }
 
       webService = {
+        # Without a hostname the ingress is disabled, and the chart ignores the other settings
         ingress = {
+          enabled  = var.hostname != null
           hostname = var.hostname
-          annotations = {
+          annotations = var.hostname != null ? {
             "cert-manager.io/cluster-issuer"                   = var.cluster_issuer
             "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
-          }
-          tls = [{
+          } : null
+          tls = var.hostname != null ? [{
             hosts      = [var.hostname]
             secretName = "${var.instance_name}-ingress-tls"
-          }]
+          }] : null
         }
       }
 

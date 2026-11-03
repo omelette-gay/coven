@@ -14,8 +14,9 @@ The chart version is pinned in the module so that Renovate can update it, and al
 The universe and plugin PVCs are annotated `helm.sh/resource-policy: keep`, so uninstalling the release doesn't delete
 the game data.
 
-The game service is a `LoadBalancer`, and the web interface is exposed through Traefik at `hostname` with a
-certificate from `cluster_issuer` (default `letsencrypt`) and an HTTP to HTTPS redirect. CPU and memory requests have
+The game service is a `LoadBalancer`. The server's web interface only returns its status (players, vessels and so on)
+as JSON. If `hostname` is set, it's exposed through Traefik there, with a certificate from `cluster_issuer` (default
+`letsencrypt`) and an HTTP to HTTPS redirect. If it isn't, there is no ingress. CPU and memory requests have
 defaults based on observed usage (`cpu_request`, `memory_request`), with no limits.
 
 The server's config files go in `config`, as a map of file name to contents. Files that aren't set use the chart's

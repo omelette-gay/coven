@@ -23,16 +23,17 @@ variable "vault_secret_name" {
 }
 
 variable "hostname" {
-  description = "Hostname that the server's web interface is served on, with a certificate from cert-manager"
+  description = "Hostname that the server's web interface is served on, with a certificate from cert-manager. The web interface only returns the server's status as JSON. If null, no ingress is created"
   type        = string
+  default     = null
   validation {
-    condition     = can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.hostname))
+    condition     = var.hostname == null || can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.hostname))
     error_message = "hostname must be a bare hostname, without https:// or a trailing slash."
   }
 }
 
 variable "cluster_issuer" {
-  description = "cert-manager ClusterIssuer used for the web interface's TLS certificate"
+  description = "cert-manager ClusterIssuer used for the web interface's TLS certificate, if it has a hostname"
   type        = string
   default     = "letsencrypt"
 }
