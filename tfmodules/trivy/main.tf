@@ -31,7 +31,8 @@ resource "helm_release" "trivy_operator" {
         enabled = true
       }
       operator = {
-        concurrentScanJobsLimit = 2
+        scanJobsConcurrentLimit = 2
+        builtInTrivyServer = true
       }
     })
   ]
