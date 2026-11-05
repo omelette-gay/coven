@@ -12,35 +12,35 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "8.10.0"
+      version = "~> 8.10"
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "5.13.0"
+      version = "~> 5.13"
     }
     time = {
       source  = "hashicorp/time"
-      version = "0.14.2"
+      version = "~> 0.14.0"
     }
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.70.2"
+      version = "~> 1.70"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "3.3.0"
+      version = "~> 3.3"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "3.5.0"
+      version = "~> 3.5"
     }
     keycloak = {
       source  = "keycloak/keycloak"
-      version = "5.10.0"
+      version = "~> 5.10"
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.9.1"
+      version = "~> 3.9"
     }
   }
 }

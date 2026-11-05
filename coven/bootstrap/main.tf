@@ -12,23 +12,23 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "8.10.0"
+      version = "~> 8.10"
     }
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.70.2"
+      version = "~> 1.70"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "3.3.0"
+      version = "~> 3.3"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "3.5.0"
+      version = "~> 3.5"
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.9.1"
+      version = "~> 3.9"
     }
   }
 }
