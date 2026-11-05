@@ -63,8 +63,7 @@ A chart is left out of the group, and gets its own pull request for every update
 
 1. It is still 0.x. This is handled automatically, by only grouping charts at 1.0.0 or above.
 2. It doesn't use semantic versioning, for example it uses calendar versions.
-3. It wraps an application that is still 0.x, or it has broken compatibility in a minor release before.
-4. It's a foundation of the cluster, such as storage or certificates, where minor releases are significant upgrades.
+3. It wraps an application that is still 0.x, or where minor releases are significant upgrades.
 
 The charts excluded under 2 to 4 are listed in `renovate.json`. When a chart breaks something in a minor release, add
 it to that list, and say so in the incident write-up. `mariadb-operator` and `mariadb-operator-crds` are also always
