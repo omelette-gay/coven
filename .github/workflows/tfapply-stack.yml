@@ -26,7 +26,7 @@ jobs:
         uses: ./.github/actions/terraform-login
 
       - name: Terraform init
-        run: terraform init -input=false
+        run: terraform init -input=false -lockfile=readonly
 
       - name: Terraform apply
         run: terraform apply -no-color -auto-approve -input=false -lock-timeout=10m

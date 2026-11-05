@@ -1,9 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
-    ":preserveSemverRanges"
+    "config:recommended"
   ],
+  "lockFileMaintenance": {
+    "enabled": true
+  },
   "customManagers": [
     {
       "customType": "regex",
@@ -36,6 +38,29 @@
     }
   ],
   "packageRules": [
+    {
+      "matchManagers": ["pep621", "terraform"],
+      "rangeStrategy": "update-lockfile"
+    },
+    {
+      "matchDatasources": ["helm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": ">=1.0.0",
+      "matchPackageNames": [
+        "!cert-manager",
+        "!external-dns",
+        "!longhorn",
+        "!mariadb-operator",
+        "!mariadb-operator-crds"
+      ],
+      "groupName": "Helm charts (non-major)",
+      "schedule": ["before 6am on monday"]
+    },
+    {
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["mariadb-operator", "mariadb-operator-crds"],
+      "groupName": "mariadb-operator"
+    },
     {
       "description": "factoriotools/factorio also tags experimental releases with plain version numbers, so only follow the stable-x.y.z tags",
       "matchDatasources": ["docker"],

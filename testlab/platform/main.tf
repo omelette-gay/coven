@@ -2,27 +2,27 @@ terraform {
   required_providers {
     helm = {
       source  = "hashicorp/helm"
-      version = "3.3.0"
+      version = "~> 3.3"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "3.5.0"
+      version = "~> 3.5"
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "5.13.0"
+      version = "~> 5.13"
     }
     keycloak = {
       source  = "keycloak/keycloak"
-      version = "5.10.0"
+      version = "~> 5.10"
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.9.1"
+      version = "~> 3.9"
     }
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.70.2"
+      version = "~> 1.70"
     }
   }
 }
