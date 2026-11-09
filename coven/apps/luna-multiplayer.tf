@@ -1,0 +1,118 @@
+module "luna_multiplayer_girlsclub" {
+  source = "../../tfmodules/luna-multiplayer"
+
+  instance_name     = "girlsclub"
+  vault_secret_name = "luna-multiplayer/girlsclub"
+
+  values = [
+    yamlencode({
+      gameService = {
+        type = "LoadBalancer"
+      }
+
+      webService = {
+        ingress = {
+          hostname = "spaceprogramme.omelette.gay"
+          annotations = {
+            "cert-manager.io/cluster-issuer"                   = "letsencrypt"
+            "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
+          }
+          tls = [{
+            hosts      = ["spaceprogramme.omelette.gay"]
+            secretName = "girlsclub-ingress-tls"
+          }]
+        }
+      }
+
+      config = {
+        # {{ .server_password }} is an External Secrets template, filled in from Vault
+        "GeneralSettings.xml" = <<-EOT
+          <?xml version="1.0" encoding="utf-16"?> <GeneralSettingsDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+            <!--Name of the server. Max 30 char-->
+            <ServerName>Girls Club Space Programme</ServerName>
+            <!--Description of the server. Max 200 char-->
+            <Description>Girls go to space today</Description>
+            <!--By default this will be given by the masterserver but you can override it here if you want. Max 2 char-->
+            <CountryCode>gb</CountryCode>
+            <!--Website text to display (discord, website, forum, etc). Can be left empty. Max 15 char-->
+            <WebsiteText>LMP</WebsiteText>
+            <!--Actual website URL. Can be left empty. Max 60 char-->
+            <Website>https://chrisn.xyz/</Website>
+            <!--Password for the server. Leave it empty if you want to make a public server. Max 30 chars-->
+            <Password>{{ .server_password }}</Password>
+            <!--Admin password for the server. Leave it empty if you don't want to allow server administration from KSP. Max 30 chars-->
+            <AdminPassword></AdminPassword>
+            <!--Specify the server's MOTD (message of the day). 255 chars max-->
+            <ServerMotd>Hi %Name%!
+            Welcome to %ServerName%.
+            Online players: %PlayerCount%</ServerMotd>
+            <!--Writes the server's MOTD (message of the day) in the chat of the user who joins-->
+            <PrintMotdInChat>false</PrintMotdInChat>
+            <!--Maximum amount of players that can join the server.-->
+            <MaxPlayers>20</MaxPlayers>
+            <!--Maximum length of a username.-->
+            <MaxUsernameLength>15</MaxUsernameLength>
+            <!--Specify in minutes how often /dekessler automatically runs. 0 = Disabled-->
+            <AutoDekessler>0.5</AutoDekessler>
+            <!--Specify in minutes how often /nukeksc automatically runs. 0 = Disabled-->
+            <AutoNuke>0</AutoNuke>
+            <!--Enable use of Cheats in-game.-->
+            <Cheats>true</Cheats>
+            <!--Allow players to sack kerbals-->
+            <AllowSackKerbals>false</AllowSackKerbals>
+            <!--Specify the Name that will appear when you send a message using the server's console.-->
+            <ConsoleIdentifier>Server</ConsoleIdentifier>
+            <!--Specify the gameplay difficulty of the server. Values: Easy, Normal, Moderate, Hard, Custom-->
+            <GameDifficulty>Normal</GameDifficulty>
+            <!--Specify the game Type. Values: Sandbox, Career, Science-->
+            <GameMode>Career</GameMode>
+            <!--Enable mod control. WARNING:
+              Only consider turning off mod control for private servers. The game will constantly complain about missing parts if there are missing mods. Read this wiki page: https://github.com/LunaMultiplayer/LunaMultiplayer/wiki/Mod-file to understand how it works-->
+            <ModControl>true</ModControl>
+            <!--How many untracked asteroids to spawn into the universe. 0 = Disabled-->
+            <NumberOfAsteroids>5</NumberOfAsteroids>
+            <!--How many untracked comets to spawn into the universe. 0 = Disabled-->
+            <NumberOfComets>5</NumberOfComets>
+            <!--Terrain quality. All clients will need to have this setting in their KSP to avoid terrain differences. Values: Low, Default, High, Ignore. Using 'Ignore' might create bugs-->
+            <TerrainQuality>High</TerrainQuality>
+            <!--Specify the minimum distance in which vessels can interact with eachother at the launch pad and runway-->
+            <SafetyBubbleDistance>100</SafetyBubbleDistance>
+            <!--Max number of parts that a vessel can have when spawning-->
+            <MaxVesselParts>500</MaxVesselParts>
+          </GeneralSettingsDefinition>
+        EOT
+      }
+    })
+  ]
+}
+
+# Adopt the resources that Ansible and the chart's old CI created. Remove these blocks once applied.
+import {
+  to = module.luna_multiplayer_girlsclub.kubernetes_namespace_v1.this
+  id = "luna-multiplayer"
+}
+
+import {
+  to = module.luna_multiplayer_girlsclub.helm_release.this
+  id = "luna-multiplayer/girlsclub"
+}
+
+import {
+  to = module.luna_multiplayer_girlsclub.module.secret_store.kubernetes_service_account_v1.reader
+  id = "luna-multiplayer/luna-multiplayer-girlsclub-config"
+}
+
+import {
+  to = module.luna_multiplayer_girlsclub.module.secret_store.vault_policy.reader
+  id = "luna-multiplayer-girlsclub-config"
+}
+
+import {
+  to = module.luna_multiplayer_girlsclub.module.secret_store.vault_kubernetes_auth_backend_role.reader
+  id = "auth/kubernetes/role/luna-multiplayer-girlsclub-config"
+}
+
+import {
+  to = module.luna_multiplayer_girlsclub.module.secret_store.kubernetes_manifest.secret_store
+  id = "apiVersion=external-secrets.io/v1,kind=SecretStore,namespace=luna-multiplayer,name=vault-luna-multiplayer-girlsclub-config"
+}
