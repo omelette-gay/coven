@@ -17,12 +17,14 @@ resource "kubernetes_namespace_v1" "this" {
   }
 }
 
-# The chart creates its own ExternalSecret to render the server config with secrets from Vault, but it needs a
-# SecretStore in the namespace to read from
+# The server config goes into a Secret, as it can contain the server password, which is filled in from Vault. The chart
+# copies the files in it over its own defaults
 module "secret_store" {
   source = "../vault-k8s-secret"
 
-  create_external_secret   = false
+  create_external_secret   = length(var.config) > 0
+  k8s_secret_name          = "${var.instance_name}-config"
+  template_data            = var.config
   vault_secret_name        = var.vault_secret_name
   k8s_namespace            = kubernetes_namespace_v1.this.metadata[0].name
   k8s_service_account_name = "${var.namespace}-${var.instance_name}-config"
@@ -42,7 +44,7 @@ resource "helm_release" "this" {
   create_namespace = false
   repository       = "https://omelette-gay.github.io/luna-multiplayer-helm-chart"
   chart            = "luna-multiplayer"
-  version          = "1.1.0"
+  version          = "2.0.0"
   atomic           = true
 
   values = [
@@ -82,7 +84,6 @@ resource "helm_release" "this" {
         }
       }
 
-      # Make the chart's ExternalSecret read the server password from the SecretStore made above
       storage = {
         universe = {
           pvcLabels = local.backup_labels
@@ -90,12 +91,9 @@ resource "helm_release" "this" {
         plugins = {
           pvcLabels = local.backup_labels
         }
-        mergeConfigFromExternalSecret = {
-          secretStore = module.secret_store.secret_store_name
-          remoteKey   = var.vault_secret_name
-          keys        = ["server_password"]
-        }
       }
+
+      existingConfigSecret = module.secret_store.k8s_secret_name != null ? module.secret_store.k8s_secret_name : ""
 
       affinity = length(var.preferred_node_labels) > 0 ? {
         nodeAffinity = {
@@ -113,8 +111,6 @@ resource "helm_release" "this" {
           ]
         }
       } : {}
-
-      config = var.config
     })
   ]
 }

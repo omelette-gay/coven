@@ -63,7 +63,7 @@ variable "preferred_node_labels" {
 }
 
 variable "config" {
-  description = "The server's config files, as a map of file name to contents (e.g. GeneralSettings.xml). Files that aren't set use the chart's defaults. Contents can refer to {{ .server_password }}, which is an External Secrets template filled in from Vault, so don't run them through templatefile()"
+  description = "The server's config files that contain secrets, as a map of file name to contents (e.g. GeneralSettings.xml). They are stored in a Secret and copied over the chart's defaults, and files that aren't set use the chart's defaults. Contents can refer to keys of the Vault secret, e.g. {{ .server_password }}, which is a template filled in by External Secrets, so don't run them through templatefile()"
   type        = map(string)
   default     = {}
 }

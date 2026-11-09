@@ -13,6 +13,12 @@ variable "create_external_secret" {
   default     = true
 }
 
+variable "template_data" {
+  description = "Templates to render into the Secret, as a map of key to Go template text, with the keys of the Vault secret available as variables (e.g. { \"config.xml\" = \"<password>{{ .password }}</password>\" }). If empty, the Secret holds the Vault secret's keys as they are. Only used if create_external_secret is true"
+  type        = map(string)
+  default     = {}
+}
+
 variable "k8s_secret_name" {
   description = "Name of the Kubernetes Secret created by External Secrets Operator. Required if create_external_secret is true"
   type        = string

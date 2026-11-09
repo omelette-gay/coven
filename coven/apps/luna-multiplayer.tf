@@ -68,3 +68,9 @@ module "luna_multiplayer_girlsclub" {
     EOT
   }
 }
+
+# Adopt the ExternalSecret that Ansible created. It was unused until now. Remove this block once applied.
+import {
+  to = module.luna_multiplayer_girlsclub.module.secret_store.kubernetes_manifest.external_secret[0]
+  id = "apiVersion=external-secrets.io/v1,kind=ExternalSecret,namespace=luna-multiplayer,name=girlsclub-config"
+}
