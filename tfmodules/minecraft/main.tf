@@ -19,6 +19,14 @@ terraform {
   }
 }
 
+locals {
+  # Pinned (rather than the chart's `latest`) so Renovate keeps the images, and their CVE fixes, up to date
+  # renovate: datasource=docker depName=itzg/minecraft-server
+  server_image_tag = "2026.10.1"
+  # renovate: datasource=docker depName=itzg/mc-backup
+  backup_image_tag = "2026.10.3"
+}
+
 resource "kubernetes_namespace_v1" "this" {
   metadata {
     name = "minecraft-${var.server_id}"
@@ -74,6 +82,11 @@ resource "helm_release" "minecraft" {
   version    = "5.3.1"
   values = [
     yamlencode({
+      image = {
+        tag        = local.server_image_tag
+        pullPolicy = "IfNotPresent"
+      }
+
       minecraftServer = {
         eula       = true
         difficulty = "normal"
@@ -128,6 +141,9 @@ resource "helm_release" "minecraft" {
 
       mcbackup = {
         enabled = var.backups_enabled
+        image = {
+          tag = local.backup_image_tag
+        }
         persistence = {
           backupDir = {
             enabled       = var.backups_enabled
