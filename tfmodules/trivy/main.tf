@@ -34,6 +34,11 @@ resource "helm_release" "trivy_operator" {
         scanJobsConcurrentLimit = 2
         builtInTrivyServer = true
       }
+      trivy = {
+        # Only report vulnerabilities that have a fixed version available, so the reports list things an image
+        # update can actually clear, rather than CVEs nobody can act on yet
+        ignoreUnfixed = true
+      }
     })
   ]
 }
