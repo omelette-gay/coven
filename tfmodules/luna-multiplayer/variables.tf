@@ -22,7 +22,48 @@ variable "vault_secret_name" {
   type        = string
 }
 
-variable "values" {
-  description = "Extra Helm values for the chart, as YAML strings (e.g. from yamlencode()), merged over the module's own. Don't run them through templatefile(): the config can contain External Secrets templates such as {{ .server_password }}"
-  type        = list(string)
+variable "hostname" {
+  description = "Hostname that the server's web interface is served on, with a certificate from cert-manager. The web interface only returns the server's status as JSON. If null, no ingress is created"
+  type        = string
+  default     = null
+  validation {
+    condition     = var.hostname == null || can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.hostname))
+    error_message = "hostname must be a bare hostname, without https:// or a trailing slash."
+  }
+}
+
+variable "cluster_issuer" {
+  description = "cert-manager ClusterIssuer used for the web interface's TLS certificate, if it has a hostname"
+  type        = string
+  default     = "letsencrypt"
+}
+
+variable "cpu_request" {
+  description = "CPU the pod requests, as a Kubernetes quantity. There is no CPU limit, so the server can burst. The default is well above what the server has been observed to use"
+  type        = string
+  default     = "100m"
+}
+
+variable "memory_request" {
+  description = "Memory the pod requests, as a Kubernetes quantity. There is no limit. The default is about double what the server has been observed to use"
+  type        = string
+  default     = "256Mi"
+}
+
+variable "longhorn_recurring_job_name" {
+  description = "Longhorn recurring job to label the universe and plugin volumes with, e.g. nightly-backup. If null, no Longhorn labels are set"
+  type        = string
+  default     = null
+}
+
+variable "preferred_node_labels" {
+  description = "Node labels to prefer running the server on, e.g. { \"coven.omelette.gay/location\" = \"xdc\" }"
+  type        = map(string)
+  default     = {}
+}
+
+variable "config" {
+  description = "The server's config files, as a map of file name to contents (e.g. GeneralSettings.xml). Files that aren't set use the chart's defaults. Contents can refer to {{ .server_password }}, which is an External Secrets template filled in from Vault, so don't run them through templatefile()"
+  type        = map(string)
+  default     = {}
 }

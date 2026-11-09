@@ -14,5 +14,20 @@ The chart version is pinned in the module so that Renovate can update it, and al
 The universe and plugin PVCs are annotated `helm.sh/resource-policy: keep`, so uninstalling the release doesn't delete
 the game data.
 
-Anything else goes in `values`. Don't use `templatefile()` on it, as `{{ .server_password }}` is an External Secrets
-template, not Terraform or Helm syntax.
+The game service is a `LoadBalancer`. The server's web interface only returns its status (players, vessels and so on)
+as JSON. If `hostname` is set, it's exposed through Traefik there, with a certificate from `cluster_issuer` (default
+`letsencrypt`) and an HTTP to HTTPS redirect. If it isn't, there is no ingress. CPU and memory requests have
+defaults based on observed usage (`cpu_request`, `memory_request`), with no limits.
+
+The server's config files go in `config`, as a map of file name to contents. Files that aren't set use the chart's
+defaults. Don't use `templatefile()` on them, as `{{ .server_password }}` is an External Secrets template, not
+Terraform or Helm syntax.
+
+The module creates the namespace, so there can only be one instance (one call of this module) per namespace. To run
+more than one server, give each its own `namespace`.
+
+The release is `atomic`, so a failed upgrade rolls back. The universe and plugin volumes are labelled with
+`longhorn_recurring_job_name` (set it to `nightly-backup` for off-site backups). Deleting the namespace, for example by
+removing this module, deletes the volumes along with it, as the `keep` annotation only protects them from a Helm
+uninstall. Restore them from the Longhorn backup if that happens (see
+[backups and recovery](../../docs/backups-and-recovery.md)).

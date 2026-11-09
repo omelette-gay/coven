@@ -67,3 +67,11 @@ provider "keycloak" {
   username  = ephemeral.vault_kv_secret_v2.keycloak.data["username"]
   password  = ephemeral.vault_kv_secret_v2.keycloak.data["password"]
 }
+
+locals {
+  # The Longhorn recurring job that backs volumes up off-site
+  nightly_backup_job = "nightly-backup"
+
+  # Game servers need a datacentre IP, so prefer running them on the xdc node
+  game_server_preferred_node = { "coven.omelette.gay/location" = "xdc" }
+}

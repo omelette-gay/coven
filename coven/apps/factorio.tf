@@ -13,10 +13,10 @@ module "girlsclub_factorio" {
   description        = "Just doing girls things, in space"
   password_protected = true
 
-  preferred_node_labels       = { "coven.omelette.gay/location" = "xdc" }
+  preferred_node_labels       = local.game_server_preferred_node
   memory                      = "3Gi"
   disk_size                   = "2Gi"
-  longhorn_recurring_job_name = "nightly-backup"
+  longhorn_recurring_job_name = local.nightly_backup_job
 }
 
 module "chegsworld_factorio" {
@@ -34,7 +34,7 @@ module "chegsworld_factorio" {
   description        = "Making a factory a home"
   password_protected = true
 
-  preferred_node_labels       = { "coven.omelette.gay/location" = "xdc" }
+  preferred_node_labels       = local.game_server_preferred_node
   memory                      = "1.5Gi"
-  longhorn_recurring_job_name = "nightly-backup"
+  longhorn_recurring_job_name = local.nightly_backup_job
 }
