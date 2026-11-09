@@ -22,7 +22,7 @@ terraform {
 locals {
   # Pinned (rather than the chart's `latest`) so Renovate keeps the images, and their CVE fixes, up to date
   # renovate: datasource=docker depName=itzg/minecraft-server
-  server_image_tag = "2026.10.1"
+  server_image_tag = "2026.11.0"
   # renovate: datasource=docker depName=itzg/mc-backup
   backup_image_tag = "2026.11.0"
 }
