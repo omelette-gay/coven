@@ -452,11 +452,15 @@
             - name: needs-restarting
               rules:
                 - alert: NodeNeedsRestarting
-                  expr: node_reboot_required == 1
+                  # aggregate by instance so a node-exporter pod restart (new pod label) doesn't create a new alert,
+                  # and look back over a window so the brief gap while it restarts doesn't resolve it
+                  expr: max by (instance) (max_over_time(node_reboot_required[15m])) == 1
                   for: 1h
                   annotations:
                     summary: Host OS indicates that node requires restart
-                    description: The host OS is indicating that the node requires a restart as currently running components have been updated but the currently running version is not the latest.
+                    description: >-
+                      {{ "{{" }} $labels.instance {{ "}}" }} is indicating that it requires a restart as currently
+                      running components have been updated but the running version is not the latest.
                   labels:
                     severity: warning
 
