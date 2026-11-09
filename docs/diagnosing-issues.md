@@ -453,6 +453,12 @@ If the datastore is lost, it can be restored from the snapshots in GCS - see
 Trivy Operator scans running images. These are informational rather than alerts, but are available with
 `kubectl get vulnerabilityreports -A` and in the Trivy Grafana dashboards.
 
+Trivy is configured with `ignoreUnfixed`, so reports only list vulnerabilities that have a fixed version available.
+One with no fix yet won't appear until a fix is released. To clear a finding, update the image, usually through a
+Renovate PR for its tag or chart. If an image is deployed as `latest`, pin a version instead so Renovate can manage it.
+Reports are regenerated every 24 hours (the chart's default `scannerReportTTL`), so it can take up to a day for an
+update to show.
+
 ## Reporting back
 
 When you've finished investigating, report:
