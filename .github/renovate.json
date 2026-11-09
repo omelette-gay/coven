@@ -67,5 +67,6 @@
       "matchPackageNames": ["factoriotools/factorio"],
       "versioning": "regex:^stable-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
     }
-  ]
+  ],
+  "ignoreDeps": ["planka"]
 }
