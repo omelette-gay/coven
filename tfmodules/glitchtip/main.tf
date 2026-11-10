@@ -237,7 +237,7 @@ resource "kubernetes_job_v1" "configure_oidc" {
 
         container {
           name    = "configure-oidc"
-          image   = "glitchtip/glitchtip:6.2.6"
+          image   = "glitchtip/glitchtip:7.0.0"
           command = ["python", "manage.py", "shell", "-c"]
           args = [<<-PYTHON
             import os
