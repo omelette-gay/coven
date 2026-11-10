@@ -8,7 +8,7 @@ collections:
   - name: ansible.posix
     version: 2.2.2
   - name: community.general
-    version: 14.0.0
+    version: 14.0.1
   # Keycloak modules moved here from community.general in 14.0.0
   - name: middleware_automation.keycloak
     version: 3.1.2
