@@ -12,6 +12,7 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 | [docs/backups-and-recovery.md](./backups-and-recovery.md) | Anything touching Longhorn, CNPG, MariaDB or k3s datastore backups and restores |
 | [docs/deploying-apps.md](./deploying-apps.md) | Adding or changing a self-deploying app (`k8s_github_deployment_roles`) |
 | [docs/secrets.md](./secrets.md) | How Vault, External Secrets and auth fit together |
+| [docs/sso.md](./sso.md) | Adding or changing a Keycloak client, putting an app behind SSO, or giving someone a Keycloak account |
 | [docs/https.md](./https.md) | Exposing a service: Traefik, cert-manager, external-dns |
 | [docs/names-and-numbers.md](./names-and-numbers.md) | Naming hosts/domains, IP ranges |
 | [docs/bootstrapping.md](./bootstrapping.md) | Building something from scratch |
@@ -45,6 +46,8 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 - **Self-deploying apps** (e.g. `wedding`, `home-assistant`) are defined in their own repos. This repo only sets up
   their namespace, Vault access, secrets and SSO client.
 - **Secrets live in Vault, never in the repo.**
+- **Keycloak doesn't restrict which apps a user can log in to.** Any user in the `omelette.gay` realm can log in to
+  any client, and each app decides what they can do. Read [docs/sso.md](./sso.md) before adding a Keycloak client.
 - **New features go to the testlab first**; bug fixes can go straight to coven.
 
 ## Environment
@@ -105,6 +108,6 @@ There's no test suite. Before proposing a change:
 - Write docs and commit messages in British English, in a plain, direct style that matches the existing docs.
 - Commit messages are a short sentence describing the change (e.g. "Replace Litestream with periodic k3s datastore
   snapshots"), with no type prefixes.
-- Pin new Helm chart versions in `Chart.yaml` and read them with `lookup('helm_chart', '<name>')`.
+- Pin new Helm chart versions in `Chart.yaml` and read them with `lookup('helm_chart', '<n>')`.
 - New hard-to-reverse decisions get an ADR, and incidents get a write-up, in the same PR as the change. Follow the
   templates and naming rules in each folder's README and add the new file to its index.
