@@ -14,21 +14,26 @@ terraform {
   }
 }
 
+# Only an identity for Vault to trust (External Secrets Operator requests a token for it), so it doesn't need a token
+# mounted into pods
 resource "kubernetes_service_account_v1" "reader" {
   metadata {
     name      = var.k8s_service_account_name
     namespace = var.k8s_namespace
   }
+
+  automount_service_account_token = false
 }
 
 resource "vault_policy" "reader" {
   name = var.vault_role_name
 
-  policy = <<-EOT
+  policy = chomp(<<-EOT
     path "${var.vault_kv_mountpoint}/data/${var.vault_secret_name}" {
       capabilities = ["read"]
     }
   EOT
+  )
 }
 
 resource "vault_kubernetes_auth_backend_role" "reader" {
