@@ -48,21 +48,6 @@ external_dns_extra_records:
       - value: "192.168.178.36"
 
 k8s_github_deployment_roles:
-  - github_repo: cnorthwood/chriss-weight-tracker
-    k8s_namespace: weight-tracker
-    role_name: weight-tracker
-    vault_secrets:
-      - vault_secret_name: weight-tracker/google-oauth
-        k8s_secret_name: google-oauth
-        k8s_namespace: weight-tracker
-        k8s_service_account_name: weight-tracker-google-oauth-secret
-        vault_role_name: weight-tracker-secrets
-      - vault_secret_name: weight-tracker/google-service-account
-        k8s_secret_name: google-service-account
-        k8s_namespace: weight-tracker
-        k8s_service_account_name: weight-tracker
-        vault_role_name: weight-tracker-google-secret
-
   - github_repo: omelette-gay/wedding
     k8s_namespace: wedding
     role_name: wedding
