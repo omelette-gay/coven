@@ -127,11 +127,6 @@ k8s_github_deployment_roles:
         k8s_service_account_name: manchestertechnights-secrets
         vault_role_name: manchestertechnights-secrets
 
-  - github_repo: cnorthwood/barcampmanchester.co.uk
-    k8s_namespace: barcampmanchester
-    role_name: barcampmanchester
-    ghcr_credentials_secret: ghcr-credentials
-
   - github_repo: cnorthwood/chrisn.xyz
     k8s_namespace: chrisn-xyz
     role_name: chrisn-xyz
