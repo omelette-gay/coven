@@ -35,7 +35,7 @@ We currently use two IaC tools, and are part way through a migration:
 | Cluster-level services (Helm releases etc) | Ansible   | [plays/configure-cluster.yml](../plays/configure-cluster.yml), roles in [roles/](../roles/) | Migrating to Terraform    |
 | Newer cluster services                 | Terraform     | `coven/platform/` and `coven/apps/`, using modules in [tfmodules/](../tfmodules/) | Terraform                 |
 | GCP project, DNS zones, cloud resources | Terraform    | Mostly `coven/bootstrap/`; DNS records for apps in `coven/apps/`        | Terraform                 |
-| Self-deploying apps                    | The app's own repo | GitHub Actions in each app repo, deploying with Helm into its own namespace | Unchanged         |
+| Self-deploying apps                    | The app's own repo, and Terraform | GitHub Actions in each app repo, deploying with Helm into its own namespace. Its namespace, Vault access, secrets and SSO client are in `coven/apps/` | Unchanged         |
 
 When working out how to fix something, first find out which of these owns it, as that tells you where the change
 needs to be made. Because the migration is in progress, some functionality exists in both forms (e.g., the
@@ -72,7 +72,6 @@ roughly reflects their dependencies:
 | `omelette.external-dns`         | `external-dns`                        | external-dns writing records to Hetzner DNS                                  |
 | `omelette.outbound-mail`        | `mail`                                | Postfix SMTP relay used by Grafana, Alertmanager and apps                    |
 | `omelette.mariadb`              | `mariadb-system`                      | MariaDB operator                                                             |
-| `omelette.apps`                 | per app                               | Namespaces, Vault roles, secret syncing and Keycloak clients for self-deploying apps (see [deploying apps](./deploying-apps.md)) |
 | `omelette.planka`               | `planka`                              | Planka (boards.omelette.gay) and its Postgres cluster                        |
 
 ### What Terraform manages
@@ -99,6 +98,7 @@ Between them, they manage:
 - `glitchtip` namespace - GlitchTip error tracking (errors.omelette.gay)
 - `minecraft-<server_id>` namespaces - Minecraft servers
 - `factorio-<server_id>` namespaces - Factorio servers
+- A namespace per self-deploying app, with Vault access for its GitHub repo, and any secrets and Keycloak client it needs
 - `luna-multiplayer` namespace - Luna Multiplayer (Kerbal Space Program) servers, installed from the Helm chart published
   by [luna-multiplayer-helm-chart](https://github.com/omelette-gay/luna-multiplayer-helm-chart). Renovate bumps the
   chart version in `tfmodules/luna-multiplayer/main.tf`
@@ -107,11 +107,11 @@ Between them, they manage:
 
 ### Self-deploying apps
 
-Apps listed under `k8s_github_deployment_roles` in [coven/inventory/group_vars/all](../coven/inventory/group_vars/all)
-deploy themselves from their own GitHub repos, using Vault to obtain credentials scoped to their namespace. This repo
-only sets up the namespace's access, secrets and SSO client. If an alert is for one of those namespaces (e.g.
-`wedding`, `home-assistant`, `weight-tracker`, `pling-org-uk`, `chrisn-xyz`), the workload itself is defined in the
-app repo listed against it, not here.
+Apps with a file in [coven/apps/](../coven/apps/) that uses the `app-namespace` and `github-deployment-role` modules
+(e.g. `wedding`, `home-assistant`, `weight-tracker`, `pling-org-uk`, `chrisn-xyz`) deploy themselves from their own
+GitHub repos, using Vault to obtain credentials scoped to their namespace. This repo only sets up the namespace's
+access, secrets and SSO client. If an alert is for one of those namespaces, the workload itself is defined in the app's
+repo, whose name is in that file as `github_repo`, not here. See [deploying apps](./deploying-apps.md).
 
 ### Things k3s provides itself
 

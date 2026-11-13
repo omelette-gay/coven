@@ -10,7 +10,7 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 | [docs/cluster-overview.md](./cluster-overview.md) | Before any non-trivial change. Nodes, networking, which tool owns what, platform services, automatic maintenance |
 | [docs/diagnosing-issues.md](./diagnosing-issues.md) | Investigating an alert or error on the cluster. Has ground rules, tools, port-forwards and per-alert guides |
 | [docs/backups-and-recovery.md](./backups-and-recovery.md) | Anything touching Longhorn, CNPG, MariaDB or k3s datastore backups and restores |
-| [docs/deploying-apps.md](./deploying-apps.md) | Adding or changing a self-deploying app (`k8s_github_deployment_roles`) |
+| [docs/deploying-apps.md](./deploying-apps.md) | Adding or changing a self-deploying app (`coven/apps/`) |
 | [docs/secrets.md](./secrets.md) | How Vault, External Secrets and auth fit together |
 | [docs/sso.md](./sso.md) | Adding or changing a Keycloak client, putting an app behind SSO, or giving someone a Keycloak account |
 | [docs/https.md](./https.md) | Exposing a service: Traefik, cert-manager, external-dns |
