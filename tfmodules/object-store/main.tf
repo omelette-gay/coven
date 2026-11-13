@@ -11,35 +11,27 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.9.0"
+    vault = {
+      source  = "hashicorp/vault"
+      version = ">= 5.10.1"
     }
   }
 }
 
-ephemeral "random_password" "access_key" {
-  length  = 32
-  special = false
-}
+# RustFS's access and secret keys, kept in Vault and synced by External Secrets Operator, so they aren't in Terraform
+# state. (The Secret is named differently to the one Terraform used to make, as ESO won't take over an existing Secret.)
+module "credentials" {
+  source = "../generated-secret"
 
-ephemeral "random_password" "secret_key" {
-  length  = 64
-  special = false
-}
-
-resource "kubernetes_secret_v1" "credentials" {
-  metadata {
-    name      = "${var.name}-object-store-credentials"
-    namespace = var.namespace
+  keys = {
+    RUSTFS_ACCESS_KEY = 32
+    RUSTFS_SECRET_KEY = 64
   }
-
-  data_wo = {
-    RUSTFS_ACCESS_KEY = ephemeral.random_password.access_key.result
-    RUSTFS_SECRET_KEY = ephemeral.random_password.secret_key.result
-  }
-
-  data_wo_revision = 1
+  vault_secret_name        = "object-store/${var.namespace}/${var.name}"
+  k8s_secret_name          = "${var.name}-object-store-keys"
+  k8s_namespace            = var.namespace
+  k8s_service_account_name = "${var.namespace}-${var.name}-object-store"
+  vault_role_name          = "${var.namespace}-${var.name}-object-store"
 }
 
 resource "helm_release" "this" {
@@ -72,7 +64,7 @@ resource "helm_release" "this" {
       }
 
       secret = {
-        existingSecret = kubernetes_secret_v1.credentials.metadata[0].name
+        existingSecret = module.credentials.k8s_secret_name
       }
 
       config = {
@@ -83,7 +75,6 @@ resource "helm_release" "this" {
     })
   ]
 
-  depends_on = [kubernetes_secret_v1.credentials]
 }
 
 resource "kubernetes_job_v1" "bucket" {
@@ -118,7 +109,7 @@ resource "kubernetes_job_v1" "bucket" {
             name = "RUSTFS_ACCESS_KEY"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret_v1.credentials.metadata[0].name
+                name = module.credentials.k8s_secret_name
                 key  = "RUSTFS_ACCESS_KEY"
               }
             }
@@ -128,7 +119,7 @@ resource "kubernetes_job_v1" "bucket" {
             name = "RUSTFS_SECRET_KEY"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret_v1.credentials.metadata[0].name
+                name = module.credentials.k8s_secret_name
                 key  = "RUSTFS_SECRET_KEY"
               }
             }
