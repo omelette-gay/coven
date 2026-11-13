@@ -15,7 +15,8 @@ You will need to have the following installed (in your WSL environment if on Win
 - [Vault](https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-install)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management)
 - [kubectl cnpg plugin](https://cloudnative-pg.io/docs/devel/kubectl-plugin/)
-- [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+- [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli), the version in
+  [.terraform-version](./.terraform-version), which CI uses and Renovate keeps up to date
 - [gcloud CLI](https://cloud.google.com/sdk/docs/install#deb)
 
 The following are optional, but are useful for diagnosing issues and checking changes, and let AI agents working in
@@ -28,7 +29,8 @@ this repo (see [the agent instructions](./docs/agents.md)) do more without needi
   `gh extension install github/gh-stack`
 - [logcli](https://grafana.com/docs/loki/latest/query/logcli/getting-started/) for querying Loki
 - [jq](https://jqlang.org/download/) and [yq](https://github.com/mikefarah/yq#install) for picking apart JSON and YAML
-- [TFLint](https://github.com/terraform-linters/tflint#installation)
+- [TFLint](https://github.com/terraform-linters/tflint#installation). CI runs it on every pull request, with
+  `tflint --recursive --config "$PWD/.tflint.hcl"` from the repo root
 - [ansible-lint](https://docs.ansible.com/projects/lint/installing/): `uv tool install ansible-lint`
 - [ShellCheck](https://github.com/koalaman/shellcheck#installing)
 
