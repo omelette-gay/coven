@@ -32,7 +32,7 @@ resource "helm_release" "trivy_operator" {
       }
       operator = {
         scanJobsConcurrentLimit = 2
-        builtInTrivyServer = true
+        builtInTrivyServer      = true
       }
       trivy = {
         # Only report vulnerabilities that have a fixed version available, so the reports list things an image
