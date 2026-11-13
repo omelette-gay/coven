@@ -245,8 +245,10 @@ resource "kubernetes_job_v1" "configure_oidc" {
         restart_policy = "OnFailure"
 
         container {
-          name    = "configure-oidc"
-          image   = "glitchtip/glitchtip:7.0.0"
+          name = "configure-oidc"
+          # The same GlitchTip version as the chart deploys (its appVersion), so the Job never runs a different version to the
+          # database it writes to. It's known after apply when the chart is upgraded, which replaces the Job to run it again
+          image   = "glitchtip/glitchtip:${helm_release.this.metadata.app_version}"
           command = ["python", "manage.py", "shell", "-c"]
           args = [<<-PYTHON
             import os
