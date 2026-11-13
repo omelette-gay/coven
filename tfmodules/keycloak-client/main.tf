@@ -1,4 +1,7 @@
 terraform {
+  # Validation rules that refer to other variables need 1.9
+  required_version = ">= 1.9.0"
+
   required_providers {
     keycloak = {
       source  = "keycloak/keycloak"
@@ -30,7 +33,7 @@ resource "keycloak_openid_client" "this" {
   valid_redirect_uris   = var.valid_redirect_uris
 
   client_secret_wo         = ephemeral.random_password.client_secret.result
-  client_secret_wo_version = "1"
+  client_secret_wo_version = tostring(var.secret_revision)
 }
 
 resource "keycloak_openid_user_client_role_protocol_mapper" "roles" {
@@ -53,16 +56,49 @@ resource "keycloak_role" "this" {
   name      = each.value
 }
 
+# Grants client roles to groups. The groups must already exist; this module doesn't create or manage them. Each mapping is
+# added without touching the group's other roles, as a group holds roles from many clients (exhaustive = false), so a
+# role someone adds to the group by hand isn't removed.
+locals {
+  group_roles = {
+    for group in distinct(flatten(values(var.role_groups))) :
+    group => [for role, groups in var.role_groups : role if contains(groups, group)]
+  }
+}
+
+data "keycloak_group" "this" {
+  for_each = local.group_roles
+
+  realm_id = var.realm_id
+  name     = each.key
+}
+
+resource "keycloak_group_roles" "this" {
+  for_each = local.group_roles
+
+  realm_id   = var.realm_id
+  group_id   = data.keycloak_group.this[each.key].id
+  role_ids   = [for role in each.value : keycloak_role.this[role].id]
+  exhaustive = false
+}
+
 resource "kubernetes_secret_v1" "this" {
   metadata {
     name      = var.k8s_secret_name
     namespace = var.k8s_namespace
   }
 
+  # Write-only, so these values aren't taken from the configuration into state. Everything the app needs is in here, so
+  # that every client's Secret has the same keys. Changing secret_revision rewrites all of it, and rotates the client
+  # secret (see the variable)
   data_wo = {
-    client_id     = var.client_id
-    client_secret = ephemeral.random_password.client_secret.result
+    client_id              = var.client_id
+    client_secret          = ephemeral.random_password.client_secret.result
+    authorization_endpoint = "${var.keycloak_url}/realms/${var.realm_id}/protocol/openid-connect/auth"
+    token_endpoint         = "${var.keycloak_url}/realms/${var.realm_id}/protocol/openid-connect/token"
+    userinfo_endpoint      = "${var.keycloak_url}/realms/${var.realm_id}/protocol/openid-connect/userinfo"
+    jwks_endpoint          = "${var.keycloak_url}/realms/${var.realm_id}/protocol/openid-connect/certs"
   }
 
-  data_wo_revision = 1
+  data_wo_revision = var.secret_revision
 }

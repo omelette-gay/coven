@@ -46,6 +46,7 @@ resource "kubernetes_secret_v1" "secret" {
 module "keycloak_client" {
   source = "../keycloak-client"
 
+  keycloak_url        = var.keycloak_url
   realm_id            = var.keycloak_realm
   client_id           = "glitchtip"
   client_name         = "GlitchTip"
