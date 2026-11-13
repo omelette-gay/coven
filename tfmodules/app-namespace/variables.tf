@@ -11,6 +11,10 @@ variable "ghcr_secret_name" {
   description = "Name of a Secret to create in the namespace holding the GitHub Container Registry credentials, in the format imagePullSecrets expects. If null, the namespace can't pull private images"
   type        = string
   default     = null
+  validation {
+    condition     = var.ghcr_secret_name == null || (can(regex("^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$", var.ghcr_secret_name)) && length(var.ghcr_secret_name) <= 253)
+    error_message = "ghcr_secret_name must be a valid Kubernetes Secret name (lowercase letters, digits, hyphens and dots, at most 253 characters)."
+  }
 }
 
 variable "ghcr_vault_secret_name" {

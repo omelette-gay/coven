@@ -1,6 +1,6 @@
 terraform {
-  # Validation rules that refer to other variables need 1.9
-  required_version = ">= 1.9.0"
+  # Write-only arguments (client_secret_wo, data_wo) need 1.11
+  required_version = ">= 1.11.0"
 
   required_providers {
     keycloak = {

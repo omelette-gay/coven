@@ -1,4 +1,6 @@
 terraform {
+  required_version = ">= 1.9.0"
+
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -25,7 +27,8 @@ locals {
   ghcr_vault_role_name      = "${var.name}-ghcr-creds"
 }
 
-# A ServiceAccount that Vault trusts to read the shared GHCR credentials, so the namespace can pull private images
+# A ServiceAccount that Vault trusts to read the shared GHCR credentials, so the namespace can pull private images. It's
+# only an identity for Vault (External Secrets Operator requests a token for it), so it doesn't need a token mounted
 resource "kubernetes_service_account_v1" "ghcr_reader" {
   count = local.ghcr_enabled ? 1 : 0
 
@@ -33,6 +36,8 @@ resource "kubernetes_service_account_v1" "ghcr_reader" {
     name      = local.ghcr_service_account_name
     namespace = kubernetes_namespace_v1.this.metadata[0].name
   }
+
+  automount_service_account_token = false
 }
 
 resource "vault_kubernetes_auth_backend_role" "ghcr_reader" {

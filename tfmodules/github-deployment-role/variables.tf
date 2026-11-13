@@ -19,4 +19,8 @@ variable "k8s_namespace" {
 variable "role_name" {
   description = "Name of the role, which vault-k8s-login-action logs in as with `github-` in front (so `weight-tracker` is `github-weight-tracker`)"
   type        = string
+  validation {
+    condition     = can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.role_name))
+    error_message = "role_name must be lowercase letters, digits and hyphens, as it's part of the names of the Vault role and policy."
+  }
 }
