@@ -5,6 +5,8 @@ variable "project_id" {
 }
 
 terraform {
+  required_version = ">= 1.11.0"
+
   backend "gcs" {
     bucket = "coven-tfstate"
     prefix = "terraform/platform"

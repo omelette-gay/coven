@@ -54,6 +54,8 @@ runs:
     - name: setup Terraform
       uses: hashicorp/setup-terraform@v4
       with:
+        # Renovate keeps this file up to date
+        terraform_version_file: .terraform-version
         # The wrapper copies all stdout/stderr into step outputs. Nothing reads them (tfplan.yml renders the
         # plan to a file instead), and keeping them invites passing huge strings around.
         terraform_wrapper: false
