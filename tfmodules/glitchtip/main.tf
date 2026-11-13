@@ -47,6 +47,7 @@ module "keycloak_client" {
   source = "../keycloak-client"
 
   keycloak_url        = var.keycloak_url
+  secret_revision     = var.keycloak_secret_revision
   realm_id            = var.keycloak_realm
   client_id           = "glitchtip"
   client_name         = "GlitchTip"
@@ -221,6 +222,13 @@ resource "helm_release" "this" {
   depends_on = [kubernetes_secret_v1.secret, module.object_store, kubernetes_manifest.block_metrics_path]
 }
 
+# The Job below copies the Keycloak client secret into GlitchTip's database, and a Job only runs once, so it has to be
+# replaced to run again after the secret is rotated. This changes when keycloak_secret_revision does, which is also
+# what rotates the secret. It's created with the revision, so adding it doesn't re-run the Job.
+resource "terraform_data" "oidc_secret_revision" {
+  input = var.keycloak_secret_revision
+}
+
 resource "kubernetes_job_v1" "configure_oidc" {
   metadata {
     name      = "glitchtip-configure-oidc"
@@ -304,6 +312,10 @@ resource "kubernetes_job_v1" "configure_oidc" {
         }
       }
     }
+  }
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.oidc_secret_revision]
   }
 
   depends_on = [helm_release.this, module.keycloak_client]

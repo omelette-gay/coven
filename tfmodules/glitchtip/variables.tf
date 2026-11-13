@@ -28,6 +28,16 @@ variable "keycloak_realm" {
   default     = "omelette.gay"
 }
 
+variable "keycloak_secret_revision" {
+  description = "Increase this to rotate GlitchTip's Keycloak client secret. It writes a new secret to Keycloak and the Kubernetes Secret, then runs the Job that copies it into GlitchTip's database again, so SSO only breaks while that happens"
+  type        = number
+  default     = 1
+  validation {
+    condition     = var.keycloak_secret_revision >= 1 && floor(var.keycloak_secret_revision) == var.keycloak_secret_revision
+    error_message = "keycloak_secret_revision must be a whole number, 1 or more."
+  }
+}
+
 variable "postgresql_instances" {
   description = "Number of CNPG PostgreSQL instances"
   type        = number

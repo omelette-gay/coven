@@ -22,3 +22,9 @@ variable "glitchtip_sender_email" {
   description = "Email address GlitchTip sends emails from"
   type        = string
 }
+
+variable "glitchtip_keycloak_secret_revision" {
+  description = "Increase this to rotate GlitchTip's Keycloak client secret (see the glitchtip module)"
+  type        = number
+  default     = 1
+}

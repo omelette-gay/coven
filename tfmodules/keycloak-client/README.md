@@ -36,7 +36,8 @@ breaks SSO until the app has the new secret, so, before increasing it:
 
 - Apps read the Secret when they start, so restart them (or deploy them) afterwards.
 - If the app keeps its own copy of the secret, update that too. GlitchTip does: its `configure_oidc` Job writes the
-  secret into GlitchTip's own database.
+  secret into GlitchTip's own database, so rotate it with `keycloak_secret_revision` in the GlitchTip module, which
+  re-runs the Job.
 
 ## Granting roles
 
