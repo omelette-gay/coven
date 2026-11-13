@@ -92,7 +92,8 @@ them directly.
 
 Between them, they manage:
 
-- GCP project resources: APIs, the `coven-backups` bucket (with a 14-day expiry on objects under `k3s/` only) and backup
+- GCP project resources: APIs, the `coven-tfstate` bucket (which keeps old versions of each stack's state for 30 days,
+  as state holds secrets), the `coven-backups` bucket (with a 14-day expiry on objects under `k3s/` only) and backup
   service account (with keys rotated every 30
   days and written into Vault), the `k3s-cluster-token` secret, GitHub Actions workload identity, billing budget alerts
 - Hetzner DNS zones and static records (Fastmail, Bluesky verification)
