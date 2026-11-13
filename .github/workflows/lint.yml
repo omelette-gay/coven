@@ -20,10 +20,15 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v7
 
+      # setup-terraform has no input for a version file, so read it here
+      - name: read the Terraform version
+        id: terraform-version
+        run: echo "version=$(tr -d '[:space:]' < .terraform-version)" >> "$GITHUB_OUTPUT"
+
       - name: setup Terraform
         uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version_file: .terraform-version
+          terraform_version: ${{ steps.terraform-version.outputs.version }}
           terraform_wrapper: false
 
       # The plan workflow only checks the formatting of each stack's own folder, not the modules in tfmodules/
