@@ -47,8 +47,6 @@ external_dns_extra_records:
     records:
       - value: "192.168.178.36"
 
-k8s_github_deployment_roles: []
-
 planka_hostname: boards.omelette.gay
 
 # increase storage for logs in prod
