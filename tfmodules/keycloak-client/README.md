@@ -39,6 +39,14 @@ breaks SSO until the app has the new secret, so, before increasing it:
   secret into GlitchTip's own database, so rotate it with `keycloak_secret_revision` in the GlitchTip module, which
   re-runs the Job.
 
+## State
+
+The client's secret ends up in Terraform state, and so does the Secret's contents. Setting them with write-only
+arguments only keeps the values in our configuration out of state: the Keycloak provider reads `client_secret` back
+after writing it, and the Kubernetes provider does the same with a Secret's `data`. The first can't be avoided, and as it's
+the same value, writing the Secret through Vault instead wouldn't help. See
+[secrets and Terraform state](../../docs/secrets.md#secrets-and-terraform-state).
+
 ## Granting roles
 
 `role_groups` grants client roles to groups that already exist, as a map of role to group names. The module doesn't
