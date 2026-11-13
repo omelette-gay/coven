@@ -1,6 +1,6 @@
 terraform {
-  # Validation rules that refer to other variables need 1.9, and ephemeral resources 1.10
-  required_version = ">= 1.10.0"
+  # Write-only arguments (data_json_wo) need 1.11, and ephemeral resources 1.10
+  required_version = ">= 1.11.0"
 
   required_providers {
     kubernetes = {
