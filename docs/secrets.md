@@ -36,8 +36,10 @@ it as possible**. Anyone who can read the state can read what's in it, and the b
 
 - **Generate secrets with an `ephemeral` resource** (`ephemeral "random_password"`), never a plain `random_password`,
   which stores its value in state.
-- **Write them to Vault with a write-only argument**, such as `data_json_wo` on `vault_kv_secret_v2`, and let External
-  Secrets Operator sync them into Kubernetes (the [vault-k8s-secret](../tfmodules/vault-k8s-secret/) module does this).
+- **For a secret nobody needs to know** (a password between two of our own services, a signing key), **use the
+  [generated-secret](../tfmodules/generated-secret/) module.** It generates the values, writes them to Vault with a
+  write-only argument (`data_json_wo` on `vault_kv_secret_v2`, which the provider doesn't read back), and has External
+  Secrets Operator create the Kubernetes Secret, using [vault-k8s-secret](../tfmodules/vault-k8s-secret/) for the sync.
   Terraform then never manages the Kubernetes Secret, and the secret isn't in state.
 - **Don't write secrets into a `kubernetes_secret_v1`**, even with `data_wo`. Write-only arguments only keep the value
   in our configuration out of state: the provider still reads the Secret's `data` back into it.
