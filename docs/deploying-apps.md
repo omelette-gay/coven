@@ -38,6 +38,6 @@ k8s_github_deployment_roles:
     keycloak_k8s_secret: sso-secrets                  # this is required if the keycloak_client_id is set and is the name of the secret that will be created in k8s containing the OIDC configuration for Keycloak. The secret will have the following keys corresponding to the relevant OIDC config settings for our Keycloak: clientId, clientSecret, authorizationEndpoint, tokenEndpoint, userEndpoint, jwksEndpoint
 ```
 
-When configuring Keycloak, by default it will map through the client roles through as the roles claim when logging in.
-The app is then responsible for reacting appropriately to these roles. In future we should allow the creation of client
-roles and mapping of them to groups when configuring an app here, but that is not currently needed so hasn't yet been added.
+When configuring Keycloak, the client's roles are passed through as the `roles` claim when logging in. The app is then
+responsible for reacting appropriately to these roles. Any user in the realm can log in to any client, so read
+[single sign-on](./sso.md) before adding a Keycloak client to an app. Mapping roles to groups in code is tracked in #904.
