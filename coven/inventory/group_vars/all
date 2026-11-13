@@ -93,29 +93,6 @@ k8s_github_deployment_roles:
         k8s_service_account_name: virtualflightonlinetransmitter-secrets
         vault_role_name: virtualflightonlinetransmitter-secrets
 
-  - github_repo: cnorthwood/www.pling.org.uk
-    k8s_namespace: pling-org-uk
-    role_name: www-pling-org-uk
-    ghcr_credentials_secret: ghcr-credentials
-
-  - github_repo: cnorthwood/whereisthenorthreally
-    k8s_namespace: pling-org-uk
-    role_name: whereisthenorthreally
-    vault_secrets:
-      - vault_secret_name: backups/service-account-creds
-        k8s_secret_name: whereisthenorthreally-gcp-backups
-        k8s_namespace: pling-org-uk
-        k8s_service_account_name: whereisthenorthreally-gcp-backups
-        vault_role_name: whereisthenorthreally-gcp-backups
-
-  - github_repo: cnorthwood/what-if-proportional-representation
-    k8s_namespace: pling-org-uk
-    role_name: what-if-proportional-representation
-
-  - github_repo: cnorthwood/ubi-calculator
-    k8s_namespace: pling-org-uk
-    role_name: ubi-calculator
-
   - github_repo: cnorthwood/manchestertechnights.org
     k8s_namespace: manchestertechnights
     role_name: manchestertechnights
