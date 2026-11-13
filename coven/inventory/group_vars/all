@@ -47,18 +47,7 @@ external_dns_extra_records:
     records:
       - value: "192.168.178.36"
 
-k8s_github_deployment_roles:
-  - github_repo: omelette-gay/home-assistant
-    k8s_namespace: home-assistant
-    role_name: home-assistant
-    ghcr_credentials_secret: ghcr-credentials
-    keycloak_client_id: home-assistant
-    keycloak_redirect_uris:
-      - https://home.gs.omelette.gay/auth/oidc/callback
-    keycloak_client_roles:
-      - admin
-      - resident
-    keycloak_k8s_secret: home-assistant-sso-secrets
+k8s_github_deployment_roles: []
 
 planka_hostname: boards.omelette.gay
 
