@@ -83,16 +83,6 @@ k8s_github_deployment_roles:
       - https://wedding.omelette.gay/oidc/callback/
     keycloak_k8s_secret: wedding-sso-secrets
 
-  - github_repo: cnorthwood/virtualflightonlinetransmitter
-    k8s_namespace: virtualflightonlinetransmitter
-    role_name: virtualflightonlinetransmitter
-    vault_secrets:
-      - vault_secret_name: virtualflightonlinetransmitter/app
-        k8s_secret_name: server-secret
-        k8s_namespace: virtualflightonlinetransmitter
-        k8s_service_account_name: virtualflightonlinetransmitter-secrets
-        vault_role_name: virtualflightonlinetransmitter-secrets
-
   - github_repo: cnorthwood/chrisn.xyz
     k8s_namespace: chrisn-xyz
     role_name: chrisn-xyz
