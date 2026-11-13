@@ -116,11 +116,6 @@ k8s_github_deployment_roles:
     k8s_namespace: pling-org-uk
     role_name: ubi-calculator
 
-  - github_repo: cnorthwood/moretobooks
-    k8s_namespace: moretobooks
-    role_name: moretobooks
-    ghcr_credentials_secret: ghcr-credentials
-
   - github_repo: cnorthwood/manchestertechnights.org
     k8s_namespace: manchestertechnights
     role_name: manchestertechnights
