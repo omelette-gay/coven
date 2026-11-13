@@ -93,17 +93,6 @@ k8s_github_deployment_roles:
         k8s_service_account_name: virtualflightonlinetransmitter-secrets
         vault_role_name: virtualflightonlinetransmitter-secrets
 
-  - github_repo: cnorthwood/manchestertechnights.org
-    k8s_namespace: manchestertechnights
-    role_name: manchestertechnights
-    ghcr_credentials_secret: ghcr-credentials
-    vault_secrets:
-      - vault_secret_name: manchestertechnights/app
-        k8s_secret_name: app-secret
-        k8s_namespace: manchestertechnights
-        k8s_service_account_name: manchestertechnights-secrets
-        vault_role_name: manchestertechnights-secrets
-
   - github_repo: cnorthwood/chrisn.xyz
     k8s_namespace: chrisn-xyz
     role_name: chrisn-xyz
