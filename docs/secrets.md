@@ -48,3 +48,24 @@ it as possible**. Anyone who can read the state can read what's in it, and the b
 reads the client's secret back into state even when it was set with `client_secret_wo`, so the same value is in state
 whatever we do with the Kubernetes copy. The [keycloak-client](../tfmodules/keycloak-client/) module writes its Secret
 with `kubernetes_secret_v1` for that reason: moving it to Vault wouldn't remove the secret from state.
+
+## Google Cloud access from the cluster
+
+**Don't give pods Google service account keys where we can avoid it.** Let them act as the service account through
+workload identity federation instead, so there's no key to store, leak or rotate:
+
+- The cluster's workload identity pool is in the platform stack
+  ([coven/platform/workloadidentity.tf](../coven/platform/workloadidentity.tf)). GCP checks tokens for Kubernetes
+  service accounts against the cluster's public signing keys, which Terraform reads from the cluster with `kubectl`.
+- The [gcp-workload-identity](../tfmodules/gcp-workload-identity/) module lets one Kubernetes service account act as
+  one GCP service account, in any project, and gives the pods a credentials file with nothing secret in it. See the
+  weight tracker in [coven/apps/weight-tracker.tf](../coven/apps/weight-tracker.tf).
+
+This needs software that uses Google's client libraries. Some software signs its own tokens with a key's private key
+(Home Assistant's Google Assistant integration does), and Longhorn needs HMAC keys for the S3 API, so those still need
+keys.
+
+Apps that need their own GCP project (for an OAuth client, say) have it managed in the apps stack. CI is given access
+to each one in the bootstrap stack ([coven/bootstrap/githubactions.tf](../coven/bootstrap/githubactions.tf)): add the
+project ID to `app_gcp_projects`, and a project owner applies that once from their own machine, since CI can't grant
+itself access. Owners, OAuth clients and consent screens can't be managed with Terraform, so are set up by hand.

@@ -6,6 +6,10 @@ terraform {
     prefix = "terraform/apps"
   }
   required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 8.10"
+    }
     vault = {
       source  = "hashicorp/vault"
       version = "~> 5.13"
@@ -42,6 +46,14 @@ ephemeral "vault_kv_secret_v2" "hetzner" {
   name  = "gitops/hetzner"
 }
 
+# Apps that use Google APIs have their own GCP projects. Name the project on each resource; calls are billed to the
+# coven project, as in the bootstrap stack, so they work even when an API isn't yet enabled in the app's project.
+provider "google" {
+  region                = "europe-west2"
+  user_project_override = true
+  billing_project       = "coven-omelette-gay"
+}
+
 provider "hcloud" {
   token = ephemeral.vault_kv_secret_v2.hetzner.data["api_token"]
 }
@@ -74,6 +86,9 @@ locals {
   keycloak_url       = "https://auth.coven.omelette.gay"
   keycloak_base_path = "/auth"
   keycloak_realm     = "omelette.gay"
+
+  # The cluster's workload identity pool provider, in the platform stack, for the gcp-workload-identity module
+  coven_workload_identity_provider = "projects/211831137824/locations/global/workloadIdentityPools/coven/providers/coven-k3s"
 
   # The Longhorn recurring job that backs volumes up off-site
   nightly_backup_job = "nightly-backup"
