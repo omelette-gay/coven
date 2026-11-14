@@ -51,9 +51,16 @@ runs:
         project_id: coven-omelette-gay
         workload_identity_provider: projects/211831137824/locations/global/workloadIdentityPools/omelette-gay-github-actions/providers/omelette-gay-github-actions
 
+    # setup-terraform has no input for a version file, so read it here. Renovate keeps the file up to date
+    - name: read the Terraform version
+      id: terraform-version
+      shell: bash
+      run: echo "version=$(tr -d '[:space:]' < "$GITHUB_WORKSPACE/.terraform-version")" >> "$GITHUB_OUTPUT"
+
     - name: setup Terraform
       uses: hashicorp/setup-terraform@v4
       with:
+        terraform_version: ${{ steps.terraform-version.outputs.version }}
         # The wrapper copies all stdout/stderr into step outputs. Nothing reads them (tfplan.yml renders the
         # plan to a file instead), and keeping them invites passing huge strings around.
         terraform_wrapper: false

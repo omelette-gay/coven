@@ -98,7 +98,8 @@ problem.
 
 There's no test suite. Before proposing a change:
 
-- Terraform: `terraform fmt -check` and `terraform validate` in the affected folder (CI runs both, plus `plan`).
+- Terraform: `terraform validate` in the affected folder, and from the repo root `terraform fmt -check -recursive` and
+  `tflint --recursive --config "$PWD/.tflint.hcl"` (CI runs all of these, plus `plan` on each stack).
 - Ansible: `uv run ansible-playbook --syntax-check -i testlab/inventory plays/configure-hosts.yml`, and the same for
   `plays/configure-cluster.yml`.
 - To actually exercise a change, use the testlab (see the README). Confirm with a human before running it.

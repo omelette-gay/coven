@@ -1,4 +1,7 @@
 terraform {
+  # Write-only arguments (client_secret_wo, data_wo) need 1.11
+  required_version = ">= 1.11.0"
+
   required_providers {
     keycloak = {
       source  = "keycloak/keycloak"
