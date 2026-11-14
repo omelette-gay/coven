@@ -5,6 +5,8 @@ variable "project_id" {
 }
 
 terraform {
+  required_version = ">= 1.11.0"
+
   backend "gcs" {
     bucket = "coven-tfstate"
     prefix = "terraform/platform"
@@ -103,4 +105,7 @@ module "platform" {
   glitchtip_domain               = "errors.omelette.gay"
   glitchtip_postgresql_instances = 2
   glitchtip_sender_email         = "glitchtip@coven.omelette.gay"
+
+  # 2 rotates the Keycloak client secret and gives its Secret the standard keys (see tfmodules/keycloak-client)
+  glitchtip_keycloak_secret_revision = 2
 }

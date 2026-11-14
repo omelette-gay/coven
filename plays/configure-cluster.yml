@@ -57,5 +57,4 @@
     - omelette.external-dns
     - omelette.outbound-mail
     - omelette.mariadb
-    - omelette.apps
     - omelette.planka

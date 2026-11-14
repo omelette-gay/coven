@@ -1,4 +1,6 @@
 terraform {
+  required_version = ">= 1.11.0"
+
   required_providers {
     helm = {
       source  = "hashicorp/helm"
@@ -7,10 +9,6 @@ terraform {
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
-    }
-    keycloak = {
-      source  = "keycloak/keycloak"
-      version = ">= 5.9.0"
     }
     vault = {
       source  = "hashicorp/vault"
@@ -43,6 +41,8 @@ module "secret_key" {
 module "keycloak_client" {
   source = "../keycloak-client"
 
+  keycloak_url        = var.keycloak_url
+  secret_revision     = var.keycloak_secret_revision
   realm_id            = var.keycloak_realm
   client_id           = "glitchtip"
   client_name         = "GlitchTip"
@@ -217,6 +217,13 @@ resource "helm_release" "this" {
   depends_on = [module.object_store, kubernetes_manifest.block_metrics_path]
 }
 
+# The Job below copies the Keycloak client secret into GlitchTip's database, and a Job only runs once, so it has to be
+# replaced to run again after the secret is rotated. This changes when keycloak_secret_revision does, which is also
+# what rotates the secret. It's created with the revision, so adding it doesn't re-run the Job.
+resource "terraform_data" "oidc_secret_revision" {
+  input = var.keycloak_secret_revision
+}
+
 resource "kubernetes_job_v1" "configure_oidc" {
   metadata {
     name      = "glitchtip-configure-oidc"
@@ -233,8 +240,10 @@ resource "kubernetes_job_v1" "configure_oidc" {
         restart_policy = "OnFailure"
 
         container {
-          name    = "configure-oidc"
-          image   = "glitchtip/glitchtip:7.0.0"
+          name = "configure-oidc"
+          # The same GlitchTip version as the chart deploys (its appVersion), so the Job never runs a different version to the
+          # database it writes to. It's known after apply when the chart is upgraded, which replaces the Job to run it again
+          image   = "glitchtip/glitchtip:${helm_release.this.metadata.app_version}"
           command = ["python", "manage.py", "shell", "-c"]
           args = [<<-PYTHON
             import os
@@ -300,6 +309,10 @@ resource "kubernetes_job_v1" "configure_oidc" {
         }
       }
     }
+  }
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.oidc_secret_revision]
   }
 
   depends_on = [helm_release.this, module.keycloak_client]

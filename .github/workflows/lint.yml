@@ -1,0 +1,55 @@
+name: Lint Terraform
+
+on:
+  pull_request:
+    types: ["opened", "synchronize"]
+    paths:
+      - "**.tf"
+      - ".terraform-version"
+      - ".tflint.hcl"
+      - ".github/workflows/lint.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v7
+
+      # setup-terraform has no input for a version file, so read it here
+      - name: read the Terraform version
+        id: terraform-version
+        run: echo "version=$(tr -d '[:space:]' < .terraform-version)" >> "$GITHUB_OUTPUT"
+
+      - name: setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ steps.terraform-version.outputs.version }}
+          terraform_wrapper: false
+
+      # The plan workflow only checks the formatting of each stack's own folder, not the modules in tfmodules/
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive -diff
+
+      - name: setup TFLint
+        if: ${{ !cancelled() }}
+        uses: terraform-linters/setup-tflint@v6
+
+      - name: TFLint
+        if: ${{ !cancelled() }}
+        run: tflint --recursive --config "$GITHUB_WORKSPACE/.tflint.hcl" --format compact
+
+      - name: Trivy
+        if: ${{ !cancelled() }}
+        uses: aquasecurity/trivy-action@v0.36.0
+        env:
+          TRIVY_MISCONFIG_SCANNERS: terraform
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"

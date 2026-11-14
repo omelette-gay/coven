@@ -1,6 +1,0 @@
-- name: allow GitHub repos to deploy to namespaces
-  include_tasks: create_k8s_deployment_role.yml
-  loop: "{{ k8s_github_deployment_roles }}"
-  loop_control:
-    loop_var: k8s_github_deployment_role
-    label: "{{ k8s_github_deployment_role.github_repo }} => {{ k8s_github_deployment_role.k8s_namespace }}"

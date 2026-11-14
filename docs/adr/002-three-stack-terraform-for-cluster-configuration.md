@@ -401,7 +401,11 @@ and its plan step catches mistakes before they're applied.
   CRDs must never be older than the chart that uses them.
 - **Terraform state contains secrets**, such as the Keycloak temporary admin password, generated keys and the Terraform
   Keycloak client's secret. This was already true of `coven/`, and the `coven-tfstate` bucket is treated as sensitive.
-  Where the providers support write-only arguments, use them so secrets written to Vault aren't stored in state.
+  Where the providers support write-only arguments, use them so secrets written to Vault aren't stored in state. We aim
+  to keep as few secrets in state as possible (see [secrets](../secrets.md#secrets-and-terraform-state)). Write-only
+  arguments don't stop a provider reading a value back after writing it, so Keycloak client secrets and the contents of
+  any `kubernetes_secret_v1` still end up in state, whereas a secret written to Vault with a write-only argument and
+  synced to Kubernetes by External Secrets Operator doesn't.
 - **A cancelled or timed-out run can leave the state locked**, needing `terraform force-unlock`. Add this to
   `docs/diagnosing-issues.md`.
 - **Migrating needs care**: imports must plan cleanly, and stateful services must never be reinstalled.

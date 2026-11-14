@@ -1,4 +1,6 @@
 terraform {
+  required_version = ">= 1.11.0"
+
   backend "gcs" {
     bucket = "coven-tfstate"
     prefix = "terraform/apps"
@@ -60,8 +62,8 @@ ephemeral "vault_kv_secret_v2" "keycloak" {
 }
 
 provider "keycloak" {
-  url       = "https://auth.coven.omelette.gay"
-  base_path = "/auth"
+  url       = local.keycloak_url
+  base_path = local.keycloak_base_path
   realm     = "master"
   client_id = "admin-cli"
   username  = ephemeral.vault_kv_secret_v2.keycloak.data["username"]
@@ -69,6 +71,10 @@ provider "keycloak" {
 }
 
 locals {
+  keycloak_url       = "https://auth.coven.omelette.gay"
+  keycloak_base_path = "/auth"
+  keycloak_realm     = "omelette.gay"
+
   # The Longhorn recurring job that backs volumes up off-site
   nightly_backup_job = "nightly-backup"
 
