@@ -14,9 +14,9 @@ terraform {
       source  = "hetznercloud/hcloud"
       version = ">= 1.68.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.7.2"
+    vault = {
+      source  = "hashicorp/vault"
+      version = ">= 5.10.1"
     }
   }
 }
@@ -35,23 +35,19 @@ resource "kubernetes_namespace_v1" "this" {
   }
 }
 
-resource "random_password" "rcon" {
-  count   = var.backups_enabled ? 1 : 0
-  length  = 32
-  special = false
-}
+# The RCON password lets the backup sidecar talk to the server. It's kept in Vault and synced by External Secrets
+# Operator, so it isn't in Terraform state. The Secret is named differently to the one Terraform used to make, as ESO
+# won't take over an existing Secret.
+module "rcon" {
+  count  = var.backups_enabled ? 1 : 0
+  source = "../generated-secret"
 
-resource "kubernetes_secret_v1" "rcon" {
-  count = var.backups_enabled ? 1 : 0
-
-  metadata {
-    name      = "${var.server_id}-rcon"
-    namespace = resource.kubernetes_namespace_v1.this.metadata[0].name
-  }
-
-  data = {
-    "rcon-password" = random_password.rcon[0].result
-  }
+  keys                     = { "rcon-password" = 32 }
+  vault_secret_name        = "minecraft/${var.server_id}/rcon"
+  k8s_secret_name          = "${var.server_id}-rcon-password"
+  k8s_namespace            = resource.kubernetes_namespace_v1.this.metadata[0].name
+  k8s_service_account_name = "minecraft-${var.server_id}-rcon"
+  vault_role_name          = "minecraft-${var.server_id}-rcon"
 }
 
 resource "kubernetes_persistent_volume_claim_v1" "backups" {
@@ -118,7 +114,7 @@ resource "helm_release" "minecraft" {
 
         rcon = {
           enabled        = var.backups_enabled
-          existingSecret = var.backups_enabled ? kubernetes_secret_v1.rcon[0].metadata[0].name : ""
+          existingSecret = var.backups_enabled ? module.rcon[0].k8s_secret_name : ""
           secretKey      = "rcon-password"
         }
       }

@@ -5,5 +5,5 @@ output "endpoint" {
 
 output "credentials_secret_name" {
   description = "Kubernetes Secret containing the RustFS credentials"
-  value       = kubernetes_secret_v1.credentials.metadata[0].name
+  value       = module.credentials.k8s_secret_name
 }

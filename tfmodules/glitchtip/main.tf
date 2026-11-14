@@ -10,9 +10,9 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.9.0"
+    vault = {
+      source  = "hashicorp/vault"
+      version = ">= 5.10.1"
     }
   }
 }
@@ -23,22 +23,19 @@ resource "kubernetes_namespace_v1" "this" {
   }
 }
 
-ephemeral "random_password" "secret_key" {
-  length  = 64
-  special = false
-}
+# GlitchTip's Django SECRET_KEY, kept in Vault and synced by External Secrets Operator, so it isn't in Terraform state.
+# It only signs sessions, cookies and password-reset tokens (SSO is the only way in, so there's no MFA to break), so
+# increasing `revision` to rotate it just logs everyone out. The Secret is named differently to the one Terraform used to
+# make, as ESO won't take over an existing Secret.
+module "secret_key" {
+  source = "../generated-secret"
 
-resource "kubernetes_secret_v1" "secret" {
-  metadata {
-    name      = "glitchtip-secrets"
-    namespace = kubernetes_namespace_v1.this.metadata[0].name
-  }
-
-  data_wo = {
-    SECRET_KEY = ephemeral.random_password.secret_key.result
-  }
-
-  data_wo_revision = 1
+  keys                     = { SECRET_KEY = 64 }
+  vault_secret_name        = "glitchtip/secret-key"
+  k8s_secret_name          = "glitchtip-secret-key"
+  k8s_namespace            = kubernetes_namespace_v1.this.metadata[0].name
+  k8s_service_account_name = "glitchtip-secret-key"
+  vault_role_name          = "glitchtip-secret-key"
 }
 
 module "keycloak_client" {
@@ -97,7 +94,7 @@ resource "helm_release" "this" {
   values = [
     yamlencode({
       glitchtip = {
-        existingSecret = "glitchtip-secrets"
+        existingSecret = module.secret_key.k8s_secret_name
         domain         = "https://${var.domain}"
       }
 
@@ -217,7 +214,7 @@ resource "helm_release" "this" {
     })
   ]
 
-  depends_on = [kubernetes_secret_v1.secret, module.object_store, kubernetes_manifest.block_metrics_path]
+  depends_on = [module.object_store, kubernetes_manifest.block_metrics_path]
 }
 
 # The Job below copies the Keycloak client secret into GlitchTip's database, and a Job only runs once, so it has to be
