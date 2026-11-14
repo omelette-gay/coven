@@ -78,8 +78,3 @@ them. `role_groups` grants roles to groups that already exist; it doesn't manage
 client to an app.
 
 Like every other change, it's applied when it's merged to `main` (see the [cluster overview](./cluster-overview.md)).
-
-## Apps that Ansible used to set up
-
-Apps used to be listed in `k8s_github_deployment_roles` in the Ansible inventory. They were all moved into
-`coven/apps/` using `import {}` blocks, so nothing was recreated.
