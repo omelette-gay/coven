@@ -1,9 +1,11 @@
-# verify omelette.gay for the omelette-gay GitHub organisation
+# verify omelette.gay (and so its subdomains) for the omelette-gay GitHub organisation, from the organisation's
+# Settings → Verified and approved domains
 
-module "github_domain_verification" {
-  source = "../../tfmodules/github-domain-verification"
-
-  zone              = data.hcloud_zone.omelette_gay
-  organisation      = "omelette-gay"
-  verification_code = "003bfe87d7"
+resource "hcloud_zone_rrset" "github_org_verification" {
+  name = "_gh-omelette-gay-o"
+  type = "TXT"
+  zone = data.hcloud_zone.omelette_gay.id
+  records = [
+    { value = provider::hcloud::txt_record("003bfe87d7") }
+  ]
 }
