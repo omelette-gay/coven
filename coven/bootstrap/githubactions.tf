@@ -46,16 +46,76 @@ resource "google_iam_workload_identity_pool_provider" "omelette_gay_github_actio
 
 locals {
   gitops_repo = "omelette-gay/gitops"
+
+  # The gitops repo's workflows. This identity works in any GCP project, not just this one.
+  gitops_repo_principal = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.omelette_gay_github_actions.name}/attribute.repository/${local.gitops_repo}"
 }
 
 resource "google_project_iam_member" "gitops_repo_role" {
   project = var.project_id
   role    = "roles/editor"
-  member  = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.omelette_gay_github_actions.name}/attribute.repository/${local.gitops_repo}"
+  member  = local.gitops_repo_principal
 }
 
 resource "google_secret_manager_secret_iam_member" "gitops_repo_k3s_token_accessor" {
   secret_id = google_secret_manager_secret.k3s_token.secret_id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.omelette_gay_github_actions.name}/attribute.repository/${local.gitops_repo}"
+  member    = local.gitops_repo_principal
+}
+
+# Let CI manage the cluster's workload identity pool (in the platform stack). roles/editor doesn't cover it.
+resource "google_project_iam_member" "gitops_repo_workload_identity_pools" {
+  project = var.project_id
+  role    = "roles/iam.workloadIdentityPoolAdmin"
+  member  = local.gitops_repo_principal
+}
+
+# Let CI manage apps' own GCP projects, whose contents are in the apps stack. CI can't change IAM, so these grants (and
+# the APIs it needs before it can do anything in a project) are applied by a project owner from their own machine
+# the first time a project is added. Owners are added by hand and aren't managed here.
+
+locals {
+  # Project IDs
+  app_gcp_projects = toset([
+    "chriss-weight-tracker",
+  ])
+
+  app_gcp_project_gitops_roles = toset([
+    "roles/browser",                        # read the project and its IAM policy
+    "roles/serviceusage.serviceUsageAdmin", # enable APIs
+    "roles/iam.serviceAccountAdmin",        # manage service accounts and who can act as them
+  ])
+
+  app_gcp_project_bootstrap_services = toset([
+    "cloudresourcemanager.googleapis.com",
+    "iam.googleapis.com",
+  ])
+}
+
+resource "google_project_service" "app_gcp_project_bootstrap" {
+  for_each = {
+    for pair in setproduct(local.app_gcp_projects, local.app_gcp_project_bootstrap_services) : "${pair[0]} ${pair[1]}" => {
+      project = pair[0]
+      service = pair[1]
+    }
+  }
+
+  project            = each.value.project
+  service            = each.value.service
+  disable_on_destroy = false
+}
+
+resource "google_project_iam_member" "app_gcp_project_gitops_roles" {
+  for_each = {
+    for pair in setproduct(local.app_gcp_projects, local.app_gcp_project_gitops_roles) : "${pair[0]} ${pair[1]}" => {
+      project = pair[0]
+      role    = pair[1]
+    }
+  }
+
+  project = each.value.project
+  role    = each.value.role
+  member  = local.gitops_repo_principal
+
+  depends_on = [google_project_service.app_gcp_project_bootstrap]
 }
