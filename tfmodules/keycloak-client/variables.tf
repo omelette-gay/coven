@@ -28,6 +28,25 @@ variable "client_roles" {
   default     = []
 }
 
+variable "keycloak_url" {
+  description = "Keycloak base URL, including its base path if it has one (e.g. https://auth.coven.omelette.gay/auth)"
+  type        = string
+  validation {
+    condition     = startswith(var.keycloak_url, "https://") && !endswith(var.keycloak_url, "/")
+    error_message = "keycloak_url must start with https:// and have no trailing slash."
+  }
+}
+
+variable "role_groups" {
+  description = "Existing groups to grant each client role to, as a map of role name to group names (e.g. { admin = [\"admins\"] })"
+  type        = map(list(string))
+  default     = {}
+  validation {
+    condition     = alltrue([for role in keys(var.role_groups) : contains(var.client_roles, role)])
+    error_message = "Every key of role_groups must be one of client_roles."
+  }
+}
+
 variable "k8s_namespace" {
   description = "Namespace for the client credentials Secret"
   type        = string
@@ -38,6 +57,16 @@ variable "k8s_namespace" {
 }
 
 variable "k8s_secret_name" {
-  description = "Name of the Kubernetes Secret containing client_id and client_secret"
+  description = "Name of the Kubernetes Secret containing the client's credentials and Keycloak's endpoints (see the README)"
   type        = string
+}
+
+variable "secret_revision" {
+  description = "Increase this to rotate the client secret: it writes a new one to Keycloak and the Kubernetes Secret together, and rewrites the rest of the Secret's keys. Both are write-only, so Terraform only writes them when this changes. An app that keeps its own copy of the secret needs updating too"
+  type        = number
+  default     = 1
+  validation {
+    condition     = var.secret_revision >= 1 && floor(var.secret_revision) == var.secret_revision
+    error_message = "secret_revision must be a whole number, 1 or more."
+  }
 }

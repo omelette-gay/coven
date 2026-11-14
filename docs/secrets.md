@@ -28,3 +28,23 @@ The final piece of the puzzle is providing Vault secrets to k8s apps at run time
 can be used to do this. This will create/update k8s secrets and populate them with the contents of secrets within
 Vault. These k8s secrets can then be specified as required either as environment variable sources, or in Helm charts,
 where a secret is needed.
+
+## Secrets and Terraform state
+
+Terraform state is stored in the `coven-tfstate` bucket, which is treated as sensitive, but **we want as few secrets in
+it as possible**. Anyone who can read the state can read what's in it, and the bucket keeps old versions of it.
+
+- **Generate secrets with an `ephemeral` resource** (`ephemeral "random_password"`), never a plain `random_password`,
+  which stores its value in state.
+- **For a secret nobody needs to know** (a password between two of our own services, a signing key), **use the
+  [generated-secret](../tfmodules/generated-secret/) module.** It generates the values, writes them to Vault with a
+  write-only argument (`data_json_wo` on `vault_kv_secret_v2`, which the provider doesn't read back), and has External
+  Secrets Operator create the Kubernetes Secret, using [vault-k8s-secret](../tfmodules/vault-k8s-secret/) for the sync.
+  Terraform then never manages the Kubernetes Secret, and the secret isn't in state.
+- **Don't write secrets into a `kubernetes_secret_v1`**, even with `data_wo`. Write-only arguments only keep the value
+  in our configuration out of state: the provider still reads the Secret's `data` back into it.
+
+**The exception is Keycloak client secrets**, which can't be kept out of state. The `keycloak_openid_client` resource
+reads the client's secret back into state even when it was set with `client_secret_wo`, so the same value is in state
+whatever we do with the Kubernetes copy. The [keycloak-client](../tfmodules/keycloak-client/) module writes its Secret
+with `kubernetes_secret_v1` for that reason: moving it to Vault wouldn't remove the secret from state.

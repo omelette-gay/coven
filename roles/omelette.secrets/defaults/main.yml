@@ -22,6 +22,4 @@ gitops_repo: omelette-gay/gitops
 vault_k8s_secrets: []
 
 vault_ghcr_credentials_key: repositories/ghcr
-vault_ghcr_creds_service_account_name: ghcr-creds-reader
-vault_ghcr_creds_store_name: ghcr
 vault_ghcr_creds_policy: ghcr-creds-read
