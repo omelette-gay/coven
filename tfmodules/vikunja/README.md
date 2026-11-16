@@ -17,8 +17,16 @@ or take over an account.
 - **Database:** the CNPG Barman Cloud plugin archives WAL continuously and takes a base backup at 09:00 and 21:00 to
   `gs://<backup_bucket><backup_path>`. Each environment needs its own `backup_path`. See
   [backups and recovery](../../docs/backups-and-recovery.md).
-- **Attachments:** the `vikunja-files` volume is labelled for the Longhorn recurring job in
-  `longhorn_recurring_job_name`.
+- **Attachments:** these are stored in the `vikunja` bucket of a RustFS object store in the namespace (the
+  [object-store](../object-store/) module). RustFS's volume is backed up by the Longhorn recurring job in
+  `longhorn_recurring_job_name`, which has to be set before first deploying.
+
+## Running more than one copy
+
+Vikunja runs as a single pod; only the database has a standby. Keeping files in RustFS means the app has no volume
+of its own, but more replicas still wouldn't work: every copy runs the scheduled jobs (reminder and overdue emails,
+webhooks) with no locking, so each would be sent once per pod, and the cache and rate limits are in memory unless
+Redis is configured. RustFS itself is also a single pod.
 
 ## Rotating secrets
 

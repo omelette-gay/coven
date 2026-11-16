@@ -75,7 +75,7 @@ variable "backup_path" {
 }
 
 variable "attachments_storage_size" {
-  description = "Size of the volume holding task attachments and avatars"
+  description = "Size of RustFS's volume, which holds task attachments, avatars and backgrounds"
   type        = string
   default     = "5Gi"
   validation {
@@ -85,7 +85,7 @@ variable "attachments_storage_size" {
 }
 
 variable "longhorn_recurring_job_name" {
-  description = "Longhorn recurring job to label the attachments volume with, e.g. nightly-backup. If null, no Longhorn labels are set"
+  description = "Longhorn recurring job to back RustFS's volume (the attachments) up with, e.g. nightly-backup. If null, attachments aren't backed up. Set it before first deploying: changing it later switches RustFS to a new, empty volume"
   type        = string
   default     = null
 }

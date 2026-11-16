@@ -34,6 +34,33 @@ module "credentials" {
   vault_role_name          = "${var.namespace}-${var.name}-object-store"
 }
 
+# Only made here when the volume needs backing up: the chart can only label its own volume through commonLabels, which
+# would also change the pods' selector labels
+resource "kubernetes_persistent_volume_claim_v1" "data" {
+  count = var.longhorn_recurring_job_name != null ? 1 : 0
+
+  metadata {
+    name      = "${var.name}-object-store-data"
+    namespace = var.namespace
+    labels = {
+      "recurring-job.longhorn.io/source"                             = "enabled"
+      "recurring-job.longhorn.io/${var.longhorn_recurring_job_name}" = "enabled"
+    }
+  }
+
+  spec {
+    access_modes       = ["ReadWriteOnce"]
+    storage_class_name = "longhorn"
+    resources {
+      requests = {
+        storage = var.storage_size
+      }
+    }
+  }
+
+  wait_until_bound = false
+}
+
 resource "helm_release" "this" {
   name             = "${var.name}-rustfs"
   namespace        = var.namespace
@@ -46,9 +73,12 @@ resource "helm_release" "this" {
   values = [
     yamlencode({
       mode = {
-        standalone = {
-          enabled = true
-        }
+        standalone = merge(
+          { enabled = true },
+          var.longhorn_recurring_job_name != null ? {
+            existingClaim = { dataClaim = kubernetes_persistent_volume_claim_v1.data[0].metadata[0].name }
+          } : {}
+        )
         distributed = {
           enabled = false
         }

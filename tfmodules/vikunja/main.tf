@@ -28,6 +28,8 @@ locals {
   oidc_provider = "keycloak"
 
   trusted_ca_dir = "/etc/vikunja-ca"
+
+  files_bucket = "vikunja"
 }
 
 resource "kubernetes_namespace_v1" "this" {
@@ -132,27 +134,16 @@ resource "helm_release" "db" {
   ]
 }
 
-# Task attachments and avatars. Made here rather than by the chart, so it can be labelled for Longhorn's off-site backup
-resource "kubernetes_persistent_volume_claim_v1" "files" {
-  metadata {
-    name      = "vikunja-files"
-    namespace = local.namespace
-    labels = var.longhorn_recurring_job_name != null ? {
-      "recurring-job.longhorn.io/source"                             = "enabled"
-      "recurring-job.longhorn.io/${var.longhorn_recurring_job_name}" = "enabled"
-    } : {}
-  }
+# Task attachments, avatars and backgrounds, in S3 rather than on a volume mounted into Vikunja, so the app itself keeps
+# no state on disk
+module "object_store" {
+  source = "../object-store"
 
-  spec {
-    access_modes = ["ReadWriteOnce"]
-    resources {
-      requests = {
-        storage = var.attachments_storage_size
-      }
-    }
-  }
-
-  wait_until_bound = false
+  name                        = "vikunja"
+  namespace                   = local.namespace
+  buckets                     = [local.files_bucket]
+  storage_size                = var.attachments_storage_size
+  longhorn_recurring_job_name = var.longhorn_recurring_job_name
 }
 
 resource "kubernetes_manifest" "block_metrics_path" {
@@ -195,11 +186,10 @@ resource "helm_release" "this" {
 
         persistence = merge(
           {
+            # Files are in RustFS, and the database is in Postgres, not SQLite
             data = {
-              enabled       = true
-              existingClaim = kubernetes_persistent_volume_claim_v1.files.metadata[0].name
+              enabled = false
             }
-            # The database is in Postgres, not SQLite
             database = {
               enabled = false
             }
@@ -277,6 +267,16 @@ resource "helm_release" "this" {
                     }
                   }
                 }
+                files = {
+                  type = "s3"
+                  s3 = {
+                    endpoint = module.object_store.endpoint
+                    bucket   = local.files_bucket
+                    # RustFS ignores the region, but the S3 client needs one to sign requests
+                    region       = "us-east-1"
+                    usepathstyle = true
+                  }
+                }
                 mailer = {
                   enabled   = true
                   host      = "mail.mail.svc.cluster.local"
@@ -293,12 +293,14 @@ resource "helm_release" "this" {
 
         env = merge(
           {
-            VIKUNJA_DATABASE_TYPE     = "postgres"
-            VIKUNJA_DATABASE_HOST     = { valueFrom = { secretKeyRef = { name = local.db_secret_name, key = "host" } } }
-            VIKUNJA_DATABASE_USER     = { valueFrom = { secretKeyRef = { name = local.db_secret_name, key = "username" } } }
-            VIKUNJA_DATABASE_PASSWORD = { valueFrom = { secretKeyRef = { name = local.db_secret_name, key = "password" } } }
-            VIKUNJA_DATABASE_DATABASE = { valueFrom = { secretKeyRef = { name = local.db_secret_name, key = "dbname" } } }
-            VIKUNJA_SERVICE_SECRET    = { valueFrom = { secretKeyRef = { name = module.service_secret.k8s_secret_name, key = "secret" } } }
+            VIKUNJA_DATABASE_TYPE      = "postgres"
+            VIKUNJA_DATABASE_HOST      = { valueFrom = { secretKeyRef = { name = local.db_secret_name, key = "host" } } }
+            VIKUNJA_DATABASE_USER      = { valueFrom = { secretKeyRef = { name = local.db_secret_name, key = "username" } } }
+            VIKUNJA_DATABASE_PASSWORD  = { valueFrom = { secretKeyRef = { name = local.db_secret_name, key = "password" } } }
+            VIKUNJA_DATABASE_DATABASE  = { valueFrom = { secretKeyRef = { name = local.db_secret_name, key = "dbname" } } }
+            VIKUNJA_SERVICE_SECRET     = { valueFrom = { secretKeyRef = { name = module.service_secret.k8s_secret_name, key = "secret" } } }
+            VIKUNJA_FILES_S3_ACCESSKEY = { valueFrom = { secretKeyRef = { name = module.object_store.credentials_secret_name, key = "RUSTFS_ACCESS_KEY" } } }
+            VIKUNJA_FILES_S3_SECRETKEY = { valueFrom = { secretKeyRef = { name = module.object_store.credentials_secret_name, key = "RUSTFS_SECRET_KEY" } } }
 
             "VIKUNJA_AUTH_OPENID_PROVIDERS_${upper(local.oidc_provider)}_CLIENTID"     = { valueFrom = { secretKeyRef = { name = module.keycloak_client.k8s_secret_name, key = "client_id" } } }
             "VIKUNJA_AUTH_OPENID_PROVIDERS_${upper(local.oidc_provider)}_CLIENTSECRET" = { valueFrom = { secretKeyRef = { name = module.keycloak_client.k8s_secret_name, key = "client_secret" } } }
@@ -312,7 +314,7 @@ resource "helm_release" "this" {
     })
   ]
 
-  depends_on = [helm_release.db, kubernetes_manifest.block_metrics_path]
+  depends_on = [helm_release.db, module.object_store, kubernetes_manifest.block_metrics_path]
 }
 
 resource "kubernetes_manifest" "probe" {
