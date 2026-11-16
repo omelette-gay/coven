@@ -39,12 +39,12 @@ variable "keycloak_secret_revision" {
 }
 
 variable "postgresql_instances" {
-  description = "Number of CNPG PostgreSQL instances"
+  description = "Number of CNPG PostgreSQL instances. At least 2, like Keycloak and Planka, as the cluster chart's alerts expect a standby"
   type        = number
-  default     = 1
+  default     = 2
   validation {
-    condition     = var.postgresql_instances >= 1 && floor(var.postgresql_instances) == var.postgresql_instances
-    error_message = "postgresql_instances must be a whole number of at least 1."
+    condition     = var.postgresql_instances >= 2 && floor(var.postgresql_instances) == var.postgresql_instances
+    error_message = "postgresql_instances must be a whole number of at least 2."
   }
 }
 
