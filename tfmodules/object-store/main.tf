@@ -96,12 +96,12 @@ resource "kubernetes_job_v1" "bucket" {
 
         container {
           name    = "create-bucket"
-          image   = "minio/mc:latest"
+          image   = "rustfs/rc:${local.rc_image_tag}"
           command = ["/bin/sh", "-c"]
           args = [<<-SHELL
             set -eu
-            mc alias set object-store ${local.endpoint} "$RUSTFS_ACCESS_KEY" "$RUSTFS_SECRET_KEY"
-            mc mb object-store/${each.key} --ignore-existing
+            rc alias set object-store ${local.endpoint} "$RUSTFS_ACCESS_KEY" "$RUSTFS_SECRET_KEY"
+            rc bucket create object-store/${each.key} --ignore-existing
           SHELL
           ]
 
