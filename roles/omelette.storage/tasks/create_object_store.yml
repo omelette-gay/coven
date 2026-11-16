@@ -82,8 +82,8 @@
         template:
           spec:
             containers:
-              - name: mc
-                image: minio/mc:latest
+              - name: create-bucket
+                image: rustfs/rc:v0.1.37
                 env:
                   - name: ACCESS_KEY
                     valueFrom:
@@ -99,10 +99,10 @@
                 args:
                   - |
                     set -e
-                    
-                    mc alias set {{ object_store.name }} http://{{ object_store.name }}-rustfs-svc.{{ object_store.namespace }}.svc.cluster.local:9000 $ACCESS_KEY $SECRET_KEY;
-                    
-                    mc mb {{ object_store.name }}/{{ bucket }} --ignore-existing;
+
+                    rc alias set {{ object_store.name }} http://{{ object_store.name }}-rustfs-svc.{{ object_store.namespace }}.svc.cluster.local:9000 $ACCESS_KEY $SECRET_KEY;
+
+                    rc bucket create {{ object_store.name }}/{{ bucket }} --ignore-existing;
             restartPolicy: OnFailure
   loop: "{{ object_store.buckets }}"
   loop_control:
