@@ -39,7 +39,7 @@ resource "helm_release" "this" {
   namespace        = var.namespace
   repository       = "https://charts.rustfs.com"
   chart            = "rustfs"
-  version          = "1.0.4"
+  version          = "1.0.6"
   create_namespace = false
   wait             = true
 
