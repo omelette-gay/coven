@@ -5,6 +5,9 @@ module "vikunja" {
   cluster_issuer = "vault"
   keycloak_url   = "https://auth.coven.local/auth"
 
+  # The testlab has a single node, so a standby wouldn't add anything
+  postgresql_instances = 1
+
   # Keep the testlab's backups apart from coven's, which will use /cnpg/vikunja/
   backup_path = "/testlab/cnpg/vikunja/"
 
