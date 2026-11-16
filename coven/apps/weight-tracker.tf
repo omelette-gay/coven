@@ -22,18 +22,6 @@ module "weight_tracker_google_oauth_secret" {
   vault_role_name          = "weight-tracker-secrets"
 }
 
-# The writer service account's key. Being replaced by workload identity federation (see below): remove this, the key and
-# the Vault secret once the app uses the google-credentials ConfigMap.
-module "weight_tracker_google_service_account_secret" {
-  source = "../../tfmodules/vault-k8s-secret"
-
-  vault_secret_name        = "weight-tracker/google-service-account"
-  k8s_secret_name          = "google-service-account"
-  k8s_namespace            = module.weight_tracker_namespace.name
-  k8s_service_account_name = "weight-tracker"
-  vault_role_name          = "weight-tracker-google-secret"
-}
-
 # The weight tracker's GCP project, "Chris's weight tracker". CI gets access to it in the bootstrap stack. Not managed
 # here, because there's no API for them:
 # - the project's owners
