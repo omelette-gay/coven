@@ -1,9 +1,9 @@
 [project]
 name = "gitops"
 version = "0.1.0"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
-    "ansible>=14.3.1,<15",
+    "ansible>=15,<16",
     "ansible-modules-hashivault>=5.6.1,<6",
     "google-auth>=2.62.0,<3",
     "jmespath>=1.1.0,<2",
