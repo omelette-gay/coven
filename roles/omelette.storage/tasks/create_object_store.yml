@@ -80,7 +80,14 @@
       apiVersion: batch/v1
       kind: Job
       spec:
+        manualSelector: true
+        selector:
+          matchLabels:
+            job-name: "create-{{ object_store.name }}-bucket-{{ bucket }}"
         template:
+          metadata:
+            labels:
+              job-name: "create-{{ object_store.name }}-bucket-{{ bucket }}"
           spec:
             containers:
               - name: create-bucket
