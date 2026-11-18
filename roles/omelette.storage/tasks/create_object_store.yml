@@ -75,6 +75,7 @@
   kubernetes.core.k8s:
     name: "create-{{ object_store.name }}-bucket-{{ bucket }}"
     namespace: "{{ object_store.namespace }}"
+    force: true
     definition:
       apiVersion: batch/v1
       kind: Job
