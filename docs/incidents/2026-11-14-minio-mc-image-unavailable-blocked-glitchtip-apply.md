@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| **Status** | Ongoing |
-| **Detected** | 2026-11-14, by the failed `tfapply.yml` run. The time the stuck-job alert first fired isn't known (see follow-up actions) |
+| **Status** | Resolved |
+| **Detected** | 2026-11-14 14:24 UTC, by the failed `tfapply.yml` run. `KubeJobNotCompleted` also fired for the stuck Job |
 | **Impact started** | 2026-11-14 14:13 UTC (the apply deleted GlitchTip's old Secrets) |
-| **Resolved** | Not yet |
-| **Severity** | Minor (GlitchTip is an internal error tracker, though its impact on stored data is unconfirmed) |
-| **Alerts** | A stuck-job alert for `glitchtip/create-glitchtip-bucket-glitchtip` (exact name to be confirmed) |
+| **Resolved** | 2026-11-16 ~11:00 UTC |
+| **Severity** | Minor (GlitchTip is an internal error tracker; object storage was inaccessible but no data was lost) |
+| **Alerts** | `KubeJobNotCompleted` for `glitchtip/create-glitchtip-bucket-glitchtip` |
 
 ## Summary
 
@@ -40,6 +40,10 @@ Secrets. The RustFS data volume was not touched.
 | 2026-11-14 14:14 | New bucket Job created. Its pod goes into `ImagePullBackOff` |
 | 2026-11-14 14:24 | Terraform gives up waiting: `job: glitchtip/create-glitchtip-bucket-glitchtip is not in complete state`. Apply fails |
 | 2026-11-16 | Stuck-job alert investigated. Docker Hub found to be refusing `minio/mc` (see below) |
+| 2026-11-16 ~10:50 | [PR #923](https://github.com/omelette-gay/gitops/pull/923) merged: replaces `minio/mc` with `rustfs/rc`. Stuck GlitchTip Job deleted manually |
+| 2026-11-16 ~11:00 | Terraform apply completes. Helm release updated to revision 5. Both GlitchTip web pods running, RustFS accepting writes with the new credentials. `KubeJobNotCompleted` resolves |
+| 2026-11-16 ~11:10 | Ansible `configure-cluster.yml` fails: the Loki bucket-creation Jobs in `monitoring` still have `minio/mc:latest` in their spec, and `spec.template` is immutable on a Job. Kubernetes rejects the patch |
+| 2026-11-16 ~11:20 | Old Loki bucket Jobs deleted manually. Ansible re-run recreates them with `rustfs/rc` and they complete |
 
 ## Root cause
 
@@ -82,8 +86,15 @@ The `rc` command is a drop-in replacement: `rc alias set` replaces `mc alias set
 --ignore-existing` replaces `mc mb --ignore-existing`. The image is pinned to `v0.1.37` and tracked by Renovate
 in the Terraform module.
 
-Once merged, the stuck Job needs to be deleted manually (`kubectl delete job create-glitchtip-bucket-glitchtip -n
-glitchtip`) so the CI re-run can recreate it with the new image and finish the GlitchTip migration from PR #911.
+After merging, the stuck GlitchTip Job was deleted manually and the Terraform re-run completed successfully. The Helm
+release updated to revision 5, both GlitchTip web pods came up with the new Secret references, and RustFS stopped
+logging `InvalidAccessKeyId` rejections. GlitchTip stores performance span data and cold storage in RustFS; the
+existing `glitchtip` bucket and its data were untouched throughout.
+
+The Ansible `configure-cluster.yml` run then failed because Loki's three bucket-creation Jobs in `monitoring` still had
+`minio/mc:latest` in their spec. A Job's `spec.template` is immutable, so Ansible's `kubernetes.core.k8s` couldn't
+patch them. Deleting the old Jobs and re-running Ansible fixed it — they were recreated with `rustfs/rc` and completed
+immediately.
 
 ## Lessons
 
@@ -93,21 +104,27 @@ glitchtip`) so the CI re-run can recreate it with the new image and finish the G
   A `:latest` tag meant we couldn't tell the image had changed or vanished until something pulled it. A failed apply
   also left the old Secrets deleted but the Helm release still pointing at them.
 - **Lucky:** the bucket Job was a no-op, and RustFS keeps its data on a PVC separate from the credentials.
+- **Didn't anticipate:** changing the image in the Ansible role required manually deleting the existing completed Jobs,
+  because `spec.template` is immutable. Terraform handles this with destroy-and-recreate, but Ansible's
+  `kubernetes.core.k8s` tries to patch. This is a one-off since the image won't change again before Loki moves to
+  Terraform.
 
 ## Follow-up actions
 
 - [x] Decide on and pin a replacement for `minio/mc:latest` (Terraform module and Ansible role) — `rustfs/rc:v0.1.37`
-- [ ] Unblock the apply, and confirm GlitchTip's web pods and object storage recover
-- [ ] Confirm what GlitchTip stores in RustFS and whether anything was lost while the credentials mismatched
-- [ ] Confirm which alert fired, and when, and fill in the detection time above
-- [ ] Consider whether the bucket Job should be able to fail an apply, or should be ordered so the Helm release is
-      updated first when Secrets are renamed
-- [ ] Check the other users of `tfmodules/object-store` and `tfmodules/generated-secret` for the same rename (PR #911
-      also changed `tfmodules/minecraft`)
+- [x] Unblock the apply, and confirm GlitchTip's web pods and object storage recover — done, both pods running, RustFS writing normally
+- [x] Confirm what GlitchTip stores in RustFS and whether anything was lost while the credentials mismatched — performance spans and cold storage; the bucket and its data were untouched, though writes would have failed while the credential mismatch was live
+- [x] Confirm which alert fired, and when — `KubeJobNotCompleted`, now resolved
+- [x] Check the other users of `tfmodules/object-store` — Loki's bucket Jobs (Ansible-managed) also needed manual deletion; Minecraft had no outstanding Jobs
+- [x] Delete old Loki bucket Jobs so Ansible can recreate them with `rustfs/rc`
+- [x] Consider whether the bucket Job should be able to fail an apply, or should be ordered so the Helm release is
+      updated first when Secrets are renamed — not actionable: the Job already runs after the Helm release
+      (`depends_on`), and the dependency graph can't be reordered to avoid this. The real fix is the pinned image
+      tracked by Renovate, which prevents a vanished upstream from surprising us again
 
 ## References
 
 - [PR #911: Keep generated secrets out of Terraform state](https://github.com/omelette-gay/gitops/pull/911)
 - [Failed `tfapply.yml` run](https://github.com/omelette-gay/gitops/actions/runs/43603668234)
-- PR: Replace `minio/mc` with `rustfs/rc` (this PR)
+- [PR #923: Replace `minio/mc` with `rustfs/rc`](https://github.com/omelette-gay/gitops/pull/923)
 - [Secrets](../secrets.md)
