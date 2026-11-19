@@ -26,7 +26,7 @@ locals {
   # renovate: datasource=docker depName=itzg/minecraft-server
   server_image_tag = "2026.11.0"
   # renovate: datasource=docker depName=itzg/mc-backup
-  backup_image_tag = "2026.11.0"
+  backup_image_tag = "2026.11.1"
 }
 
 resource "kubernetes_namespace_v1" "this" {
