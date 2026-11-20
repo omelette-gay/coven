@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Accepted |
+| **Status** | Accepted; Helm chart grouping superseded by [004](./004-bundle-renovate-updates-weekly.md) |
 | **Date** | 2026-11-05 |
 | **Related** | [Renovate configuration](../../.github/renovate.json) |
 
@@ -65,7 +65,7 @@ A chart is left out of the group, and gets its own pull request for every update
 2. It doesn't use semantic versioning, for example it uses calendar versions.
 3. It wraps an application that is still 0.x, or where minor releases are significant upgrades.
 
-The charts excluded under 2 to 4 are listed in `renovate.json`. When a chart breaks something in a minor release, add
+The charts excluded under 2 and 3 are listed in `renovate.json`. When a chart breaks something in a minor release, add
 it to that list, and say so in the incident write-up. `mariadb-operator` and `mariadb-operator-crds` are also always
 updated together, as the CRDs must match the operator.
 
