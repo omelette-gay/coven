@@ -9,14 +9,5 @@ collections:
     version: 2.2.2
   - name: community.general
     version: 14.0.1
-  # Keycloak modules moved here from community.general in 14.0.0
-  - name: middleware_automation.keycloak
-    version: 3.1.2
-  - name: kubernetes.core
-    version: 6.6.0
-  - name: community.dns
-    version: 4.3.1
-  - name: community.crypto
-    version: 3.5.1
   - name: google.cloud
     version: 1.16.0
