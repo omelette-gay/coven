@@ -1,5 +1,0 @@
-cnpg_k8s_namespace: cnpg-system
-cnpg_postgres_major_version: 17
-cnpg_k8s_backup_creds_secret: gcp-backup-creds
-cnpg_backup_object_store: backup
-cnpg_backup_retention_period: 60d

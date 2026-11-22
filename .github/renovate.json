@@ -16,26 +16,6 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/(^|/)tasks/.*\\.ya?ml$/",
-        "/(^|/)roles/.*\\.ya?ml$/"
-      ],
-      "matchStrings": [
-        "repository:\\s*[\"']?(?<depName>[^\\s\"']+)[\"']?\\s*\\n(?:\\s*#.*\\n)?\\s*tag:\\s*[\"']?(?<currentValue>v?[0-9]+\\.[0-9]+\\.[0-9]+[^\"'\\s]*)[\"']?"
-      ],
-      "datasourceTemplate": "docker"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/defaults/main\\.yml$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)\\n.*_version:\\s*\"(?<currentValue>.*?)\""
-      ]
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
         "/\\.tf$/"
       ],
       "matchStrings": [
@@ -128,6 +108,20 @@
         "mariadb-operator-crds"
       ],
       "groupName": "mariadb-operator"
+    },
+    {
+      "description": "The Prometheus Operator's CRDs must never be older than kube-prometheus-stack, and both take a major release when the operator's minor version changes, so their major updates come in one pull request. Minor and patch updates go in the weekly Platform bundle together",
+      "matchDatasources": [
+        "helm"
+      ],
+      "matchPackageNames": [
+        "kube-prometheus-stack",
+        "prometheus-operator-crds"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "groupName": "kube-prometheus-stack (major)"
     },
     {
       "description": "Apps: charts and images for the apps this repo deploys (not the self-deploying ones). Add each new app's charts and images here, following ADR 004. Patch and digest updates are always grouped. The Factorio image isn't listed, as it needs a pull request as soon as it's released",
@@ -237,8 +231,5 @@
       "versioning": "regex:^stable-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$",
       "minimumReleaseAge": "0 days"
     }
-  ],
-  "ignoreDeps": [
-    "planka"
   ]
 }

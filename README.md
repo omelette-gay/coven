@@ -61,10 +61,9 @@ This will also log you in to allow you to use kubectl locally.
 
     ./login.sh --coven
 
-Now you can run the playbooks:
+Now you can run the host playbook:
 
     uv run ansible-playbook -i coven/inventory plays/configure-hosts.yml
-    uv run ansible-playbook -i coven/inventory plays/configure-cluster.yml
 
 If you want to run Terraform locally, you will also need to log in to GCP.
 
@@ -136,7 +135,6 @@ to specify the inventory as `testlab/inventory`. Following this, you can specify
 
     ./login.sh --local
     uv run ansible-playbook -i testlab/inventory plays/configure-hosts.yml
-    uv run ansible-playbook -i testlab/inventory plays/configure-cluster.yml
 
 Now you can apply the Terraform stacks, in order:
 
@@ -157,8 +155,8 @@ as [architecture decision records](./docs/adr/README.md).
 ## Restart and unseal Vault after a deploy or reboot
 
 Our Vault is not configured to "auto-unseal", so on first boot, it requires unseal codes (which are stored offline) to
-be entered into it. This means that after running Ansible, if that changes Vault, you will need to manually cause
-Vault to restart it (otherwise it'll break itself in the middle of a run). Run `kubectl -n vault delete pod vault-0`.
+be entered into it. The Vault chart doesn't restart Vault when its config changes, so after a deploy that changes it,
+restart Vault yourself with `kubectl -n vault delete pod vault-0`.
 
 You will then need to unseal Vault before the UI becomes available. You can do this by running `kubectl -n vault exec -it vault-0 -- vault operator unseal`
 (if you are not logged into k8s at the time, you will need to SSH and run it on the host as root).

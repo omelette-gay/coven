@@ -1,2 +1,0 @@
-- name: restart Grafana
-  include_tasks: restart_grafana.yml
