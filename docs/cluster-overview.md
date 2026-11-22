@@ -97,6 +97,8 @@ Between them, they manage:
   days and written into Vault), the `k3s-cluster-token` secret, GitHub Actions workload identity, billing budget alerts
 - Hetzner DNS zones and static records (Fastmail, Bluesky and GitHub verification, GitHub Pages CNAMEs)
 - `glitchtip` namespace - GlitchTip error tracking (errors.omelette.gay)
+- `vikunja` namespace - Vikunja task lists and kanban boards (tasks.omelette.gay), with its Postgres cluster and a
+  RustFS object store for attachments. Replacing Planka (#592)
 - `minecraft-<server_id>` namespaces - Minecraft servers
 - `factorio-<server_id>` namespaces - Factorio servers
 - A namespace per self-deploying app, with Vault access for its GitHub repo, and any secrets and Keycloak client it needs
