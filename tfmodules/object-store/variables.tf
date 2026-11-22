@@ -26,6 +26,12 @@ variable "storage_size" {
   }
 }
 
+variable "longhorn_recurring_job_name" {
+  description = "Longhorn recurring job to back RustFS's volume up with, e.g. nightly-backup. If set, the module creates the volume itself so it can be labelled; if null, the RustFS chart creates it and it isn't backed up. Changing this on an existing store switches RustFS to a new, empty volume"
+  type        = string
+  default     = null
+}
+
 variable "buckets" {
   description = "Buckets to create in the object store"
   type        = set(string)

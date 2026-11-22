@@ -54,11 +54,15 @@ That can be acceptable, but it should be a deliberate choice.
 | Wedding | `coven/apps/wedding.tf`; gate in `omelette-gay/wedding` | Django admin requires `is_staff`, which SSO-created users don't have. RSVPs use invite codes, not login | An account that can't see anything (2) |
 | GlitchTip | `tfmodules/glitchtip` (via `tfmodules/keycloak-client`) | Everything is inside organizations. New users belong to none, and only superusers can create them (`ENABLE_ORGANIZATION_CREATION` defaults to false) | An account that can't see anything until invited to an organization (2) |
 | Planka | `roles/omelette.planka/tasks/main.yml` | Only admin rights come from Keycloak | An account that can use Planka (3). Accepted because Planka is being decommissioned |
+| Vikunja | `tfmodules/vikunja` (via `tfmodules/keycloak-client`) | Nothing: Vikunja's OpenID login can't require a role or group claim | Their own empty account, which can create projects but sees nobody else's unless they're shared with it (3). Accepted |
 
 Things to know about these:
 
 - **Home Assistant has no per-device permissions for non-admin users.** The `resident` role can control everything in
   the house, including locks and heating. Only give it to people who live there.
+- **Any realm user can use Vikunja.** It has no setting to require a role or group claim (checked at v2.8.0), so
+  everyone in `omelette.gay` gets an account. That account only sees projects it creates or that are shared with it,
+  so it can't see Chris and Meg's tasks. Accounts are linked to Keycloak by issuer and `sub`, not email.
 - **Some role mappings are still made by Ansible.** Ansible maps the Vault, Grafana and Planka admin roles to `admins`.
   Terraform maps Home Assistant's `admin` role to `admins` (`role_groups` in `coven/apps/home-assistant.tf`). Nobody has
   its `resident` role, as nobody but Chris and Meg lives there. See [known gaps](#known-gaps).
