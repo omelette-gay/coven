@@ -31,6 +31,11 @@ import {
 }
 
 import {
+  to = module.bootstrap.kubernetes_namespace_v1.keycloak
+  id = "keycloak"
+}
+
+import {
   to = module.bootstrap.helm_release.longhorn
   id = "longhorn-system/longhorn"
 }
@@ -88,4 +93,19 @@ import {
 import {
   to = module.bootstrap.helm_release.external_secrets
   id = "external-secrets/external-secrets"
+}
+
+import {
+  to = module.bootstrap.helm_release.keycloak_db
+  id = "keycloak/db"
+}
+
+import {
+  to = module.bootstrap.kubernetes_manifest.keycloak_block_metrics_path
+  id = "apiVersion=traefik.io/v1alpha1,kind=Middleware,namespace=keycloak,name=block-metrics-path"
+}
+
+import {
+  to = module.bootstrap.helm_release.keycloak
+  id = "keycloak/keycloak"
 }
