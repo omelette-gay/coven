@@ -66,6 +66,7 @@ resource "helm_release" "this" {
   repository       = "https://charts.rustfs.com"
   chart            = "rustfs"
   version          = "1.0.6"
+  atomic           = true
   create_namespace = false
   wait             = true
 

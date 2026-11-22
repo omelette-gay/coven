@@ -23,7 +23,6 @@ after the mount. The modules take the mount paths as inputs for this. Root modul
 
 ## Conventions
 
-As in bootstrap, every new `helm_release` sets `atomic = true` (GlitchTip's and object-store's don't yet), and
-names both stacks need are passed in by the root modules. Secrets are kept out of state where the providers allow it (see [secrets](../../docs/secrets.md)): generated
+As in bootstrap, every `helm_release` sets `atomic = true`, and names both stacks need are passed in by the root modules. Secrets are kept out of state where the providers allow it (see [secrets](../../docs/secrets.md)): generated
 values are written to Vault write-only and synced by External Secrets Operator. Keycloak client secrets are the
 exception, as the provider always reads them back.

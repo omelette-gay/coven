@@ -109,7 +109,7 @@ There's no test suite. Before proposing a change:
 - Terraform modules: each service gets its own module in `tfmodules/`, with `main.tf`, `variables.tf`, `outputs.tf` if
   it has outputs, and a `README.md`. Declare only the providers the module uses directly, and require Terraform 1.9
   unless it uses write-only arguments or ephemeral resources itself (1.11, with a comment). Name resources after what
-  they are (e.g. `helm_release.keycloak`); older modules use `this`, which can stay. New `helm_release`s set
+  they are (e.g. `helm_release.keycloak`); older modules use `this`, which can stay. Every `helm_release` sets
   `atomic = true`.
 - Renovate bundles updates using explicit lists in `.github/renovate.json`. When adding an app, add its charts and
   images to the Apps rules, and follow [ADR 004](./adr/004-bundle-renovate-updates-weekly.md) to decide whether a new

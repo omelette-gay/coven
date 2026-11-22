@@ -74,6 +74,7 @@ resource "helm_release" "minecraft" {
   repository = "https://itzg.github.io/minecraft-server-charts/"
   chart      = "minecraft"
   version    = "5.3.1"
+  atomic     = true
   values = [
     yamlencode({
       image = {
