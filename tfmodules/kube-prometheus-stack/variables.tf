@@ -19,12 +19,17 @@ variable "cluster_issuer" {
 }
 
 variable "keycloak_realm_url" {
-  description = "URL of the Keycloak realm Grafana logs people in with, e.g. https://auth.coven.omelette.gay/auth/realms/omelette.gay. Grafana's client and its Secret, grafana-keycloak-creds, are made by the platform stack; until then SSO doesn't work, but Grafana still starts"
+  description = "URL of the Keycloak realm Grafana logs people in with, e.g. https://auth.coven.omelette.gay/auth/realms/omelette.gay"
   type        = string
   validation {
     condition     = startswith(var.keycloak_realm_url, "https://") && !endswith(var.keycloak_realm_url, "/")
     error_message = "keycloak_realm_url must start with https:// and have no trailing slash."
   }
+}
+
+variable "grafana_oauth_secret" {
+  description = "Secret holding Grafana's Keycloak client, which the platform stack makes. Grafana reads client_secret from it, and starts without it"
+  type        = string
 }
 
 variable "insecure_tls" {
@@ -33,9 +38,14 @@ variable "insecure_tls" {
   default     = false
 }
 
-variable "smtp_relay" {
-  description = "host:port of the SMTP relay Grafana and Alertmanager send mail through"
+variable "smtp_host" {
+  description = "SMTP relay Grafana and Alertmanager send mail through"
   type        = string
+}
+
+variable "smtp_port" {
+  description = "Port of the SMTP relay"
+  type        = number
 }
 
 variable "host_aliases" {

@@ -24,3 +24,8 @@ variable "allow_degraded_volumes" {
   type        = bool
   default     = false
 }
+
+variable "backup_credentials_secret" {
+  description = "Secret holding the credentials for backing up to GCS, which the platform stack syncs from Vault. Backups fail until it exists"
+  type        = string
+}

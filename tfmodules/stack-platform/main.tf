@@ -2,10 +2,6 @@ terraform {
   required_version = ">= 1.11.0"
 
   required_providers {
-    helm = {
-      source  = "hashicorp/helm"
-      version = ">= 3.2.0"
-    }
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
@@ -26,20 +22,14 @@ terraform {
 }
 
 locals {
-  # namespaces the bootstrap stack makes
-  namespaces = {
-    monitoring   = "monitoring"
-    keycloak     = "keycloak"
-    vault        = "vault"
-    longhorn     = "longhorn-system"
-    cert_manager = "cert-manager"
-  }
-
   # the blackbox exporter bootstrap installs, which probes our sites from inside the cluster
   blackbox_prober = {
-    url  = "blackbox-exporter-prometheus-blackbox-exporter.${local.namespaces.monitoring}.svc.cluster.local:9115"
+    url  = "blackbox-exporter-prometheus-blackbox-exporter.${var.namespaces.monitoring}.svc.cluster.local:9115"
     path = "/probe"
   }
+
+  # Vault's address inside the cluster
+  vault_internal_url = "http://vault.${var.namespaces.vault}.svc.cluster.local:8200"
 
   # Vault's mounts, so that everything using them is made after them on a fresh cluster
   vault = {

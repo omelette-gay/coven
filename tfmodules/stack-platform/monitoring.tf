@@ -6,7 +6,7 @@
 module "grafana_sso" {
   source = "../keycloak-client"
 
-  realm_id            = keycloak_realm.omelette_gay.id
+  keycloak_realm      = keycloak_realm.omelette_gay.id
   client_id           = "grafana"
   client_name         = "grafana"
   valid_redirect_uris = ["https://${var.grafana_host}/login/generic_oauth"]
@@ -14,17 +14,17 @@ module "grafana_sso" {
   role_groups         = { grafana-admin = [keycloak_group.admins.name] }
   group_ids           = { (keycloak_group.admins.name) = keycloak_group.admins.id }
   keycloak_url        = var.keycloak_url
-  k8s_namespace       = local.namespaces.monitoring
-  k8s_secret_name     = "grafana-keycloak-creds"
+  k8s_namespace       = var.namespaces.monitoring
+  k8s_secret_name     = var.grafana_oauth_secret
   secret_revision     = var.grafana_keycloak_secret_revision
 }
 
 # Checks over HTTPS that the services bootstrap installs are up (the HttpProbeFailed alert)
 locals {
   probes = {
-    keycloak = { namespace = local.namespaces.keycloak, url = "${var.keycloak_url}/realms/master/" }
-    vault    = { namespace = local.namespaces.vault, url = "https://${var.vault_host}/ui/vault/auth" }
-    grafana  = { namespace = local.namespaces.monitoring, url = "https://${var.grafana_host}/login" }
+    keycloak = { namespace = var.namespaces.keycloak, url = "${var.keycloak_url}/realms/master/" }
+    vault    = { namespace = var.namespaces.vault, url = "https://${var.vault_host}/ui/vault/auth" }
+    grafana  = { namespace = var.namespaces.monitoring, url = "https://${var.grafana_host}/login" }
   }
 }
 
@@ -62,7 +62,7 @@ module "grafana_discord_contact_point" {
   vault_kubernetes_auth_backend = local.vault.kubernetes_auth_backend
   k8s_secret_name               = "grafana-discord-notifier"
   k8s_secret_labels             = { grafana_alert = "1" }
-  k8s_namespace                 = local.namespaces.monitoring
+  k8s_namespace                 = var.namespaces.monitoring
   k8s_service_account_name      = "grafana-discord-notifier"
   vault_role_name               = "grafana-discord-notifier"
   template_data = {
@@ -90,7 +90,7 @@ module "alertmanager_discord_webhook" {
   vault_kv_mountpoint           = local.vault.kv_mountpoint
   vault_kubernetes_auth_backend = local.vault.kubernetes_auth_backend
   k8s_secret_name               = "discord-alerting-webhook"
-  k8s_namespace                 = local.namespaces.monitoring
+  k8s_namespace                 = var.namespaces.monitoring
   k8s_service_account_name      = "discord-alerting-webhook"
   vault_role_name               = "discord-alerting-webhook"
 }
@@ -103,7 +103,7 @@ resource "kubernetes_manifest" "alertmanager_discord" {
     kind       = "AlertmanagerConfig"
     metadata = {
       name      = "alertmanager-discord-notifier"
-      namespace = local.namespaces.monitoring
+      namespace = var.namespaces.monitoring
     }
     spec = {
       route = {
@@ -127,7 +127,7 @@ resource "kubernetes_manifest" "alertmanager_discord" {
 module "logging" {
   source = "../logging"
 
-  namespace           = local.namespaces.monitoring
+  namespace           = var.namespaces.monitoring
   storage_size        = var.loki_storage_size
   chunks_cache_memory = var.loki_chunks_cache_memory
 

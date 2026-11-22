@@ -1,4 +1,4 @@
-variable "realm_id" {
+variable "keycloak_realm" {
   description = "Keycloak realm containing the client"
   type        = string
 }

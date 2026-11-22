@@ -11,10 +11,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
     }
-    vault = {
-      source  = "hashicorp/vault"
-      version = ">= 5.10.1"
-    }
   }
 }
 
@@ -127,7 +123,6 @@ resource "helm_release" "this" {
       ]
     }) : "",
   ])
-
 }
 
 resource "kubernetes_job_v1" "bucket" {

@@ -17,7 +17,7 @@ module "home_assistant_sso" {
   source = "../../tfmodules/keycloak-client"
 
   keycloak_url        = "${local.keycloak_url}${local.keycloak_base_path}"
-  realm_id            = local.keycloak_realm
+  keycloak_realm      = local.keycloak_realm
   client_id           = "home-assistant"
   client_name         = "Home Assistant"
   valid_redirect_uris = ["https://home.gs.omelette.gay/auth/oidc/callback"]

@@ -13,6 +13,12 @@ terraform {
   }
 }
 
+locals {
+  # e.g. auth.coven.omelette.gay and /auth
+  host      = regex("^https://([^/]+)", var.url)[0]
+  base_path = trimprefix(var.url, "https://${local.host}")
+}
+
 resource "kubernetes_namespace_v1" "keycloak" {
   metadata {
     name = var.namespace
@@ -54,7 +60,7 @@ resource "helm_release" "keycloak_db" {
         path   = "/cnpg/keycloak/"
       }
       secret = {
-        name   = "keycloak-gcp-backup-creds"
+        name   = var.backup_credentials_secret
         create = false
       }
       scheduledBackups = [{
@@ -68,7 +74,6 @@ resource "helm_release" "keycloak_db" {
       }]
     }
   })]
-
 }
 
 # Hides Keycloak's realm metrics from the web. Prometheus scrapes them inside the cluster.
@@ -83,7 +88,7 @@ resource "kubernetes_manifest" "keycloak_block_metrics_path" {
     spec = {
       plugin = {
         plugin-blockpath = {
-          Regex = ["^/auth/realms/([^/]*)/metrics(.*)"]
+          Regex = ["^${local.base_path}/realms/([^/]*)/metrics(.*)"]
         }
       }
     }
@@ -108,6 +113,7 @@ resource "kubernetes_secret_v1" "keycloak_bootstrap_admin" {
 }
 
 locals {
+  # renovate: datasource=github-releases depName=aerogear/keycloak-metrics-spi
   keycloak_metrics_spi_version = "7.0.0"
 }
 
@@ -116,7 +122,7 @@ locals {
 resource "helm_release" "keycloak" {
   name       = "keycloak"
   namespace  = kubernetes_namespace_v1.keycloak.metadata[0].name
-  repository = "https://codecentric.github.io/helm-charts/"
+  repository = "https://codecentric.github.io/helm-charts"
   chart      = "keycloakx"
   version    = "7.4.0"
   atomic     = true
@@ -128,7 +134,7 @@ resource "helm_release" "keycloak" {
       "/opt/keycloak/bin/kc.sh",
       "start",
       "--http-port=8080",
-      "--hostname=https://${var.host}/auth",
+      "--hostname=${var.url}",
     ]
     extraEnv = <<-EOT
       - name: JAVA_OPTS_APPEND
@@ -153,12 +159,13 @@ resource "helm_release" "keycloak" {
     dbchecker = { enabled = true }
 
     database = {
-      vendor            = "postgres"
-      hostname          = "db-cluster-rw"
+      vendor = "postgres"
+      # the cluster chart names the database cluster <release>-cluster
+      hostname          = "${helm_release.keycloak_db.name}-cluster-rw"
       port              = 5432
       database          = "keycloak"
       username          = "keycloak"
-      existingSecret    = "db-cluster-app"
+      existingSecret    = "${helm_release.keycloak_db.name}-cluster-app"
       existingSecretKey = "password"
     }
 
@@ -201,15 +208,15 @@ resource "helm_release" "keycloak" {
     ingress = {
       enabled = true
       rules = [{
-        host  = var.host
-        paths = [{ path = "/auth/", pathType = "Prefix" }]
+        host  = local.host
+        paths = [{ path = "${local.base_path}/", pathType = "Prefix" }]
       }]
       annotations = {
         "cert-manager.io/cluster-issuer"                   = var.cluster_issuer
-        "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd,keycloak-block-metrics-path@kubernetescrd"
+        "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd,${var.namespace}-${kubernetes_manifest.keycloak_block_metrics_path.manifest.metadata.name}@kubernetescrd"
       }
       tls = [{
-        hosts      = [var.host]
+        hosts      = [local.host]
         secretName = "keycloak-tls"
       }]
     }

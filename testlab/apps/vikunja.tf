@@ -2,10 +2,17 @@
 # module "vikunja" {
 #   source = "../../tfmodules/vikunja"
 #
-#   domain         = "tasks.coven.local"
+#   host           = "tasks.coven.local"
 #   cluster_issuer = "vault"
 #   keycloak_url   = "https://auth.coven.local/auth"
+#   keycloak_realm = "omelette.gay"
 #   sender_email   = "vikunja@coven.local"
+#   smtp_host      = "mail.mail.svc.cluster.local"
+#   smtp_port      = 587
+#   blackbox_prober = {
+#     url  = "blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115"
+#     path = "/probe"
+#   }
 #
 #   # The testlab has a single node, so a standby wouldn't add anything
 #   postgresql_instances = 1

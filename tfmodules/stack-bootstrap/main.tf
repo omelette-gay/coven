@@ -19,9 +19,8 @@ terraform {
 
 locals {
   # Longhorn volumes with these labels are backed up off-site by the recurring job the platform stack creates
-  longhorn_recurring_job_name = "nightly-backup"
   longhorn_backup_labels = {
-    "recurring-job.longhorn.io/source"                               = "enabled"
-    "recurring-job.longhorn.io/${local.longhorn_recurring_job_name}" = "enabled"
+    "recurring-job.longhorn.io/source"                          = "enabled"
+    "recurring-job.longhorn.io/${var.longhorn_backup_job_name}" = "enabled"
   }
 }

@@ -48,8 +48,8 @@ module "keycloak_backup_credentials" {
   vault_secret_name             = "backups/service-account-key"
   vault_kv_mountpoint           = local.vault.kv_mountpoint
   vault_kubernetes_auth_backend = local.vault.kubernetes_auth_backend
-  k8s_secret_name               = "keycloak-gcp-backup-creds"
-  k8s_namespace                 = local.namespaces.keycloak
+  k8s_secret_name               = var.keycloak_backup_credentials_secret
+  k8s_namespace                 = var.namespaces.keycloak
   k8s_service_account_name      = "keycloak-gcp-backup-creds"
   vault_role_name               = "keycloak-gcp-backup-creds"
 }

@@ -30,6 +30,17 @@ variable "keycloak_realm" {
   type        = string
 }
 
+variable "namespaces" {
+  description = "Namespaces of the services the bootstrap stack installs"
+  type = object({
+    monitoring   = string
+    longhorn     = string
+    cert_manager = string
+    vault        = string
+    keycloak     = string
+  })
+}
+
 variable "grafana_host" {
   description = "Hostname of Grafana, which the bootstrap stack installs"
   type        = string
@@ -55,7 +66,7 @@ variable "insecure_tls" {
   default     = false
 }
 
-variable "glitchtip_domain" {
+variable "glitchtip_host" {
   description = "Hostname for GlitchTip"
   type        = string
 }
@@ -147,4 +158,28 @@ variable "dkim_key_revision" {
   description = "Increase this to generate a new DKIM key for outbound mail. Mail may fail DKIM checks until postfix restarts with the new key"
   type        = number
   default     = 1
+  validation {
+    condition     = var.dkim_key_revision >= 1 && floor(var.dkim_key_revision) == var.dkim_key_revision
+    error_message = "dkim_key_revision must be a whole number, 1 or more."
+  }
+}
+
+variable "longhorn_backup_job_name" {
+  description = "Name of the Longhorn recurring job that backs labelled volumes up off-site. The bootstrap stack labels Vault's volume for it"
+  type        = string
+}
+
+variable "longhorn_backup_credentials_secret" {
+  description = "Secret to sync Longhorn's GCS backup credentials into. The bootstrap stack points Longhorn at it"
+  type        = string
+}
+
+variable "keycloak_backup_credentials_secret" {
+  description = "Secret to sync the GCP service account key Keycloak's database backs up with into. The bootstrap stack points the database at it"
+  type        = string
+}
+
+variable "grafana_oauth_secret" {
+  description = "Secret to write Grafana's Keycloak client into. The bootstrap stack points Grafana at it"
+  type        = string
 }

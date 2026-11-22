@@ -3,5 +3,7 @@
 module "external_secrets" {
   source = "../external-secrets"
 
+  namespace = var.namespaces.external_secrets
+
   depends_on = [helm_release.prometheus_operator_crds]
 }

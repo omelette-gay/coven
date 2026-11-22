@@ -22,13 +22,13 @@ variable "vault_secret_name" {
   type        = string
 }
 
-variable "hostname" {
+variable "host" {
   description = "Hostname that the server's web interface is served on, with a certificate from cert-manager. The web interface only returns the server's status as JSON. If null, no ingress is created"
   type        = string
   default     = null
   validation {
-    condition     = var.hostname == null || can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.hostname))
-    error_message = "hostname must be a bare hostname, without https:// or a trailing slash."
+    condition     = var.host == null || can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.host))
+    error_message = "host must be a bare hostname, without https:// or a trailing slash."
   }
 }
 

@@ -90,7 +90,7 @@ resource "kubernetes_cluster_role_binding_v1" "vault_credential_issuing" {
   subject {
     kind      = "ServiceAccount"
     name      = "vault"
-    namespace = "vault"
+    namespace = var.namespaces.vault
   }
 }
 

@@ -16,7 +16,7 @@ The universe and plugin PVCs are annotated `helm.sh/resource-policy: keep`, so u
 the game data.
 
 The game service is a `LoadBalancer`. The server's web interface only returns its status (players, vessels and so on)
-as JSON. If `hostname` is set, it's exposed through Traefik there, with a certificate from `cluster_issuer` (default
+as JSON. If `host` is set, it's exposed through Traefik there, with a certificate from `cluster_issuer` (default
 `letsencrypt`) and an HTTP to HTTPS redirect. If it isn't, there is no ingress. CPU and memory requests have
 defaults based on observed usage (`cpu_request`, `memory_request`), with no limits.
 

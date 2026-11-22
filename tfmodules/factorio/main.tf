@@ -10,10 +10,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
     }
-    vault = {
-      source  = "hashicorp/vault"
-      version = ">= 5.10.1"
-    }
     hcloud = {
       source  = "hetznercloud/hcloud"
       version = ">= 1.68.0"

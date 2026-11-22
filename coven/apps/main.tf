@@ -93,6 +93,16 @@ locals {
   # The Longhorn recurring job that backs volumes up off-site
   nightly_backup_job = "nightly-backup"
 
+  # Outbound mail, installed by the platform stack
+  smtp_host = "mail.mail.svc.cluster.local"
+  smtp_port = 587
+
+  # The blackbox exporter, installed by the bootstrap stack, which probes sites over HTTPS
+  blackbox_prober = {
+    url  = "blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115"
+    path = "/probe"
+  }
+
   # Game servers need a datacentre IP, so prefer running them on the xdc node
   game_server_preferred_node = { "coven.omelette.gay/location" = "xdc" }
 }

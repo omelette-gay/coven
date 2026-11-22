@@ -24,5 +24,5 @@ are looked up here and passed in.
 ## Conventions
 
 Every `helm_release` sets `atomic = true`, so a failed upgrade is rolled back instead of leaving the release stuck in a
-`pending-*` state. Releases that take a while to start (kube-prometheus-stack, Keycloak) have a longer `timeout`. Names
+`pending-*` state. Releases that take a while to start (Longhorn, kube-prometheus-stack, Keycloak) have a longer `timeout`. Names
 that both stacks need (hostnames, the realm, the SMTP relay) are passed in by the root modules.

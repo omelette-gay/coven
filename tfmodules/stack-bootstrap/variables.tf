@@ -26,6 +26,19 @@ variable "letsencrypt_server" {
   }
 }
 
+variable "namespaces" {
+  description = "Namespaces for the services installed here, which the platform stack also needs"
+  type = object({
+    monitoring       = string
+    longhorn         = string
+    cert_manager     = string
+    cnpg             = string
+    vault            = string
+    external_secrets = string
+    keycloak         = string
+  })
+}
+
 variable "grafana_host" {
   description = "Hostname for Grafana"
   type        = string
@@ -36,9 +49,13 @@ variable "vault_host" {
   type        = string
 }
 
-variable "keycloak_host" {
-  description = "Hostname for Keycloak, which serves it under /auth"
+variable "keycloak_url" {
+  description = "Keycloak's base URL, including the path it's served under, e.g. https://auth.coven.omelette.gay/auth"
   type        = string
+  validation {
+    condition     = startswith(var.keycloak_url, "https://") && !endswith(var.keycloak_url, "/")
+    error_message = "keycloak_url must start with https:// and have no trailing slash."
+  }
 }
 
 variable "keycloak_realm" {
@@ -46,9 +63,14 @@ variable "keycloak_realm" {
   type        = string
 }
 
-variable "smtp_relay" {
-  description = "host:port of the SMTP relay that Grafana and Alertmanager send mail through. The platform stack installs it"
+variable "smtp_host" {
+  description = "SMTP relay Grafana and Alertmanager send mail through. The platform stack installs it"
   type        = string
+}
+
+variable "smtp_port" {
+  description = "Port of the SMTP relay"
+  type        = number
 }
 
 variable "insecure_tls" {
@@ -83,4 +105,29 @@ variable "keycloak_bootstrap_admin_password" {
   type        = string
   default     = null
   sensitive   = true
+}
+
+variable "keycloak_bootstrap_admin_username" {
+  description = "Username of Keycloak's temporary first-boot admin, which the platform stack's root logs in as for its first apply"
+  type        = string
+}
+
+variable "longhorn_backup_job_name" {
+  description = "Name of the Longhorn recurring job that backs labelled volumes up off-site, which the platform stack makes. Vault's volume is labelled for it"
+  type        = string
+}
+
+variable "longhorn_backup_credentials_secret" {
+  description = "Secret holding Longhorn's credentials for backing up to GCS, which the platform stack syncs from Vault"
+  type        = string
+}
+
+variable "keycloak_backup_credentials_secret" {
+  description = "Secret holding the GCP service account key Keycloak's database backs up with, which the platform stack syncs from Vault"
+  type        = string
+}
+
+variable "grafana_oauth_secret" {
+  description = "Secret holding Grafana's Keycloak client, which the platform stack makes"
+  type        = string
 }

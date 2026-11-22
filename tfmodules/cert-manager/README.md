@@ -7,3 +7,6 @@ The ClusterIssuer is in a small local chart ([charts/letsencrypt-issuer](./chart
 `vault` ClusterIssuer is made by the platform stack, as it needs Vault configured.
 
 `letsencrypt_server` defaults to Let's Encrypt's staging server, so only coven uses up real rate limits.
+
+Terraform only notices changes to the local chart's values or its `Chart.yaml` version, so after editing its templates,
+increase the version in `Chart.yaml`.

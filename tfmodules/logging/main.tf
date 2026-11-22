@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.9.0"
 
   required_providers {
     helm = {
@@ -30,7 +30,7 @@ module "object_store" {
 resource "helm_release" "loki" {
   name       = "loki"
   namespace  = var.namespace
-  repository = "https://grafana-community.github.io/helm-charts/"
+  repository = "https://grafana-community.github.io/helm-charts"
   chart      = "loki"
   version    = "21.2.3"
   atomic     = true

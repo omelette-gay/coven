@@ -53,7 +53,7 @@ resource "helm_release" "longhorn" {
     }
     defaultBackupStore = {
       backupTarget                 = "s3://coven-backups@europe-west2/"
-      backupTargetCredentialSecret = "gcp-backup-creds"
+      backupTargetCredentialSecret = var.backup_credentials_secret
       pollInterval                 = 180
     }
     persistence = {

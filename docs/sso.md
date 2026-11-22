@@ -103,7 +103,7 @@ module "keycloak_client" {
   source = "../keycloak-client"
 
   keycloak_url        = var.keycloak_url
-  realm_id            = var.keycloak_realm
+  keycloak_realm      = var.keycloak_realm
   client_id           = "example"
   client_name         = "Example"
   valid_redirect_uris = ["https://${var.domain}/oidc/callback"]

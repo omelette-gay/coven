@@ -130,7 +130,7 @@ resource "hcloud_zone_rrset" "dmarc" {
 resource "helm_release" "mail" {
   name       = "mail"
   namespace  = kubernetes_namespace_v1.mail.metadata[0].name
-  repository = "https://bokysan.github.io/docker-postfix/"
+  repository = "https://bokysan.github.io/docker-postfix"
   chart      = "mail"
   version    = "5.2.1"
   atomic     = true

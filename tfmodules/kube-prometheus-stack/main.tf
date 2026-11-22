@@ -87,7 +87,8 @@ resource "helm_release" "kube_prometheus_stack" {
       cluster_issuer     = var.cluster_issuer
       keycloak_realm_url = var.keycloak_realm_url
       insecure_tls       = var.insecure_tls
-      smtp_relay         = var.smtp_relay
+      smtp_relay         = "${var.smtp_host}:${var.smtp_port}"
+      oauth_secret       = var.grafana_oauth_secret
       cluster_domain     = var.cluster_domain
       host_aliases       = var.host_aliases
     }),
@@ -95,7 +96,7 @@ resource "helm_release" "kube_prometheus_stack" {
     yamlencode(local.k3s_components),
     file("${path.module}/values/node-exporter.yaml"),
     templatefile("${path.module}/values/alertmanager.yaml.tftpl", {
-      smtp_relay     = var.smtp_relay
+      smtp_relay     = "${var.smtp_host}:${var.smtp_port}"
       cluster_domain = var.cluster_domain
     }),
     file("${path.module}/values/kube-state-metrics.yaml"),
@@ -125,7 +126,7 @@ resource "helm_release" "blackbox_exporter" {
 resource "helm_release" "helm_exporter" {
   name       = "helm-exporter"
   namespace  = var.namespace
-  repository = "https://shanestarcher.com/helm-charts/"
+  repository = "https://shanestarcher.com/helm-charts"
   chart      = "helm-exporter"
   version    = "1.4.0+e2eee28"
   atomic     = true

@@ -1,14 +1,21 @@
 module "keycloak" {
   source = "../keycloak"
 
-  host                     = var.keycloak_host
-  cluster_issuer           = var.cluster_issuer
-  bootstrap_admin_password = var.keycloak_bootstrap_admin_password
+  namespace                 = var.namespaces.keycloak
+  url                       = var.keycloak_url
+  cluster_issuer            = var.cluster_issuer
+  backup_credentials_secret = var.keycloak_backup_credentials_secret
+  bootstrap_admin_username  = var.keycloak_bootstrap_admin_username
+  bootstrap_admin_password  = var.keycloak_bootstrap_admin_password
 
+  # Longhorn first, so the database's volumes get its storage class, and Traefik's config first, as the metrics
+  # middleware needs its blockpath plugin
   depends_on = [
     helm_release.prometheus_operator_crds,
+    module.longhorn,
     module.cnpg,
     module.cert_manager,
+    kubernetes_manifest.traefik_config,
     kubernetes_manifest.redirect_https,
   ]
 }

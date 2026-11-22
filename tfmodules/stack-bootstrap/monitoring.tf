@@ -1,9 +1,9 @@
 resource "kubernetes_namespace_v1" "monitoring" {
   metadata {
-    name = "monitoring"
+    name = var.namespaces.monitoring
     # added by Helm when it made the namespace, kept so the import doesn't change it
     labels = {
-      name = "monitoring"
+      name = var.namespaces.monitoring
     }
   }
 }
@@ -45,17 +45,24 @@ locals {
 module "kube_prometheus_stack" {
   source = "../kube-prometheus-stack"
 
-  namespace          = kubernetes_namespace_v1.monitoring.metadata[0].name
-  cluster_domain     = var.cluster_domain
-  grafana_host       = var.grafana_host
-  cluster_issuer     = var.cluster_issuer
-  keycloak_realm_url = "https://${var.keycloak_host}/auth/realms/${var.keycloak_realm}"
-  insecure_tls       = var.insecure_tls
-  smtp_relay         = var.smtp_relay
-  host_aliases       = var.host_aliases
-  controller_ips     = local.controller_ips
+  namespace            = kubernetes_namespace_v1.monitoring.metadata[0].name
+  cluster_domain       = var.cluster_domain
+  grafana_host         = var.grafana_host
+  cluster_issuer       = var.cluster_issuer
+  keycloak_realm_url   = "${var.keycloak_url}/realms/${var.keycloak_realm}"
+  insecure_tls         = var.insecure_tls
+  smtp_host            = var.smtp_host
+  smtp_port            = var.smtp_port
+  grafana_oauth_secret = var.grafana_oauth_secret
+  host_aliases         = var.host_aliases
+  controller_ips       = local.controller_ips
 
   # Prometheus, Alertmanager and Grafana's volumes must get Longhorn's storage class, which is the default only once
-  # Longhorn is installed
-  depends_on = [helm_release.prometheus_operator_crds, module.longhorn]
+  # Longhorn is installed. Grafana's ingress uses cert-manager and the HTTPS redirect.
+  depends_on = [
+    helm_release.prometheus_operator_crds,
+    module.longhorn,
+    module.cert_manager,
+    kubernetes_manifest.redirect_https,
+  ]
 }

@@ -35,7 +35,7 @@ grafana:
       host: "${smtp_relay}"
       from_address: "grafana@${cluster_domain}"
   envFromSecrets:
-    - name: grafana-keycloak-creds
+    - name: ${oauth_secret}
       optional: true
 
   # auto-discover resources installed into the cluster

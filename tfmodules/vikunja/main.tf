@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.9.0"
 
   required_providers {
     helm = {
@@ -9,10 +9,6 @@ terraform {
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
-    }
-    vault = {
-      source  = "hashicorp/vault"
-      version = ">= 5.10.1"
     }
   }
 }
@@ -60,10 +56,10 @@ module "keycloak_client" {
 
   keycloak_url        = var.keycloak_url
   secret_revision     = var.keycloak_secret_revision
-  realm_id            = var.keycloak_realm
+  keycloak_realm      = var.keycloak_realm
   client_id           = local.namespace
   client_name         = "Vikunja"
-  valid_redirect_uris = ["https://${var.domain}/auth/openid/${local.oidc_provider}"]
+  valid_redirect_uris = ["https://${var.host}/auth/openid/${local.oidc_provider}"]
   k8s_namespace       = local.namespace
   k8s_secret_name     = "vikunja-oidc"
 }
@@ -216,14 +212,14 @@ resource "helm_release" "this" {
               "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd,${local.namespace}-block-metrics-path@kubernetescrd"
             }
             hosts = [{
-              host = var.domain
+              host = var.host
               paths = [{
                 path     = "/"
                 pathType = "Prefix"
               }]
             }]
             tls = [{
-              hosts      = [var.domain]
+              hosts      = [var.host]
               secretName = "vikunja-tls"
             }]
           }
@@ -250,7 +246,7 @@ resource "helm_release" "this" {
             data = {
               "config.yml" = yamlencode({
                 service = {
-                  publicurl          = "https://${var.domain}/"
+                  publicurl          = "https://${var.host}/"
                   enableregistration = false
                   timezone           = "Europe/London"
                 }
@@ -281,8 +277,8 @@ resource "helm_release" "this" {
                 }
                 mailer = {
                   enabled   = true
-                  host      = "mail.mail.svc.cluster.local"
-                  port      = 587
+                  host      = var.smtp_host
+                  port      = var.smtp_port
                   fromemail = var.sender_email
                 }
                 metrics = {
@@ -330,13 +326,10 @@ resource "kubernetes_manifest" "probe" {
     spec = {
       interval = "60s"
       module   = "http_2xx"
-      prober = {
-        url  = "blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115"
-        path = "/probe"
-      }
+      prober   = var.blackbox_prober
       targets = {
         staticConfig = {
-          static = ["https://${var.domain}/"]
+          static = ["https://${var.host}/"]
         }
       }
     }

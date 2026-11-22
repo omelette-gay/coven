@@ -57,7 +57,7 @@ module "example_sso" {                            # optional
   source = "../../tfmodules/keycloak-client"
 
   keycloak_url        = "${local.keycloak_url}${local.keycloak_base_path}"
-  realm_id            = local.keycloak_realm
+  keycloak_realm      = local.keycloak_realm
   client_id           = "example-app"
   client_name         = "Example"
   valid_redirect_uris = ["https://example.omelette.gay/oidc/callback/"]

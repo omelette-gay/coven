@@ -23,8 +23,8 @@ resource "vault_pki_secret_backend_config_issuers" "pki" {
 
 resource "vault_pki_secret_backend_config_urls" "pki" {
   backend                 = vault_mount.pki.path
-  issuing_certificates    = ["http://vault.vault.svc.cluster.local:8200/v1/pki/ca"]
-  crl_distribution_points = ["http://vault.vault.svc.cluster.local:8200/v1/pki/crl"]
+  issuing_certificates    = ["${local.vault_internal_url}/v1/${vault_mount.pki.path}/ca"]
+  crl_distribution_points = ["${local.vault_internal_url}/v1/${vault_mount.pki.path}/crl"]
 }
 
 resource "vault_pki_secret_backend_role" "coven" {
@@ -39,9 +39,9 @@ resource "vault_policy" "pki_issuer" {
   name = "pki-${vault_pki_secret_backend_role.coven.name}-issuer"
 
   policy = chomp(<<-EOT
-    path "pki*" { capabilities = ["read", "list"] }
-    path "pki/sign/${vault_pki_secret_backend_role.coven.name}" { capabilities = ["create", "update"] }
-    path "pki/issue/${vault_pki_secret_backend_role.coven.name}" { capabilities = ["create"] }
+    path "${vault_mount.pki.path}*" { capabilities = ["read", "list"] }
+    path "${vault_mount.pki.path}/sign/${vault_pki_secret_backend_role.coven.name}" { capabilities = ["create", "update"] }
+    path "${vault_mount.pki.path}/issue/${vault_pki_secret_backend_role.coven.name}" { capabilities = ["create"] }
   EOT
   )
 }
@@ -50,7 +50,7 @@ resource "vault_kubernetes_auth_backend_role" "cert_manager" {
   backend                          = vault_auth_backend.kubernetes.path
   role_name                        = "cert-manager"
   bound_service_account_names      = [kubernetes_service_account_v1.vault_issuer.metadata[0].name]
-  bound_service_account_namespaces = [local.namespaces.cert_manager]
+  bound_service_account_namespaces = [var.namespaces.cert_manager]
   token_policies                   = [vault_policy.pki_issuer.name]
 }
 
@@ -59,7 +59,7 @@ resource "vault_kubernetes_auth_backend_role" "cert_manager" {
 resource "kubernetes_service_account_v1" "vault_issuer" {
   metadata {
     name      = "vault-issuer"
-    namespace = local.namespaces.cert_manager
+    namespace = var.namespaces.cert_manager
   }
 
   automount_service_account_token = false
@@ -68,7 +68,7 @@ resource "kubernetes_service_account_v1" "vault_issuer" {
 resource "kubernetes_role_v1" "vault_issuer" {
   metadata {
     name      = "vault-issuer"
-    namespace = local.namespaces.cert_manager
+    namespace = var.namespaces.cert_manager
   }
 
   rule {
@@ -82,13 +82,13 @@ resource "kubernetes_role_v1" "vault_issuer" {
 resource "kubernetes_role_binding_v1" "vault_issuer" {
   metadata {
     name      = "vault-issuer"
-    namespace = local.namespaces.cert_manager
+    namespace = var.namespaces.cert_manager
   }
 
   subject {
     kind      = "ServiceAccount"
     name      = "cert-manager"
-    namespace = local.namespaces.cert_manager
+    namespace = var.namespaces.cert_manager
   }
 
   role_ref {
@@ -107,8 +107,8 @@ resource "kubernetes_manifest" "vault_cluster_issuer" {
     }
     spec = {
       vault = {
-        server = "http://vault.vault.svc.cluster.local:8200"
-        path   = "pki/sign/${vault_pki_secret_backend_role.coven.name}"
+        server = local.vault_internal_url
+        path   = "${vault_mount.pki.path}/sign/${vault_pki_secret_backend_role.coven.name}"
         auth = {
           kubernetes = {
             role      = vault_kubernetes_auth_backend_role.cert_manager.role_name

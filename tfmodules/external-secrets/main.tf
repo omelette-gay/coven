@@ -28,7 +28,7 @@ resource "kubernetes_namespace_v1" "external_secrets" {
 resource "helm_release" "external_secrets" {
   name       = "external-secrets"
   namespace  = kubernetes_namespace_v1.external_secrets.metadata[0].name
-  repository = "https://charts.external-secrets.io/"
+  repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
   version    = "2.15.0"
   atomic     = true

@@ -4,9 +4,13 @@ variable "namespace" {
   default     = "keycloak"
 }
 
-variable "host" {
-  description = "Hostname for Keycloak, which serves it under /auth"
+variable "url" {
+  description = "Keycloak's base URL, including the path it's served under, e.g. https://auth.coven.omelette.gay/auth"
   type        = string
+  validation {
+    condition     = can(regex("^https://[^/]+/[^/].*[^/]$", var.url))
+    error_message = "url must start with https://, include a path such as /auth, and have no trailing slash."
+  }
 }
 
 variable "cluster_issuer" {
@@ -15,9 +19,8 @@ variable "cluster_issuer" {
 }
 
 variable "bootstrap_admin_username" {
-  description = "Username of the temporary admin Keycloak creates on its first start, if bootstrap_admin_password is set"
+  description = "Username of the temporary admin Keycloak creates on its first start, if bootstrap_admin_password is set. The platform stack's root logs in as it for its first apply"
   type        = string
-  default     = "temp-admin"
 }
 
 variable "bootstrap_admin_password" {
@@ -25,4 +28,9 @@ variable "bootstrap_admin_password" {
   type        = string
   default     = null
   sensitive   = true
+}
+
+variable "backup_credentials_secret" {
+  description = "Secret holding the GCP service account key the database backs up with, which the platform stack syncs from Vault. Backups fail until it exists"
+  type        = string
 }

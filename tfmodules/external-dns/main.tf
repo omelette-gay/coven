@@ -10,10 +10,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
     }
-    vault = {
-      source  = "hashicorp/vault"
-      version = ">= 5.10.1"
-    }
   }
 }
 
@@ -47,7 +43,7 @@ locals {
 resource "helm_release" "external_dns" {
   name       = "hetzner"
   namespace  = kubernetes_namespace_v1.external_dns.metadata[0].name
-  repository = "https://kubernetes-sigs.github.io/external-dns/"
+  repository = "https://kubernetes-sigs.github.io/external-dns"
   chart      = "external-dns"
   version    = "1.24.0"
   atomic     = true

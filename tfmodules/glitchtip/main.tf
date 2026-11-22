@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.9.0"
 
   required_providers {
     helm = {
@@ -9,10 +9,6 @@ terraform {
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
-    }
-    vault = {
-      source  = "hashicorp/vault"
-      version = ">= 5.10.1"
     }
   }
 }
@@ -46,14 +42,12 @@ module "keycloak_client" {
 
   keycloak_url        = var.keycloak_url
   secret_revision     = var.keycloak_secret_revision
-  realm_id            = var.keycloak_realm
+  keycloak_realm      = var.keycloak_realm
   client_id           = "glitchtip"
   client_name         = "GlitchTip"
-  valid_redirect_uris = ["https://${var.domain}/accounts/oidc/keycloak/login/callback/"]
+  valid_redirect_uris = ["https://${var.host}/accounts/oidc/keycloak/login/callback/"]
   k8s_namespace       = kubernetes_namespace_v1.this.metadata[0].name
   k8s_secret_name     = "glitchtip-oidc"
-
-  depends_on = [kubernetes_namespace_v1.this]
 }
 
 module "object_store" {
@@ -65,8 +59,6 @@ module "object_store" {
 
   vault_kv_mountpoint           = var.vault_kv_mountpoint
   vault_kubernetes_auth_backend = var.vault_kubernetes_auth_backend
-
-  depends_on = [kubernetes_namespace_v1.this]
 }
 
 resource "kubernetes_manifest" "block_metrics_path" {
@@ -101,7 +93,7 @@ resource "helm_release" "this" {
     yamlencode({
       glitchtip = {
         existingSecret = module.secret_key.k8s_secret_name
-        domain         = "https://${var.domain}"
+        domain         = "https://${var.host}"
       }
 
       extraEnvVars = [
@@ -165,7 +157,7 @@ resource "helm_release" "this" {
         },
         {
           name  = "EMAIL_URL",
-          value = "smtp://mail.mail.svc.cluster.local:587"
+          value = "smtp://${var.smtp_host}:${var.smtp_port}"
         },
         {
           name  = "DEFAULT_FROM_EMAIL",
@@ -180,14 +172,14 @@ resource "helm_release" "this" {
           "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd,${kubernetes_namespace_v1.this.metadata[0].name}-block-metrics-path@kubernetescrd"
         }
         hosts = [{
-          host = var.domain
+          host = var.host
           paths = [{
             path     = "/"
             pathType = "Prefix"
           }]
         }]
         tls = [{
-          hosts      = [var.domain]
+          hosts      = [var.host]
           secretName = "glitchtip-tls"
         }]
       }
@@ -335,13 +327,10 @@ resource "kubernetes_manifest" "probe" {
     spec = {
       interval = "60s"
       module   = "http_2xx"
-      prober = {
-        url  = "blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115"
-        path = "/probe"
-      }
+      prober   = var.blackbox_prober
       targets = {
         staticConfig = {
-          static = ["https://${var.domain}/"]
+          static = ["https://${var.host}/"]
         }
       }
     }

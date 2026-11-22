@@ -1,8 +1,8 @@
-variable "domain" {
+variable "host" {
   description = "Hostname used by GlitchTip for generated URLs and ingress"
   type        = string
   validation {
-    condition     = can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.domain))
+    condition     = can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.host))
     error_message = "domain must be a bare hostname, without https:// or a trailing slash."
   }
 }
@@ -10,7 +10,6 @@ variable "domain" {
 variable "cluster_issuer" {
   description = "cert-manager ClusterIssuer used for the GlitchTip TLS certificate"
   type        = string
-  default     = "letsencrypt"
 }
 
 variable "keycloak_url" {
@@ -25,7 +24,6 @@ variable "keycloak_url" {
 variable "keycloak_realm" {
   description = "Keycloak realm used for GlitchTip SSO"
   type        = string
-  default     = "omelette.gay"
 }
 
 variable "keycloak_secret_revision" {
@@ -61,7 +59,6 @@ variable "postgresql_storage_size" {
 variable "sender_email" {
   description = "Email address GlitchTip sends emails from"
   type        = string
-  default     = "glitchtip@coven.local"
   validation {
     condition     = can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", var.sender_email))
     error_message = "sender_email must be an email address."
@@ -78,4 +75,22 @@ variable "vault_kubernetes_auth_backend" {
   description = "Path of Vault's Kubernetes auth method. Pass the auth backend's path from the stack that makes it, so the roles are created after it"
   type        = string
   default     = "kubernetes"
+}
+
+variable "smtp_host" {
+  description = "SMTP relay GlitchTip sends mail through (the platform stack's outbound mail)"
+  type        = string
+}
+
+variable "smtp_port" {
+  description = "Port of the SMTP relay"
+  type        = number
+}
+
+variable "blackbox_prober" {
+  description = "Blackbox exporter that probes GlitchTip over HTTPS (installed by the bootstrap stack)"
+  type = object({
+    url  = string
+    path = string
+  })
 }

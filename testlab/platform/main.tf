@@ -68,17 +68,42 @@ ephemeral "vault_kv_secret_v2" "keycloak" {
   name  = "gitops/keycloak-master-credentials"
 }
 
+# Names the bootstrap and platform stacks share. Keep them the same as in ../bootstrap/main.tf.
 locals {
-  keycloak_url       = "https://auth.coven.local"
+  cluster_domain = "coven.local"
+  grafana_host   = "monitoring.${local.cluster_domain}"
+  vault_host     = "vault.${local.cluster_domain}"
+
+  keycloak_server    = "https://auth.${local.cluster_domain}"
   keycloak_base_path = "/auth"
+  keycloak_url       = "${local.keycloak_server}${local.keycloak_base_path}"
+  keycloak_realm     = "omelette.gay"
+  # the temporary admin Keycloak creates on a fresh cluster, which platform's first apply logs in as
+  keycloak_bootstrap_admin_username = "temp-admin"
+
+  namespaces = {
+    monitoring       = "monitoring"
+    longhorn         = "longhorn-system"
+    cert_manager     = "cert-manager"
+    cnpg             = "cnpg-system"
+    vault            = "vault"
+    external_secrets = "external-secrets"
+    keycloak         = "keycloak"
+  }
+
+  # Made by platform, used by bootstrap's services
+  longhorn_backup_job_name           = "nightly-backup"
+  longhorn_backup_credentials_secret = "gcp-backup-creds"
+  keycloak_backup_credentials_secret = "keycloak-gcp-backup-creds"
+  grafana_oauth_secret               = "grafana-keycloak-creds"
 }
 
 provider "keycloak" {
-  url                      = local.keycloak_url
+  url                      = local.keycloak_server
   base_path                = local.keycloak_base_path
   realm                    = "master"
   client_id                = "admin-cli"
-  username                 = var.keycloak_bootstrap_admin_password == null ? ephemeral.vault_kv_secret_v2.keycloak[0].data["username"] : "temp-admin"
+  username                 = var.keycloak_bootstrap_admin_password == null ? ephemeral.vault_kv_secret_v2.keycloak[0].data["username"] : local.keycloak_bootstrap_admin_username
   password                 = var.keycloak_bootstrap_admin_password == null ? ephemeral.vault_kv_secret_v2.keycloak[0].data["password"] : var.keycloak_bootstrap_admin_password
   tls_insecure_skip_verify = true
 }
@@ -86,17 +111,23 @@ provider "keycloak" {
 module "platform" {
   source = "../../tfmodules/stack-platform"
 
-  keycloak_url   = "${local.keycloak_url}${local.keycloak_base_path}"
+  keycloak_url                       = local.keycloak_url
+  namespaces                         = local.namespaces
+  grafana_host                       = local.grafana_host
+  vault_host                         = local.vault_host
+  keycloak_realm                     = local.keycloak_realm
+  longhorn_backup_job_name           = local.longhorn_backup_job_name
+  longhorn_backup_credentials_secret = local.longhorn_backup_credentials_secret
+  keycloak_backup_credentials_secret = local.keycloak_backup_credentials_secret
+  grafana_oauth_secret               = local.grafana_oauth_secret
+
   cluster_issuer = "vault"
 
-  glitchtip_domain               = "errors.coven.local"
+  glitchtip_host                 = "errors.coven.local"
   glitchtip_postgresql_instances = 1
   glitchtip_sender_email         = "glitchtip@coven.local"
 
-  cluster_domain     = "coven.local"
-  keycloak_realm     = "omelette.gay"
-  grafana_host       = "monitoring.coven.local"
-  vault_host         = "vault.coven.local"
+  cluster_domain     = local.cluster_domain
   kubernetes_api_url = "https://192.168.57.100:6443"
   insecure_tls       = true
 
