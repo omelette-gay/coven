@@ -7,11 +7,17 @@ on:
         description: The root module to apply, e.g. coven/bootstrap
         required: true
         type: string
+      timeout-minutes:
+        description: Must be longer than the longest chain of Helm timeouts in the stack, so a Helm upgrade isn't killed part way through
+        required: false
+        type: number
+        default: 60
 
 jobs:
   tfapply:
     name: apply ${{ inputs.stack }}
     runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
     permissions:
       contents: read
       id-token: write
