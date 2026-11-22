@@ -96,7 +96,7 @@ variable "glitchtip_keycloak_secret_revision" {
 }
 
 variable "grafana_keycloak_secret_revision" {
-  description = "Increase this to rotate Grafana's Keycloak client secret. Grafana reads it when it starts, so restart it afterwards"
+  description = "Increase this to rotate Grafana's Keycloak client secret. Grafana is restarted to read the new one"
   type        = number
   default     = 1
   validation {

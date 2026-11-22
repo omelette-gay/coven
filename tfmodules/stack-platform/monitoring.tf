@@ -1,8 +1,7 @@
 # kube-prometheus-stack and Grafana are installed by bootstrap. This is what needs Vault or Keycloak, and the logging
 # stack, which nothing in bootstrap depends on.
 
-# Grafana's SSO client. Grafana's Helm values in bootstrap already point at this client and its Secret, and Grafana reads
-# the Secret when it starts, so restart Grafana after rotating it.
+# Grafana's SSO client. Grafana's Helm values in bootstrap already point at this client and its Secret.
 module "grafana_sso" {
   source = "../keycloak-client"
 
@@ -26,6 +25,22 @@ locals {
     vault    = { namespace = var.namespaces.vault, url = "https://${var.vault_host}/ui/vault/auth" }
     grafana  = { namespace = var.namespaces.monitoring, url = "https://${var.grafana_host}/login" }
   }
+}
+
+# Grafana reads its SSO Secret only when it starts, so this annotation on its pods restarts it when the secret rotates.
+# Grafana is installed by bootstrap's kube-prometheus-stack (release kube-prometheus); Helm leaves the annotation alone.
+resource "kubernetes_annotations" "grafana_sso_revision" {
+  api_version = "apps/v1"
+  kind        = "Deployment"
+  metadata {
+    name      = "kube-prometheus-grafana"
+    namespace = var.namespaces.monitoring
+  }
+  template_annotations = {
+    "omelette.gay/sso-secret-revision" = tostring(var.grafana_keycloak_secret_revision)
+  }
+
+  depends_on = [module.grafana_sso]
 }
 
 resource "kubernetes_manifest" "probe" {

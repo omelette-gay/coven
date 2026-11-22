@@ -27,5 +27,5 @@ be older than this chart's operator: Renovate puts major updates to the two in o
 ## Grafana
 
 Grafana logs people in through Keycloak only. Its client and the `grafana-keycloak-creds` Secret are made by the platform
-stack; until then the Secret is missing and SSO doesn't work, but Grafana still starts. Grafana reads the Secret when it
-starts, so restart it after the client secret rotates.
+stack; until then the Secret is missing and SSO doesn't work, but Grafana still starts. Grafana reads the Secret when it starts; the platform stack
+restarts it when the client secret rotates.
