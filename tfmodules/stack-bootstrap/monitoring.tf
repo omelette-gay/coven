@@ -10,7 +10,7 @@ resource "kubernetes_namespace_v1" "monitoring" {
 
 # The Prometheus Operator's CRDs, on their own so they can be installed before Longhorn, whose ServiceMonitor needs them,
 # while kube-prometheus-stack needs Longhorn for its volumes. Keep this in step with the operator version of
-# kube-prometheus-stack below: the CRDs must never be older than the chart (Renovate groups their major updates). The
+# kube-prometheus-stack (tfmodules/kube-prometheus-stack): the CRDs must never be older than the chart (Renovate groups their major updates). The
 # chart keeps the CRDs if the release is ever deleted.
 resource "helm_release" "prometheus_operator_crds" {
   name       = "prometheus-operator-crds"
@@ -42,98 +42,20 @@ locals {
   ])
 }
 
-resource "helm_release" "kube_prometheus_stack" {
-  name       = "kube-prometheus"
-  namespace  = kubernetes_namespace_v1.monitoring.metadata[0].name
-  repository = "https://prometheus-community.github.io/helm-charts"
-  chart      = "kube-prometheus-stack"
-  version    = "93.3.0"
-  atomic     = true
-  wait       = true
-  timeout    = 900
+module "kube_prometheus_stack" {
+  source = "../kube-prometheus-stack"
 
-  values = [templatefile("${path.module}/values/kube-prometheus-stack.yaml.tftpl", {
-    cluster_domain     = var.cluster_domain
-    cluster_issuer     = var.cluster_issuer
-    grafana_host       = local.grafana_host
-    keycloak_realm_url = "${local.keycloak_url}/realms/omelette.gay"
-    insecure_tls       = var.cluster_issuer == "vault"
-    smtp_relay         = local.smtp_relay
-    host_aliases       = var.host_aliases
-    controller_ips     = local.controller_ips
-  })]
+  namespace          = kubernetes_namespace_v1.monitoring.metadata[0].name
+  cluster_domain     = var.cluster_domain
+  grafana_host       = var.grafana_host
+  cluster_issuer     = var.cluster_issuer
+  keycloak_realm_url = "https://${var.keycloak_host}/auth/realms/${var.keycloak_realm}"
+  insecure_tls       = var.insecure_tls
+  smtp_relay         = var.smtp_relay
+  host_aliases       = var.host_aliases
+  controller_ips     = local.controller_ips
 
-  depends_on = [helm_release.prometheus_operator_crds, helm_release.longhorn]
-}
-
-resource "helm_release" "blackbox_exporter" {
-  name       = "blackbox-exporter"
-  namespace  = kubernetes_namespace_v1.monitoring.metadata[0].name
-  repository = "https://prometheus-community.github.io/helm-charts"
-  chart      = "prometheus-blackbox-exporter"
-  version    = "11.21.3"
-  atomic     = true
-  wait       = true
-
-  values = [yamlencode({
-    serviceMonitor = {
-      enabled     = true
-      selfMonitor = { enabled = true }
-    }
-  })]
-
-  depends_on = [helm_release.prometheus_operator_crds]
-}
-
-resource "helm_release" "helm_exporter" {
-  name       = "helm-exporter"
-  namespace  = kubernetes_namespace_v1.monitoring.metadata[0].name
-  repository = "https://shanestarcher.com/helm-charts/"
-  chart      = "helm-exporter"
-  version    = "1.4.0+e2eee28"
-  atomic     = true
-  wait       = true
-
-  values = [yamlencode({
-    serviceMonitor   = { create = true }
-    grafanaDashboard = { enabled = true }
-  })]
-
-  depends_on = [helm_release.prometheus_operator_crds]
-}
-
-# Traefik is installed by k3s, and configured through this k3s custom resource: metrics, and the blockpath plugin that
-# the services here use to hide their metrics endpoints from the web. The CRD comes with k3s, so it exists before this
-# stack is applied.
-resource "kubernetes_manifest" "traefik_config" {
-  manifest = {
-    apiVersion = "helm.cattle.io/v1"
-    kind       = "HelmChartConfig"
-    metadata = {
-      name      = "traefik"
-      namespace = "kube-system"
-    }
-    spec = {
-      # chomp keeps the text exactly as Ansible wrote it, so Traefik isn't redeployed
-      valuesContent = chomp(<<-EOT
-        additionalArguments:
-          - "--api.dashboard=true"
-          - "--api.insecure=true"
-          - "--providers.kubernetesingress.allowemptyservices=true"
-
-        experimental:
-          plugins:
-            plugin-blockpath:
-              moduleName: github.com/traefik/plugin-blockpath
-              version: v0.2.1
-
-        metrics:
-          prometheus:
-            enabled: true
-            serviceMonitor:
-              enabled: true
-      EOT
-      )
-    }
-  }
+  # Prometheus, Alertmanager and Grafana's volumes must get Longhorn's storage class, which is the default only once
+  # Longhorn is installed
+  depends_on = [helm_release.prometheus_operator_crds, module.longhorn]
 }

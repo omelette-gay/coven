@@ -1,0 +1,31 @@
+groups:
+  - name: k3s-datastore-backup
+    rules:
+      # the backup script reports its own interval, so this follows k3s_backup_interval_hours without
+      # needing to know it
+      - alert: K3sDatastoreBackupStale
+        expr: time() - k3s_datastore_backup_last_success_timestamp_seconds > 2 * k3s_datastore_backup_interval_seconds
+        for: 15m
+        annotations:
+          summary: k3s datastore backup is out of date
+          description: >-
+            The last successful k3s datastore backup on {{ $labels.instance }} was
+            {{ $value | humanizeDuration }} ago, more than twice the backup interval. Check
+            `systemctl status k3s-datastore-backup` and `journalctl -u k3s-datastore-backup` on the controller.
+        labels:
+          severity: warning
+
+      # The metric is kept across reboots (see k3s-datastore-backup-metrics.service), so it is only absent if
+      # a backup has never succeeded on this host, or node-exporter isn't being scraped. Ansible starts the
+      # first backup as soon as it is set up, so an hour is plenty of time for that. The testlab doesn't take
+      # backups, so this will always fire there, but testlab alerts aren't sent anywhere.
+      - alert: K3sDatastoreBackupMissing
+        expr: absent(k3s_datastore_backup_last_success_timestamp_seconds)
+        for: 1h
+        annotations:
+          summary: k3s datastore backup has never succeeded
+          description: >-
+            There is no record of a successful k3s datastore backup. Check
+            `systemctl status k3s-datastore-backup` and `journalctl -u k3s-datastore-backup` on the controller.
+        labels:
+          severity: warning

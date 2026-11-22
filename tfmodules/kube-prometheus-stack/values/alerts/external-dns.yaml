@@ -1,0 +1,18 @@
+groups:
+  - name: external-dns
+    rules:
+      - alert: ExternalDnsErrors
+        annotations:
+          description: |
+            External DNS ({{ $labels.service }}) is unable to manage DNS records for services in the cluster.
+          summary: External DNS is reporting errors
+        expr: |
+          sum by (service) (
+            rate(external_dns_registry_errors_total{}[5m]) + rate(external_dns_source_errors_total{}[5m]) 
+            + rate(external_dns_webhook_provider_adjustendpoints_errors_total{}[5m]) 
+            + rate(external_dns_webhook_provider_applychanges_errors_total{}[5m]) 
+            + rate(external_dns_webhook_provider_records_errors_total{}[5m])
+          ) > 0
+        for: 10m
+        labels:
+          severity: critical
