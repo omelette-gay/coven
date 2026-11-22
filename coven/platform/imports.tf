@@ -344,3 +344,53 @@ import {
   to = module.platform.hcloud_zone_rrset.extra["grimhilde_a"]
   id = "798597/grimhilde.gs/A"
 }
+
+import {
+  to = module.platform.hcloud_zone_rrset.dkim[0]
+  id = "798597/mail._domainkey.coven/TXT"
+}
+
+import {
+  to = module.platform.hcloud_zone_rrset.spf[0]
+  id = "798597/coven/TXT"
+}
+
+import {
+  to = module.platform.hcloud_zone_rrset.dmarc[0]
+  id = "798597/_dmarc.coven/TXT"
+}
+
+import {
+  to = module.platform.kubernetes_namespace_v1.mail
+  id = "mail"
+}
+
+import {
+  to = module.platform.module.dkim_key.kubernetes_service_account_v1.reader
+  id = "mail/outbound-mail-dkim"
+}
+
+import {
+  to = module.platform.module.dkim_key.vault_policy.reader
+  id = "outbound-mail-dkim"
+}
+
+import {
+  to = module.platform.module.dkim_key.vault_kubernetes_auth_backend_role.reader
+  id = "auth/kubernetes/role/outbound-mail-dkim"
+}
+
+import {
+  to = module.platform.module.dkim_key.kubernetes_manifest.secret_store
+  id = "apiVersion=external-secrets.io/v1,kind=SecretStore,namespace=mail,name=vault-outbound-mail-dkim"
+}
+
+import {
+  to = module.platform.module.dkim_key.kubernetes_manifest.external_secret[0]
+  id = "apiVersion=external-secrets.io/v1,kind=ExternalSecret,namespace=mail,name=dkim"
+}
+
+import {
+  to = module.platform.helm_release.mail
+  id = "mail/mail"
+}
