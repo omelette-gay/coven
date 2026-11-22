@@ -49,9 +49,8 @@ resource "helm_release" "mariadb_operator" {
         certManager = {
           enabled = true
           issuerRef = {
-            name      = var.cluster_issuer
-            namespace = "cert-manager"
-            kind      = "ClusterIssuer"
+            name = var.cluster_issuer
+            kind = "ClusterIssuer"
           }
         }
       }
