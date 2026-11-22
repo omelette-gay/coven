@@ -21,6 +21,16 @@ import {
 }
 
 import {
+  to = module.bootstrap.kubernetes_namespace_v1.vault
+  id = "vault"
+}
+
+import {
+  to = module.bootstrap.kubernetes_namespace_v1.external_secrets
+  id = "external-secrets"
+}
+
+import {
   to = module.bootstrap.helm_release.longhorn
   id = "longhorn-system/longhorn"
 }
@@ -63,4 +73,19 @@ import {
 import {
   to = module.bootstrap.helm_release.plugin_barman_cloud
   id = "cnpg-system/plugin-barman-cloud"
+}
+
+import {
+  to = module.bootstrap.kubernetes_manifest.vault_block_metrics_path
+  id = "apiVersion=traefik.io/v1alpha1,kind=Middleware,namespace=vault,name=block-metrics-path"
+}
+
+import {
+  to = module.bootstrap.helm_release.vault
+  id = "vault/vault"
+}
+
+import {
+  to = module.bootstrap.helm_release.external_secrets
+  id = "external-secrets/external-secrets"
 }
