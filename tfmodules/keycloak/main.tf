@@ -120,6 +120,8 @@ resource "kubernetes_secret_v1" "keycloak_bootstrap_admin" {
 locals {
   # renovate: datasource=github-releases depName=aerogear/keycloak-metrics-spi
   keycloak_metrics_spi_version = "7.0.0"
+  # renovate: datasource=docker depName=alpine
+  init_image_tag = "3.24.4"
 }
 
 # Keycloak itself. The realm, groups, clients and Terraform's own admin user are made by platform, through the keycloak
@@ -182,7 +184,7 @@ resource "helm_release" "keycloak" {
     extraServiceMonitor = { enabled = true }
     extraInitContainers = <<-EOT
       - name: metrics-spi-provider
-        image: alpine:latest
+        image: alpine:${local.init_image_tag}
         imagePullPolicy: IfNotPresent
         command:
           - sh
