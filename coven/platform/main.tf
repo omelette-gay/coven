@@ -59,6 +59,10 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.1"
     }
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.6"
+    }
   }
 }
 

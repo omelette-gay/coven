@@ -33,6 +33,10 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.1"
     }
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.6"
+    }
     hcloud = {
       source  = "hetznercloud/hcloud"
       version = "~> 1.70"
@@ -132,4 +136,10 @@ module "platform" {
   insecure_tls       = true
 
   loki_chunks_cache_memory = 1024
+
+  # 2 after the migration rehearsal left Keycloak with different client secrets to Vault and Grafana: the first apply
+  # wrote some of them and then failed (see the Keycloak certificate check in tfmodules/stack-platform/vault.tf), and
+  # the second wrote new ones to only the other side
+  vault_keycloak_secret_revision   = 2
+  grafana_keycloak_secret_revision = 2
 }

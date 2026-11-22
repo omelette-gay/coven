@@ -185,6 +185,32 @@ resource "keycloak_group_roles" "admins_vault" {
   exhaustive = false
 }
 
+# On the testlab, Keycloak's certificate comes from Vault's own CA, and Vault checks Keycloak's discovery URL against
+# that CA when its config is written. On a fresh cluster Keycloak has no certificate from the CA until cert-manager
+# issues one, once the Vault ClusterIssuer exists, so wait for it here or Vault rejects the config. (After the CA is
+# replaced, existing certificates have to be re-issued by hand, as they're still valid.)
+data "http" "keycloak_discovery" {
+  count = var.insecure_tls ? 1 : 0
+
+  url         = "${var.keycloak_url}/realms/${keycloak_realm.omelette_gay.realm}/.well-known/openid-configuration"
+  ca_cert_pem = vault_pki_secret_backend_root_cert.cluster.certificate
+
+  retry {
+    attempts     = 60
+    min_delay_ms = 10000
+    max_delay_ms = 10000
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = self.status_code == 200
+      error_message = "Keycloak's discovery URL didn't return 200."
+    }
+  }
+
+  depends_on = [kubernetes_manifest.vault_cluster_issuer]
+}
+
 resource "vault_jwt_auth_backend" "keycloak" {
   path                  = "keycloak"
   type                  = "oidc"
@@ -200,6 +226,8 @@ resource "vault_jwt_auth_backend" "keycloak" {
     max_lease_ttl     = "8h"
     token_type        = "default-service"
   }
+
+  depends_on = [data.http.keycloak_discovery]
 }
 
 resource "vault_jwt_auth_backend_role" "keycloak_admin" {
