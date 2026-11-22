@@ -32,9 +32,11 @@ locals {
   files_bucket = "vikunja"
 }
 
+# Names that are global rather than per namespace (Vault paths and roles, the Keycloak client ID and the default backup
+# path) are built from the namespace, so a second install in another namespace doesn't clash with the first
 resource "kubernetes_namespace_v1" "this" {
   metadata {
-    name = "vikunja"
+    name = var.namespace
   }
 }
 
@@ -44,11 +46,11 @@ module "service_secret" {
   source = "../generated-secret"
 
   keys                     = { secret = 64 }
-  vault_secret_name        = "vikunja/service-secret"
+  vault_secret_name        = "${local.namespace}/service-secret"
   k8s_secret_name          = "vikunja-service-secret"
   k8s_namespace            = local.namespace
   k8s_service_account_name = "vikunja-service-secret"
-  vault_role_name          = "vikunja-service-secret"
+  vault_role_name          = "${local.namespace}-service-secret"
 }
 
 # Vikunja can't require a role or group claim, so anyone in the realm can log in and gets their own empty account.
@@ -59,7 +61,7 @@ module "keycloak_client" {
   keycloak_url        = var.keycloak_url
   secret_revision     = var.keycloak_secret_revision
   realm_id            = var.keycloak_realm
-  client_id           = "vikunja"
+  client_id           = local.namespace
   client_name         = "Vikunja"
   valid_redirect_uris = ["https://${var.domain}/auth/openid/${local.oidc_provider}"]
   k8s_namespace       = local.namespace
@@ -74,7 +76,7 @@ module "backup_credentials" {
   k8s_secret_name          = "vikunja-gcp-backup-creds"
   k8s_namespace            = local.namespace
   k8s_service_account_name = "vikunja-gcp-backup-creds"
-  vault_role_name          = "vikunja-gcp-backup-creds"
+  vault_role_name          = "${local.namespace}-gcp-backup-creds"
 }
 
 resource "helm_release" "db" {
@@ -113,7 +115,7 @@ resource "helm_release" "db" {
         provider = "google"
         google = {
           bucket = var.backup_bucket
-          path   = var.backup_path
+          path   = coalesce(var.backup_path, "/cnpg/${local.namespace}/")
         }
         secret = {
           create = false

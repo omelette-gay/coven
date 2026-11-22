@@ -1,3 +1,13 @@
+variable "namespace" {
+  description = "Kubernetes namespace to create and install Vikunja into. Also used for the Vault secret path and roles, the Keycloak client ID and the default backup path, so a second install in another namespace doesn't clash with the first. Changing it on an existing install creates a new, empty one"
+  type        = string
+  default     = "vikunja"
+  validation {
+    condition     = can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.namespace)) && length(var.namespace) <= 63
+    error_message = "namespace must be a DNS label (lowercase letters, digits and hyphens, at most 63 characters)."
+  }
+}
+
 variable "domain" {
   description = "Hostname Vikunja is served on"
   type        = string
@@ -65,11 +75,11 @@ variable "backup_bucket" {
 }
 
 variable "backup_path" {
-  description = "Path in backup_bucket for the database's backups. Barman won't archive into a path that already holds another cluster's backups, so each environment needs its own"
+  description = "Path in backup_bucket for the database's backups. Barman won't archive into a path that already holds another cluster's backups, so each environment and install needs its own. Defaults to /cnpg/<namespace>/"
   type        = string
-  default     = "/cnpg/vikunja/"
+  default     = null
   validation {
-    condition     = startswith(var.backup_path, "/") && endswith(var.backup_path, "/")
+    condition     = var.backup_path == null || (startswith(coalesce(var.backup_path, "/"), "/") && endswith(coalesce(var.backup_path, "/"), "/"))
     error_message = "backup_path must start and end with a slash, e.g. /cnpg/vikunja/."
   }
 }
@@ -93,7 +103,6 @@ variable "longhorn_recurring_job_name" {
 variable "sender_email" {
   description = "Email address Vikunja sends emails from"
   type        = string
-  default     = "vikunja@coven.local"
   validation {
     condition     = can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", var.sender_email))
     error_message = "sender_email must be an email address."

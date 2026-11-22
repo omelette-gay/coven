@@ -4,6 +4,7 @@ module "vikunja" {
   domain         = "tasks.coven.local"
   cluster_issuer = "vault"
   keycloak_url   = "https://auth.coven.local/auth"
+  sender_email   = "vikunja@coven.local"
 
   # The testlab has a single node, so a standby wouldn't add anything
   postgresql_instances = 1

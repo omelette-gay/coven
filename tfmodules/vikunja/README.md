@@ -15,8 +15,8 @@ or take over an account.
 ## Backups
 
 - **Database:** the CNPG Barman Cloud plugin archives WAL continuously and takes a base backup at 09:00 and 21:00 to
-  `gs://<backup_bucket><backup_path>`. Each environment needs its own `backup_path`. See
-  [backups and recovery](../../docs/backups-and-recovery.md).
+  `gs://<backup_bucket><backup_path>` (`/cnpg/<namespace>/` by default). Each environment needs its own
+  `backup_path`. See [backups and recovery](../../docs/backups-and-recovery.md).
 - **Attachments:** these are stored in the `vikunja` bucket of a RustFS object store in the namespace (the
   [object-store](../object-store/) module). RustFS's volume is backed up by the Longhorn recurring job in
   `longhorn_recurring_job_name`, which has to be set before first deploying.
@@ -32,8 +32,9 @@ Redis is configured. RustFS itself is also a single pod.
 
 - **Keycloak client secret:** increase `keycloak_secret_revision` by one. It writes a new secret to Keycloak and the
   `vikunja-oidc` Secret, and changes a pod annotation so Vikunja restarts and reads it.
-- **`service.secret`:** this signs login sessions. It's generated into Vault at `vikunja/service-secret`; increase the
-  `service_secret` module's `revision` and restart Vikunja. Everyone is logged out.
+- **`service.secret`:** this signs login sessions. It's generated into Vault at `<namespace>/service-secret`
+  (`vikunja/service-secret` by default); increase the `service_secret` module's `revision` and restart Vikunja.
+  Everyone is logged out.
 
 ## MCP
 
