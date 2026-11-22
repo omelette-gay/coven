@@ -1,0 +1,4 @@
+apiVersion: v2
+name: letsencrypt-issuer
+description: The Let's Encrypt ClusterIssuer, as a chart so the bootstrap stack can create it in the same apply as cert-manager (see ADR 002)
+version: 1.0.0
