@@ -1,3 +1,10 @@
+variable "keycloak_bootstrap_admin_password" {
+  description = "Only set on the first apply of a fresh cluster, e.g. with TF_VAR_keycloak_bootstrap_admin_password (see docs/bootstrapping.md)"
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
 variable "project_id" {
   description = "The project ID"
   type        = string
@@ -58,4 +65,10 @@ provider "kubernetes" {
 
 module "bootstrap" {
   source = "../../tfmodules/stack-bootstrap"
+
+  cluster_domain     = "coven.omelette.gay"
+  cluster_issuer     = "letsencrypt"
+  letsencrypt_server = "https://acme-v02.api.letsencrypt.org/directory"
+
+  keycloak_bootstrap_admin_password = var.keycloak_bootstrap_admin_password
 }
