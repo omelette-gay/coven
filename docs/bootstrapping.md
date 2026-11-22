@@ -4,36 +4,59 @@ When we first deploy something, there will often have to be something a bit non-
 e.g., because the automation user accounts aren't set up. This guide documents what those
 might be.
 
-## First deploy of SSO
+## Building the cluster services from scratch
 
-When first deploying the SSO configuration, you will need to specify the initial user for Keycloak
-on the command line and enable the bootstrapping flag:
+This is how the testlab is built, and how coven would be rebuilt without restoring its datastore (see
+[ADR 002](./adr/002-three-stack-terraform-for-cluster-configuration.md#building-a-fresh-cluster)). The examples are for
+the testlab; use `--coven` instead of `--local` for coven. If the stacks still have `imports.tf` files from a
+migration, delete them locally first, as there's nothing to import on a fresh cluster.
 
-    uv run ansible-playbook -i INSERT-INVENTORY -e 'bootstrap=true keycloak_username=USERNAME keycloak_password=PASSWORD' plays/configure-cluster.yml
+1. Run the host playbook, so k3s is installed:
 
-You will now be able to go to Keycloak and log in using that username and password. You should change
-this password after bootstrapping as it is stored in plaintext in the config for Keycloak.
+       uv run ansible-playbook -i testlab/inventory plays/configure-hosts.yml
 
-Your initial login will be created in the master realm, which is the realm used for managing the domain. You
-should log in and create yourself a user in the "omelette.gay" realm which is the one that's actually used for
-logging in to things that are not admining Keycloak. This user should also be put in the "admins" group
-so you can log in to Vault using this login.
+2. Get cluster-admin credentials from the node, as Vault and Keycloak don't exist yet, and choose a password for
+   Keycloak's temporary admin. Keep this shell open: both bootstrap and platform need the password.
 
-Once k3s is installed on the server, you will need to authenticate to the cluster with the system user until SSO
-and Vault are fully installed and configured. There is a `bootstrap-auth.sh` script which will set up your local
-k8s credentials to the system user on the box.
+       ./bootstrap-auth.sh --local
+       export TF_VAR_keycloak_bootstrap_admin_password=$(openssl rand -hex 24)
+       ./terraform.sh --local apply bootstrap
 
-On first run, you will error the first time you need to interact with Vault. You will need to go to init Vault with
-`kubectl -n vault exec -it vault-0 -- vault operator init`. On the testlab you may prefer to only have a single unlock
-key for speed: `kubectl -n vault exec -it vault-0 -- vault operator init -key-shares=1 -key-threshold=1`.
+   Keycloak creates a temporary admin, `temp-admin`, in the master realm with that password when it first starts.
 
-You can now log in using your root token, e.g., if in Vagrant: `vault login -address https://vault.coven.local -tls-skip-verify`
-and continue the deploy by re-running Ansible.
+3. Initialise and unseal Vault, and log in with the root token. On the testlab you may prefer a single unseal key for
+   speed (`-key-shares=1 -key-threshold=1`):
 
-Once you are in and can confirm you can sign in to Vault using Keycloak, now revoke the root token:
-`vault token revoke -address https://vault.coven.local -self -tls-skip-verify`.
+       kubectl -n vault exec -it vault-0 -- vault operator init
+       kubectl -n vault exec -it vault-0 -- vault operator unseal
+       vault login -address https://vault.coven.local -tls-skip-verify
 
-In future runs, you will not need to specify the extra vars when running ansible.
+   On coven, also write the Hetzner API token to Vault now (see [external API keys](#external-api-keys)).
+
+4. Apply platform. With the temporary admin's password still set, it logs in to Keycloak as `temp-admin`, and creates
+   the realm, Vault's configuration (including GitHub Actions' access) and Terraform's own Keycloak user,
+   `ansible-automation`:
+
+       ./terraform.sh --local apply platform
+
+5. Give `ansible-automation` a password in Keycloak's master realm (Users, then Credentials), and store it in Vault, so
+   Terraform can log in as it from now on:
+
+       vault kv put -address https://vault.coven.local -tls-skip-verify secret/gitops/keycloak-master-credentials username=ansible-automation password=...
+
+6. Log in to Keycloak as `temp-admin`, create yourself a user in the `omelette.gay` realm (the one used to log in to
+   everything other than Keycloak's own admin), and add it to the `admins` group. Check you can log in with
+   `./login.sh --local`.
+
+7. Delete `temp-admin` in the master realm, unset the password, and apply bootstrap again, which deletes the Secret
+   that held it. Then revoke the root token, and apply apps:
+
+       unset TF_VAR_keycloak_bootstrap_admin_password
+       ./terraform.sh --local apply bootstrap
+       vault token revoke -address https://vault.coven.local -tls-skip-verify -self
+       ./terraform.sh --local apply apps
+
+   On coven, CI takes over from here.
 
 ## Deploying to physical hardware on Hetzner
 
@@ -71,7 +94,7 @@ This will allow Ansible to then run (this may be automated in future).
 ## External API keys
 
 You will need to [create an API token](https://docs.hetzner.com/dns-console/dns/general/api-access-token/) for DNS in Hetzner
-and store this in Vault under the `gitops/hetzner` secret in the key `api_key`.
+and store this in Vault under the `gitops/hetzner` secret in the key `api_token`.
 
 ## Initialising new GCP account / project with Terraform
 

@@ -99,7 +99,7 @@ curl -s http://localhost:9093/api/v2/alerts | jq '.[] | {alert: .labels.alertnam
 ```
 
 Find the rule's expression. Our own rules are in `additionalPrometheusRulesMap` in
-[roles/omelette.monitoring/tasks/install_kube-prometheus.yml](../roles/omelette.monitoring/tasks/install_kube-prometheus.yml);
+[tfmodules/stack-bootstrap/values/kube-prometheus-stack.yaml.tftpl](../tfmodules/stack-bootstrap/values/kube-prometheus-stack.yaml.tftpl);
 upstream rules can be found from the cluster:
 
 ```shell
@@ -224,11 +224,11 @@ From strix, you can check the tunnel to the home network with `ping 192.168.178.
 
 ### `VaultIsSealed`
 
-Vault has restarted (e.g. the pod was rescheduled, the node rebooted, or Ansible changed Vault's config) and needs
-unsealing with the offline keys. While it's sealed, External Secrets can't sync, Terraform and Ansible can't run,
+Vault has restarted (e.g. the pod was rescheduled, the node rebooted, or a Terraform change to its config) and needs
+unsealing with the offline keys. While it's sealed, External Secrets can't sync, Terraform can't run,
 and `./login.sh` won't work - so expect `ExternalSecretSyncError` alongside it.
 
-**This needs a human.** For reference, the procedure is: if Vault was changed by Ansible, restart it first with
+**This needs a human.** For reference, the procedure is: if Vault's config was changed, restart it first with
 `kubectl -n vault delete pod vault-0` (otherwise it'll break itself in the middle of a run), then unseal with
 `kubectl -n vault exec -it vault-0 -- vault operator unseal` (or SSH to the host and run it as root there if you
 can't get k8s credentials). The UI won't be available until it is unsealed.
@@ -361,7 +361,7 @@ kubectl -n external-secrets logs deploy/external-secrets
 ```
 
 Usually Vault is sealed, the Vault role/policy for that namespace is missing, or the secret doesn't exist in Vault.
-The roles are created by `omelette.secrets` (`create_k8s_secret` task) or the `vault-k8s-secret` Terraform module.
+The roles are created by the `vault-k8s-secret` Terraform module.
 
 ### `CertManagerCertNotReady` / `CertManagerCertExpirySoon` / `TraefikTLSCertificatesExpiring`
 
@@ -402,9 +402,9 @@ helm -n <namespace> history <release>
 helm -n <namespace> status <release>
 ```
 
-A release left in a `pending-*` state blocks future upgrades, so the next Ansible/Terraform run will fail. Check the
+A release left in a `pending-*` state blocks future upgrades, so the next Terraform run will fail. Check the
 GitHub Actions run that did the deploy for the error. Recovery is usually `helm rollback`, but confirm with a human
-first, and check whether the release is owned by Ansible, Terraform or an app repo.
+first, and check whether the release is owned by Terraform or an app repo.
 
 ### `NodeNeedsRestarting`
 
@@ -433,7 +433,7 @@ kubectl -n kube-system logs deploy/traefik
 
 A typical cause is an Ingress referencing a middleware (e.g. `kube-system-redirect-https@kubernetescrd`) or secret
 that doesn't exist. Traefik is configured through a `HelmChartConfig` in
-[roles/omelette.monitoring/tasks/traefik_monitoring.yml](../roles/omelette.monitoring/tasks/traefik_monitoring.yml).
+[tfmodules/stack-bootstrap/monitoring.tf](../tfmodules/stack-bootstrap/monitoring.tf).
 
 ### The Kubernetes API is unreachable
 
