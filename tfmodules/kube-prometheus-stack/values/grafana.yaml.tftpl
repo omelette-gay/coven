@@ -1,0 +1,153 @@
+grafana:
+  # configure Grafana
+  grafana.ini:
+    server:
+      domain: "https://${grafana_host}/"
+      root_url: "https://${grafana_host}/"
+    # The client and its secret are made by platform. Until then, the secret below is missing and SSO doesn't work, but
+    # Grafana still starts
+    auth.generic_oauth:
+      enabled: true
+      name: SSO
+      allow_sign_up: true
+      client_id: grafana
+      client_secret: $__env{client_secret}
+      scopes: openid profile email roles
+      auth_url: ${keycloak_realm_url}/protocol/openid-connect/auth
+      token_url: ${keycloak_realm_url}/protocol/openid-connect/token
+      api_url: ${keycloak_realm_url}/protocol/openid-connect/userinfo
+      signout_redirect_url: ${keycloak_realm_url}/protocol/openid-connect/logout
+      role_attribute_strict: true
+      role_attribute_path: (contains(roles[], 'grafana-admin') && 'GrafanaAdmin')
+      allow_assign_grafana_admin: true
+      email_attribute_path: email
+      name_attribute_path: preferred_username
+      login_attribute_path: preferred_username
+      tls_skip_verify_insecure: ${insecure_tls}
+    security:
+      disable_initial_admin_creation: true
+      cookie_secure: true
+    auth:
+      disable_login_form: true   
+      oauth_auto_login: false
+    smtp:
+      enabled: true
+      host: "${smtp_relay}"
+      from_address: "grafana@${cluster_domain}"
+  envFromSecrets:
+    - name: ${oauth_secret}
+      optional: true
+
+  # auto-discover resources installed into the cluster
+  # this has to be done at boot
+  sidecar:
+    alerts:
+      enabled: true
+      searchNamespace: ALL
+      skipReload: true
+      initAlerts: true
+      watchMethod: LIST
+    dashboards:
+      enabled: true
+      searchNamespace: ALL
+      skipReload: true
+      initDashboards: true
+      watchMethod: LIST
+    datasources:
+      enabled: true
+      searchNamespace: ALL
+      skipReload: true
+      initDatasources: true
+      watchMethod: LIST
+    notifiers:
+      enabled: true
+      searchNamespace: ALL
+      skipReload: true
+      initNotifiers: true
+      watchMethod: LIST
+
+  # expose Grafana to the web
+  ingress:
+    enabled: true
+    hosts:
+      - "${grafana_host}"
+    annotations:
+      cert-manager.io/cluster-issuer: "${cluster_issuer}"
+      traefik.ingress.kubernetes.io/router.middlewares: "kube-system-redirect-https@kubernetescrd"
+    tls:
+      - hosts:
+          - "${grafana_host}"
+        secretName: grafana-tls
+
+%{ if length(host_aliases) > 0 ~}
+  hostAliases: ${jsonencode(host_aliases)}
+%{ endif ~}
+
+  # https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/metrics.md#prometheus-reference-installation
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: mariadb
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/mariadb
+        - name: minecraft
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/minecraft
+        - name: trivy
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/trivy
+  dashboards:
+    mariadb:
+      mysql-overview:
+        gnetId: 7362
+        revision: 5
+        datasource: Prometheus
+      mysql-replication:
+        gnetId: 7371
+        revision: 1
+        datasource: Prometheus
+      mariadb-galera:
+        gnetId: 13106
+        revision: 3
+        datasource: Prometheus
+      mysql-quickstart:
+        gnetId: 14057
+        revision: 1
+        datasource: Prometheus
+    minecraft:
+      minecraft-server:
+        url: https://raw.githubusercontent.com/sladkoff/minecraft-prometheus-exporter/master/dashboards/minecraft-server-dashboard.json
+        datasource: Prometheus
+      minecraft-players:
+        url: https://raw.githubusercontent.com/sladkoff/minecraft-prometheus-exporter/master/dashboards/minecraft-players-dashboard.json
+        datasource: Prometheus
+    trivy:
+      trivy-operator-reports:
+        gnetId: 17214
+        revision: 1
+        datasource: Prometheus
+      trivy-operator-dashboard:
+        gnetId: 21398
+        revision: 1
+        datasource: Prometheus
+
+  persistence:
+    enabled: true
+  deploymentStrategy:
+    type: Recreate

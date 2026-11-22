@@ -1,0 +1,11 @@
+groups:
+  - name: http-probes
+    rules:
+      - alert: HttpProbeFailed
+        expr: probe_success == 0
+        for: 2m
+        annotations:
+          summary: HTTP probe failed
+          description: Endpoint {{ $labels.instance }} down
+        labels:
+          severity: error

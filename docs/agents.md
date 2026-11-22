@@ -22,8 +22,7 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 
 ## Repo layout
 
-- `plays/` - Ansible playbooks. `configure-hosts.yml` configures hosts; `configure-cluster.yml` configures the cluster
-  services that haven't moved to Terraform yet; `rolling-reboot.yml` reboots nodes safely.
+- `plays/` - Ansible playbooks. `configure-hosts.yml` configures hosts; `rolling-reboot.yml` reboots nodes safely.
 - `roles/omelette.*` - our Ansible roles. External roles (e.g. `xanmanning.k3s`) come from `requirements.yml`.
 - `coven/` - production: the Ansible inventory (`coven/inventory/`) and three Terraform stacks, applied in order:
   `coven/bootstrap/`, `coven/platform/` and `coven/apps/` (see
@@ -32,17 +31,15 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 - `tfmodules/` - Terraform modules used by `coven/` and `testlab/`. `stack-bootstrap/` and `stack-platform/` hold the
   content of those stacks, shared by both environments; apps differ between environments, so each environment's
   `apps/` defines them directly.
-- `Chart.yaml` - not a real chart. It pins Helm chart versions so Renovate can bump them; Ansible reads them with the
-  `helm_chart` lookup plugin in `lookup_plugins/`.
 - `.github/workflows/` - CI/CD (see below).
 
 ## Key facts
 
 - **Deploys happen from GitHub Actions on merge to `main`**: `host_config.yml` runs `plays/configure-hosts.yml`, and
-  `tfapply.yml` applies the Terraform stacks in order, then runs `plays/configure-cluster.yml`. `tfplan.yml` posts a Terraform plan on every PR. A change isn't
+  `tfapply.yml` applies the Terraform stacks in order. `tfplan.yml` posts a Terraform plan on every PR. A change isn't
   done until it's in code and merged; manual changes on the cluster get reverted or cause drift.
-- **Ansible → Terraform migration is in progress.** Host config stays in Ansible; cluster services are moving to
-  Terraform, and new work should prefer Terraform. Some things exist in both (see the cluster overview).
+- **Ansible configures the hosts; Terraform configures everything on the cluster**, in three stacks (see
+  [ADR 002](./adr/002-three-stack-terraform-for-cluster-configuration.md) and the cluster overview).
 - **Self-deploying apps** (e.g. `wedding`, `home-assistant`) are defined in their own repos. This repo only sets up
   their namespace, Vault access, secrets and SSO client.
 - **Secrets live in Vault, never in the repo.**
@@ -76,7 +73,7 @@ problem.
   in the user's shell profile.
 - Anything that needs root (`sudo apt install`, `wsl -u root`) needs a password or confirmation. Give the human the
   exact command to run.
-- Don't change versions pinned in the repo (`uv.lock`, `.terraform.lock.hcl`, `Chart.yaml`) to make something work
+- Don't change versions pinned in the repo (`uv.lock`, `.terraform.lock.hcl`, chart versions) to make something work
   locally. That's a change for a pull request.
 - If the fix was a step missing from the README, add it to the README so it's documented for everyone.
 
@@ -100,8 +97,7 @@ There's no test suite. Before proposing a change:
 
 - Terraform: `terraform validate` in the affected folder, and from the repo root `terraform fmt -check -recursive` and
   `tflint --recursive --config "$PWD/.tflint.hcl"` (CI runs all of these, plus `plan` on each stack).
-- Ansible: `uv run ansible-playbook --syntax-check -i testlab/inventory plays/configure-hosts.yml`, and the same for
-  `plays/configure-cluster.yml`.
+- Ansible: `uv run ansible-playbook --syntax-check -i testlab/inventory plays/configure-hosts.yml`.
 - To actually exercise a change, use the testlab (see the README). Confirm with a human before running it.
 
 ## Conventions
@@ -109,7 +105,12 @@ There's no test suite. Before proposing a change:
 - Write docs and commit messages in British English, in a plain, direct style that matches the existing docs.
 - Commit messages are a short sentence describing the change (e.g. "Replace Litestream with periodic k3s datastore
   snapshots"), with no type prefixes.
-- Pin new Helm chart versions in `Chart.yaml` and read them with `lookup('helm_chart', '<n>')`.
+- Pin Helm chart versions in the `helm_release` resource (`version = "..."`), where Renovate updates them.
+- Terraform modules: each service gets its own module in `tfmodules/`, with `main.tf`, `variables.tf`, `outputs.tf` if
+  it has outputs, and a `README.md`. Declare only the providers the module uses directly, and require Terraform 1.9
+  unless it uses write-only arguments or ephemeral resources itself (1.11, with a comment). Name resources after what
+  they are (e.g. `helm_release.keycloak`); older modules use `this`, which can stay. New `helm_release`s set
+  `atomic = true`.
 - Renovate bundles updates using explicit lists in `.github/renovate.json`. When adding an app, add its charts and
   images to the Apps rules, and follow [ADR 004](./adr/004-bundle-renovate-updates-weekly.md) to decide whether a new
   chart or image belongs in a bundle or needs its own pull request.

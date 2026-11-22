@@ -1,8 +1,2 @@
-longhorn_k8s_namespace: longhorn-system
-longhorn_default_replica_count: 2
-longhorn_allow_single_replicas: "{{ groups.all|length < longhorn_default_replica_count }}"
-longhorn_k8s_backup_creds_secret: "gcp-backup-creds"
-longhorn_k8s_recurring_job_name: "nightly-backup"
-longhorn_k8s_snapshot_job_name: "daily-snapshot"
-longhorn_over_provision_percentage: 100 # allow more storage to be provisioned than is available
+# also used by omelette.k3s-backup
 gcp_backup_bucket_name: coven-backups

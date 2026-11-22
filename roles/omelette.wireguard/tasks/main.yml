@@ -2,13 +2,6 @@
   dnf:
     name: wireguard-tools
 
-# so this is ran outside of the k8s part of the play, but we generally do want to get the secrets from Vault
-# for wireguard as that's how we're managing them, so we need to ensure we've loaded the defaults for the secrets module
-- name: load secret defaults
-  include_vars:
-    file: "../../omelette.secrets/defaults/main.yml"
-  when: vault_url is not defined
-
 - name: create wg0 interface
   include_tasks: create_wg0_interface.yml
   when: wireguard_private_key is defined

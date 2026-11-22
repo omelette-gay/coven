@@ -1,6 +1,9 @@
 ---
 cluster_domain: coven.omelette.gay
-cluster_dns_zone: omelette.gay
+
+# for the secrets host configuration reads from Vault
+vault_url: "https://vault.{{ cluster_domain }}"
+vault_kv_mountpoint: secret
 
 ssh_users:
   chris:
@@ -13,50 +16,8 @@ ssh_users:
   github:
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGdbUfsB3EIhdi8hhXIK/UbQFIl69WO7Vud1OHdP0ID6 chris@prism
 
-# get real TLS certificates from Let's Encrypt
-certmanager_acme_server: https://acme-v02.api.letsencrypt.org/directory
-
-# read Discord webhook from Vault when not bootstrapping
-grafana_discord_webhook_url: "{% if not bootstrap|default(false) %}{{ lookup('hashivault', 'gitops/grafana-discord-notifier', 'webhook_url', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
-
-external_dns_extra_records:
-  # machine hostnames
-  - zone: omelette.gay
-    name: strix.xdc
-    type: A
-    records:
-      - value: "168.119.4.112"
-  - zone: omelette.gay
-    name: strix.xdc
-    type: AAAA
-    records:
-      - value: "2a01:4f8:242:4f21::2"
-  - zone: omelette.gay
-    name: janus.gs
-    type: A
-    records:
-      - value: "51.148.152.196"
-  - zone: omelette.gay
-    name: janus.gs
-    type: AAAA
-    records:
-      - value: "2a02:8011:d017:dba5::1"
-  - zone: omelette.gay
-    name: grimhilde.gs
-    type: A
-    records:
-      - value: "192.168.178.36"
-
-planka_hostname: boards.omelette.gay
-
-# increase storage for logs in prod
-loki_storage_size: 50Gi
-
 wireguard_server_public_key: "{% if not bootstrap|default(false) %}{{ lookup('hashivault', 'wireguard/janus', 'public_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
 wireguard_server_preshared_key: "{% if not bootstrap|default(false) %}{{ lookup('hashivault', 'wireguard/janus', 'preshared_key', mount_point=vault_kv_mountpoint, version=2, url=vault_url, verify=kubeconfig_require_secure|default(true)) }}{% else %}{{ omit }}{% endif %}"
 wireguard_ipv4_network: 192.168.178.0/24
 wireguard_ipv6_network: fd1e:6349:c40a::/64
 wireguard_server_endpoint: janus.gs.omelette.gay:59384
-
-outbound_mail_node_selector:
-  "coven.omelette.gay/location": "xdc"

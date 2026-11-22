@@ -40,3 +40,21 @@ variable "buckets" {
     error_message = "buckets must contain at least one bucket name of 3-63 lowercase letters, digits and hyphens, short enough that create-<name>-bucket-<bucket> fits in 63 characters."
   }
 }
+
+variable "otlp_metrics" {
+  description = "Whether RustFS sends metrics to Prometheus over OTLP"
+  type        = bool
+  default     = false
+}
+
+variable "vault_kv_mountpoint" {
+  description = "Vault KV v2 mount for the secret. Pass the mount's path from the stack that makes it, so the secret is written after it"
+  type        = string
+  default     = "secret"
+}
+
+variable "vault_kubernetes_auth_backend" {
+  description = "Path of Vault's Kubernetes auth method. Pass the auth backend's path from the stack that makes it, so the role is created after it"
+  type        = string
+  default     = "kubernetes"
+}

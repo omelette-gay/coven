@@ -11,13 +11,6 @@ kubeconfig_require_secure: false
 
 cluster_domain: coven.local
 
-certmanager_default_issuer: vault
-
-longhorn_over_provision_percentage: 400
-
-loki_chunks_cache_memory: 1024
-
-k8s_hostaliases:
-  - ip: 192.168.57.100
-    hostnames:
-      - "{{ keycloak_host }}"
+# for the secrets host configuration reads from Vault
+vault_url: "https://vault.{{ cluster_domain }}"
+vault_kv_mountpoint: secret

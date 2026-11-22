@@ -1,0 +1,18 @@
+alertmanager:
+  config:
+    global:
+      smtp_smarthost: "${smtp_relay}"
+      smtp_from: "alertmanager@${cluster_domain}"
+  # stop adding namespace restriction when installing alerting rules
+  alertmanagerSpec:
+    alertmanagerConfigMatcherStrategy:
+      type: None
+
+    # enable persistence
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          resources:
+            requests:
+              storage: 5Gi

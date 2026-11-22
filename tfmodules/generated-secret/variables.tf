@@ -47,3 +47,9 @@ variable "vault_role_name" {
   description = "Vault policy and Kubernetes auth role name"
   type        = string
 }
+
+variable "vault_kubernetes_auth_backend" {
+  description = "Path of Vault's Kubernetes auth method. Pass the auth backend's path from the stack that makes it, so the role is created after it"
+  type        = string
+  default     = "kubernetes"
+}

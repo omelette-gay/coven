@@ -1,7 +1,3 @@
+# Longhorn itself is installed by Terraform (tfmodules/stack-bootstrap); this installs what it needs on each host
 - name: install host level dependencies
   include_tasks: host.yml
-  when: inventory_hostname != "localhost"
-
-- name: install k8s dependencies
-  include_tasks: k8s.yml
-  when: kubeconfig is defined

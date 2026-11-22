@@ -1,0 +1,11 @@
+groups:
+  - name: vault
+    rules:
+      - alert: VaultIsSealed
+        expr: vault_core_unsealed != 1 or absent(vault_core_unsealed) == 1
+        for: 1m
+        annotations:
+          summary: Vault is not unsealed
+          description: Vault is not reporting that it is unsealed. It may need unsealing or there is another issue affecting Vault.
+        labels:
+          severity: critical

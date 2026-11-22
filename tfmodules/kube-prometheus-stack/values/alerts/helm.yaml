@@ -1,0 +1,30 @@
+groups:
+  - name: helm
+    rules:
+      - alert: HelmDeployFailed
+        annotations:
+          description: |
+            The Helm release {{ $labels.release }} (namespace: {{ $labels.namespace }}) is in the failed state.
+          summary: A Helm release is in the failed state
+        expr: helm_chart_info < 0
+        for: 1m
+        labels:
+          severity: critical
+      - alert: HelmDeployStuck
+        annotations:
+          description: |
+            The Helm release {{ $labels.release }} (namespace: {{ $labels.namespace }}) has been stuck in a pending state for over 15 minutes.
+          summary: A Helm release is stuck in a pending state
+        expr: helm_chart_info > 4
+        for: 15m
+        labels:
+          severity: error
+      - alert: HelmDeployUnknown
+        annotations:
+          description: |
+            The Helm release {{ $labels.release }} (namespace: {{ $labels.namespace }}) is in an unknown state.
+          summary: A Helm release is stuck in an unknown state
+        expr: helm_chart_info == 0
+        for: 15m
+        labels:
+          severity: warning

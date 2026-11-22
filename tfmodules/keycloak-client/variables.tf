@@ -1,4 +1,4 @@
-variable "realm_id" {
+variable "keycloak_realm" {
   description = "Keycloak realm containing the client"
   type        = string
 }
@@ -45,6 +45,12 @@ variable "role_groups" {
     condition     = alltrue([for role in keys(var.role_groups) : contains(var.client_roles, role)])
     error_message = "Every key of role_groups must be one of client_roles."
   }
+}
+
+variable "group_ids" {
+  description = "IDs of groups in role_groups that are made in the same stack, as a map of group name to ID, so they don't have to exist before the stack is planned. Other groups are looked up by name"
+  type        = map(string)
+  default     = {}
 }
 
 variable "k8s_namespace" {

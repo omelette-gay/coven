@@ -24,7 +24,7 @@ ephemeral "random_password" "client_secret" {
 }
 
 resource "keycloak_openid_client" "this" {
-  realm_id              = var.realm_id
+  realm_id              = var.keycloak_realm
   client_id             = var.client_id
   name                  = var.client_name
   enabled               = true
@@ -37,7 +37,7 @@ resource "keycloak_openid_client" "this" {
 }
 
 resource "keycloak_openid_user_client_role_protocol_mapper" "roles" {
-  realm_id                    = var.realm_id
+  realm_id                    = var.keycloak_realm
   client_id                   = keycloak_openid_client.this.id
   name                        = "client roles"
   claim_name                  = "roles"
@@ -51,7 +51,7 @@ resource "keycloak_openid_user_client_role_protocol_mapper" "roles" {
 resource "keycloak_role" "this" {
   for_each = toset(var.client_roles)
 
-  realm_id  = var.realm_id
+  realm_id  = var.keycloak_realm
   client_id = keycloak_openid_client.this.id
   name      = each.value
 }
@@ -66,18 +66,19 @@ locals {
   }
 }
 
+# Groups whose IDs aren't passed in are looked up by name, so they must exist when the stack is planned
 data "keycloak_group" "this" {
-  for_each = local.group_roles
+  for_each = { for group, roles in local.group_roles : group => roles if !contains(keys(var.group_ids), group) }
 
-  realm_id = var.realm_id
+  realm_id = var.keycloak_realm
   name     = each.key
 }
 
 resource "keycloak_group_roles" "this" {
   for_each = local.group_roles
 
-  realm_id   = var.realm_id
-  group_id   = data.keycloak_group.this[each.key].id
+  realm_id   = var.keycloak_realm
+  group_id   = try(var.group_ids[each.key], data.keycloak_group.this[each.key].id)
   role_ids   = [for role in each.value : keycloak_role.this[role].id]
   exhaustive = false
 }
@@ -94,10 +95,10 @@ resource "kubernetes_secret_v1" "this" {
   data_wo = {
     client_id              = var.client_id
     client_secret          = ephemeral.random_password.client_secret.result
-    authorization_endpoint = "${var.keycloak_url}/realms/${var.realm_id}/protocol/openid-connect/auth"
-    token_endpoint         = "${var.keycloak_url}/realms/${var.realm_id}/protocol/openid-connect/token"
-    userinfo_endpoint      = "${var.keycloak_url}/realms/${var.realm_id}/protocol/openid-connect/userinfo"
-    jwks_endpoint          = "${var.keycloak_url}/realms/${var.realm_id}/protocol/openid-connect/certs"
+    authorization_endpoint = "${var.keycloak_url}/realms/${var.keycloak_realm}/protocol/openid-connect/auth"
+    token_endpoint         = "${var.keycloak_url}/realms/${var.keycloak_realm}/protocol/openid-connect/token"
+    userinfo_endpoint      = "${var.keycloak_url}/realms/${var.keycloak_realm}/protocol/openid-connect/userinfo"
+    jwks_endpoint          = "${var.keycloak_url}/realms/${var.keycloak_realm}/protocol/openid-connect/certs"
   }
 
   data_wo_revision = var.secret_revision

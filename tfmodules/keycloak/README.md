@@ -1,0 +1,18 @@
+# Keycloak
+
+Installs [Keycloak](https://www.keycloak.org/) (served under `/auth`) and its CNPG PostgreSQL cluster, backed up to
+GCS. Called by the bootstrap stack. The realm, groups, clients and Terraform's own admin user are made by the platform
+stack, through the keycloak provider, which needs Keycloak running.
+
+## First start
+
+On a fresh cluster, set `bootstrap_admin_password`. Keycloak then creates a temporary admin (`temp-admin`) in the master
+realm with it when it first starts, which the platform stack logs in as for its first apply. Keycloak reads the password
+from optional environment variables, so its Helm values are the same whether or not the Secret holding it exists, and
+deleting it doesn't restart Keycloak. Delete the temporary admin and unset the password afterwards (see
+[bootstrapping](../../docs/bootstrapping.md)). The password is in Terraform state while it's set.
+
+## Backups
+
+The database backs up to `gs://coven-backups/cnpg/keycloak/` with the service account key the platform stack syncs from
+Vault, so on a fresh cluster backups fail until platform has been applied.

@@ -73,14 +73,14 @@ resource "helm_release" "this" {
       webService = {
         # Without a hostname the ingress is disabled, and the chart ignores the other settings
         ingress = {
-          enabled  = var.hostname != null
-          hostname = var.hostname
-          annotations = var.hostname != null ? {
+          enabled  = var.host != null
+          hostname = var.host
+          annotations = var.host != null ? {
             "cert-manager.io/cluster-issuer"                   = var.cluster_issuer
             "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
           } : null
-          tls = var.hostname != null ? [{
-            hosts      = [var.hostname]
+          tls = var.host != null ? [{
+            hosts      = [var.host]
             secretName = "${var.instance_name}-ingress-tls"
           }] : null
         }

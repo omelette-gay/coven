@@ -192,8 +192,8 @@ Kubernetes API, and with it Vault, will be down throughout.
    - The backup service account key: create a new one in the GCP console (IAM → Service accounts → `coven-backup` →
      Keys → Add key → JSON) and save it locally. Delete it once Vault is back, as Terraform manages the usual key.
 4. **Run the host part of the playbook against strix only**, passing the key in place of the Vault lookup.
-   This playbook doesn't include the cluster-level services, which need Vault, and `bootstrap=true` skips the Vault
-   lookups in the host config:
+   This playbook only configures the hosts (the cluster's services are in Terraform), and `bootstrap=true` skips the
+   Vault lookups in the host config:
 
    ```shell
    uv run ansible-playbook -i coven/inventory plays/configure-hosts.yml --limit strix -e bootstrap=true \
@@ -210,8 +210,8 @@ Kubernetes API, and with it Vault, will be down throughout.
 5. **Check k3s is up** with `sudo k3s kubectl get nodes` on strix, then **unseal Vault** (see
    [diagnosing issues](./diagnosing-issues.md#vaultissealed)).
 6. **Run the normal deploy** by re-running the "Configure Coven hosts" and "Deploy cluster configuration" GitHub
-   Actions workflows, so that everything, including the cluster-level services and the normal backup credentials, is
-   put back as it should be. Then delete
+   Actions workflows (the second applies the three Terraform stacks in order), so that everything, including the
+   cluster's services and the normal backup credentials, is put back as it should be. Then delete
    the service account key you created in step 3.
 7. **Expect things to be out of date.** Anything that changed in the cluster after the snapshot was taken (up to about
    6.5 hours) is lost. Ansible, Terraform and app deploys put back most of it, so re-run the Terraform workflow and any

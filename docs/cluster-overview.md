@@ -10,13 +10,12 @@ For the practical "how do I start investigating" guide, see [diagnosing issues](
   app's own repo). Manual changes made with `kubectl edit`/`kubectl apply`/`helm upgrade` or by hand on the hosts will
   either be reverted on the next run of Ansible/Terraform, or cause drift that breaks the next run. A fix is only
   really a fix once it is in code.
-- **Changes are deployed by GitHub Actions on merge to `main`.** The Ansible playbooks and `terraform apply` run
+- **Changes are deployed by GitHub Actions on merge to `main`.** The host playbook and `terraform apply` run
   automatically on every push to `main` (see [.github/workflows/](../.github/workflows/)). Terraform also runs a plan on
   every pull request. So "what changed recently?" can usually be answered with `git log` on this repo.
-- **Dependency versions are bumped automatically by Renovate.** Helm chart versions are pinned in
-  [Chart.yaml](../Chart.yaml) (which is not a real chart, it only exists so Renovate can update it), and Ansible reads
-  them from there via the `helm_chart` lookup plugin. Terraform provider and module chart versions are pinned in the
-  `.tf` files. Renovate PRs are merged frequently, so a recent chart upgrade is a common cause of new alerts.
+- **Dependency versions are bumped automatically by Renovate.** Helm chart versions are pinned in the `helm_release`
+  resources in the `.tf` files, and Terraform provider versions in the lock files. Renovate PRs are merged frequently, so
+  a recent chart upgrade is a common cause of new alerts.
 - **Secrets live in Vault, never in the repo.** See [secrets](./secrets.md).
 - **New features go to the testlab first.** We prefer to develop new features on the Vagrant testlab before
   deploying them to coven. Bug fixes can go straight to coven. See [Testlab](#testlab).
@@ -26,26 +25,25 @@ For the practical "how do I start investigating" guide, see [diagnosing issues](
 
 ## Ansible vs Terraform
 
-We currently use two IaC tools, and are part way through a migration:
+Ansible configures the hosts, and Terraform everything on the cluster (see
+[ADR 002](./adr/002-three-stack-terraform-for-cluster-configuration.md)):
 
-| Layer                                  | Tool          | Where                                                                  | Long-term plan            |
-|----------------------------------------|---------------|------------------------------------------------------------------------|---------------------------|
-| Host OS configuration                  | Ansible       | [plays/configure-hosts.yml](../plays/configure-hosts.yml)              | **Stays in Ansible**      |
-| k3s installation                       | Ansible       | `xanmanning.k3s` role (external, see [requirements.yml](../requirements.yml)) | Stays in Ansible          |
-| Cluster-level services (Helm releases etc) | Ansible   | [plays/configure-cluster.yml](../plays/configure-cluster.yml), roles in [roles/](../roles/) | Migrating to Terraform    |
-| Newer cluster services                 | Terraform     | `coven/platform/` and `coven/apps/`, using modules in [tfmodules/](../tfmodules/) | Terraform                 |
-| GCP project, DNS zones, cloud resources | Terraform    | Mostly `coven/bootstrap/`; DNS records for apps in `coven/apps/`        | Terraform                 |
-| Self-deploying apps                    | The app's own repo, and Terraform | GitHub Actions in each app repo, deploying with Helm into its own namespace. Its namespace, Vault access, secrets and SSO client are in `coven/apps/` | Unchanged         |
+| Layer                                  | Tool          | Where                                                                  |
+|----------------------------------------|---------------|------------------------------------------------------------------------|
+| Host OS configuration                  | Ansible       | [plays/configure-hosts.yml](../plays/configure-hosts.yml)              |
+| k3s installation                       | Ansible       | `xanmanning.k3s` role (external, see [requirements.yml](../requirements.yml)) |
+| Operators and base services (Longhorn, monitoring, cert-manager, CNPG, Vault, ESO, Keycloak) | Terraform | `coven/bootstrap/`, using [tfmodules/stack-bootstrap/](../tfmodules/stack-bootstrap/) |
+| Vault and Keycloak configuration, and services apps depend on | Terraform | `coven/platform/`, using [tfmodules/stack-platform/](../tfmodules/stack-platform/) |
+| Apps                                   | Terraform     | `coven/apps/`, using modules in [tfmodules/](../tfmodules/)            |
+| GCP project, DNS zones, cloud resources | Terraform    | Mostly `coven/bootstrap/`; DNS records for apps in `coven/apps/`        |
+| Self-deploying apps                    | The app's own repo, and Terraform | GitHub Actions in each app repo, deploying with Helm into its own namespace. Its namespace, Vault access, secrets and SSO client are in `coven/apps/` |
 
 When working out how to fix something, first find out which of these owns it, as that tells you where the change
-needs to be made. Because the migration is in progress, some functionality exists in both forms (e.g., the
-`create_object_store` task in `omelette.storage` and the `tfmodules/object-store` module, or the Keycloak client and
-Vault secret syncing tasks in Ansible and the `keycloak-client` and `vault-k8s-secret` modules). New work should
-prefer Terraform; host-level configuration stays in Ansible.
+needs to be made.
 
 ### What Ansible manages
 
-Host level (runs against every node, as root):
+Everything runs against the nodes themselves, as root:
 
 - `omelette.hostbase` - hostname, timezone (UTC) and the EPEL repository
 - `omelette.auto-updates` - `dnf-automatic` applying OS updates automatically, plus a textfile exporter that reports
@@ -56,23 +54,7 @@ Host level (runs against every node, as root):
 - `omelette.k3s-backup` - a systemd timer snapshotting the k3s datastore to GCS every 6 hours, and restoring it if it's
   missing (controller only)
 - `xanmanning.k3s` - installs and configures k3s
-- `omelette.storage` (host part) - iSCSI tools needed by Longhorn
-
-Cluster level (runs from the machine running Ansible, against the k8s API). Roles are run in this order, which
-roughly reflects their dependencies:
-
-| Role                            | Namespace(s)                          | What it deploys                                                              |
-|---------------------------------|---------------------------------------|------------------------------------------------------------------------------|
-| `omelette.storage`              | `longhorn-system`                     | Longhorn (default storage class), nightly backup and daily snapshot recurring jobs |
-| `omelette.monitoring`           | `monitoring`                          | kube-prometheus-stack, Loki (+ RustFS object store), Alloy, blackbox exporter, helm-exporter, alert rules, Traefik metrics config |
-| `omelette.cert-manager`         | `cert-manager`                        | cert-manager with Let's Encrypt and Vault PKI issuers, HTTPS redirect middleware |
-| `omelette.postgres`             | `cnpg-system`                         | CloudNativePG operator and barman-cloud backup plugin                        |
-| `omelette.sso`                  | `keycloak`                            | Keycloak (auth.coven.omelette.gay) and its Postgres cluster                  |
-| `omelette.secrets`              | `vault`, `external-secrets`           | Vault (vault.coven.omelette.gay), External Secrets Operator, Vault auth methods and policies |
-| `omelette.external-dns`         | `external-dns`                        | external-dns writing records to Hetzner DNS                                  |
-| `omelette.outbound-mail`        | `mail`                                | Postfix SMTP relay used by Grafana, Alertmanager and apps                    |
-| `omelette.mariadb`              | `mariadb-system`                      | MariaDB operator                                                             |
-| `omelette.planka`               | `planka`                              | Planka (boards.omelette.gay) and its Postgres cluster                        |
+- `omelette.storage` - iSCSI tools needed by Longhorn
 
 ### What Terraform manages
 
@@ -86,10 +68,22 @@ local Vagrant VM. Each environment has three stacks, each with its own state, ap
 - `apps/` - leaf services that nothing else in the cluster depends on.
 
 The bootstrap and platform stacks are shared modules (`tfmodules/stack-bootstrap/` and `tfmodules/stack-platform/`),
-so both environments run the same platform. Apps differ between environments, so each environment's `apps/` defines
+so both environments run the same platform. Each service in them is its own module in `tfmodules/` (e.g.
+`tfmodules/keycloak/`, `tfmodules/logging/`); see each stack's README. Apps differ between environments, so each environment's `apps/` defines
 them directly.
 
 Between them, they manage:
+
+- Bootstrap: Longhorn (`longhorn-system`, the default storage class), the Prometheus Operator CRDs, kube-prometheus-stack
+  with its alert rules, the blackbox exporter and helm-exporter (`monitoring`), Traefik's metrics config,
+  cert-manager and the Let's Encrypt issuer, the HTTPS redirect middleware, the CloudNativePG operator and barman-cloud
+  plugin (`cnpg-system`), Vault (`vault`), External Secrets Operator (`external-secrets`), and Keycloak and its
+  Postgres cluster (`keycloak`)
+- Platform: Vault's auth methods, policies, secrets engines and CA, and cert-manager's Vault issuer; the `omelette.gay`
+  realm, its `admins` group and Terraform's own Keycloak user; Grafana's SSO client and Discord alerting; Loki (with a
+  RustFS object store) and Alloy; Longhorn's backup credentials and its nightly backup and daily snapshot jobs;
+  external-dns (`external-dns`), and on coven the machines' DNS records; Postfix for outbound mail (`mail`), with its DKIM key and DNS
+  records; the MariaDB operator (`mariadb-system`)
 
 - GCP project resources: APIs, the `coven-tfstate` bucket (which keeps old versions of each stack's state for 30 days,
   as state holds secrets), the `coven-backups` bucket (with a 14-day expiry on objects under `k3s/` only) and backup
@@ -120,7 +114,7 @@ repo, whose name is in that file as `github_repo`, not here. See [deploying apps
 
 k3s ships with some components that are not deployed by us directly: Traefik (ingress, in `kube-system`), CoreDNS,
 metrics-server, ServiceLB (`svclb-*` pods) and the local-path provisioner. We customise Traefik through a
-`HelmChartConfig` in `omelette.monitoring` (enabling metrics, the dashboard and a plugin). Longhorn is made the
+`HelmChartConfig` in the bootstrap stack (enabling metrics, the dashboard and a plugin). Longhorn is made the
 default storage class instead of local-path.
 
 ## Nodes
@@ -179,11 +173,10 @@ grimhilde has no public address, so how you reach it depends on where you are:
 | GitHub Actions            | Over the internet                       | Through a WireGuard tunnel to janus, which the workflow brings up |
 | Anywhere else             | Over the internet                       | Not directly reachable; jump through strix, which is on the home LAN via its own tunnel |
 
-The Ansible jobs (in [.github/workflows/host_config.yml](../.github/workflows/host_config.yml), and the
-"Configure Coven cluster" job at the end of [.github/workflows/tfapply.yml](../.github/workflows/tfapply.yml)) bring up
-their own WireGuard peer (192.168.178.204) to janus before running the playbook, so they can reach grimhilde, and take
-it down again afterwards. They share a concurrency group, so only one uses the peer at a time. If that tunnel can't be
-established (for example because janus or the home internet connection is down), they will fail. The Terraform jobs
+The Ansible job (in [.github/workflows/host_config.yml](../.github/workflows/host_config.yml)) brings up its own
+WireGuard peer (192.168.178.204) to janus before running the playbook, so it can reach grimhilde, and takes it down
+again afterwards. A concurrency group stops two runs using the peer at once. If that tunnel can't be established (for
+example because janus or the home internet connection is down), it will fail. The Terraform jobs
 only talk to the Kubernetes API on strix, Vault and cloud APIs, so they don't need the tunnel.
 
 ## Platform services
@@ -231,7 +224,7 @@ only talk to the Kubernetes API on strix, Vault and cloud APIs, so they don't ne
 ## Alerting
 
 - Alert rules are Prometheus rules. Our own rules are defined in `additionalPrometheusRulesMap` in
-  [roles/omelette.monitoring/tasks/install_kube-prometheus.yml](../roles/omelette.monitoring/tasks/install_kube-prometheus.yml);
+  [tfmodules/kube-prometheus-stack/values/alerts/](../tfmodules/kube-prometheus-stack/values/alerts/) (one file per group);
   others come with the kube-prometheus-stack defaults and with charts that ship their own `PrometheusRule`s (e.g.
   Loki). Prometheus picks up `ServiceMonitor`, `PodMonitor`, `Probe` and `PrometheusRule` resources from every
   namespace.
@@ -268,7 +261,7 @@ uses `coven.local` hostnames, Vault-issued certificates instead of Let's Encrypt
 come from production (coven) unless stated otherwise.
 
 **New features should be built and tested in the testlab first**, before they go to coven. This covers things like
-new services, new roles or Terraform modules, and moving existing Ansible config to Terraform. Bug fixes for
+new services, new Terraform modules and changes to Ansible roles. Bug fixes for
 problems on coven don't need to go through the testlab first. When suggesting a fix while diagnosing an issue,
 treat it as a bug fix; if the fix needs something new to be built, say that it should be tried in the testlab first.
 See the [README](../README.md#testlab) for how to set up the testlab.

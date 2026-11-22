@@ -8,11 +8,11 @@ variable "namespace" {
   }
 }
 
-variable "domain" {
+variable "host" {
   description = "Hostname Vikunja is served on"
   type        = string
   validation {
-    condition     = can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.domain))
+    condition     = can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.host))
     error_message = "domain must be a bare hostname, without https:// or a trailing slash."
   }
 }
@@ -20,7 +20,6 @@ variable "domain" {
 variable "cluster_issuer" {
   description = "cert-manager ClusterIssuer used for the Vikunja TLS certificate"
   type        = string
-  default     = "letsencrypt"
 }
 
 variable "keycloak_url" {
@@ -35,7 +34,6 @@ variable "keycloak_url" {
 variable "keycloak_realm" {
   description = "Keycloak realm used for Vikunja SSO"
   type        = string
-  default     = "omelette.gay"
 }
 
 variable "keycloak_secret_revision" {
@@ -119,4 +117,22 @@ variable "trusted_ca_secret_name" {
   description = "Secret in the vikunja namespace whose ca.crt Vikunja should trust as well as the image's CA bundle. Only for the testlab, where Keycloak's certificate comes from Vault's private CA"
   type        = string
   default     = null
+}
+
+variable "smtp_host" {
+  description = "SMTP relay Vikunja sends mail through (the platform stack's outbound mail)"
+  type        = string
+}
+
+variable "smtp_port" {
+  description = "Port of the SMTP relay"
+  type        = number
+}
+
+variable "blackbox_prober" {
+  description = "Blackbox exporter that probes Vikunja over HTTPS (installed by the bootstrap stack)"
+  type = object({
+    url  = string
+    path = string
+  })
 }

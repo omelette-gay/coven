@@ -23,7 +23,7 @@ resource "google_storage_hmac_key" "backup_service_account_key" {
 }
 
 resource "vault_kv_secret_v2" "backup_service_account_creds" {
-  mount = "secret"
+  mount = module.platform.vault_kv_mountpoint
   name  = "backups/service-account-creds"
 
   data_json = jsonencode(
@@ -45,7 +45,7 @@ resource "google_service_account_key" "backup_service_account_key" {
 }
 
 resource "vault_kv_secret_v2" "backup_service_account_key" {
-  mount = "secret"
+  mount = module.platform.vault_kv_mountpoint
   name  = "backups/service-account-key"
 
   data_json = jsonencode(

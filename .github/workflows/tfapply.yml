@@ -33,31 +33,3 @@ jobs:
     with:
       stack: coven/apps
 
-  # Cluster services still configured by Ansible. These run last, as Terraform-managed services never depend on them.
-  configure-cluster:
-    name: Configure Coven cluster
-    needs: apps
-    runs-on: ubuntu-latest
-    environment: coven
-    # shared with host_config.yml, as both connect with the same WireGuard peer
-    concurrency:
-      group: coven-ansible
-    steps:
-      - name: checkout code
-        uses: actions/checkout@v7
-
-      - name: set up Ansible
-        uses: ./.github/actions/ansible-setup
-        with:
-          wireguard-private-key: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
-          wireguard-server-public-key: ${{ secrets.WIREGUARD_SERVER_PUBLIC_KEY }}
-          wireguard-server-preshared-key: ${{ secrets.WIREGUARD_SERVER_PRESHARED_KEY }}
-          ssh-key: ${{ secrets.SSH_KEY }}
-          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
-
-      - name: run Ansible
-        run: uv run ansible-playbook -u github -i coven/inventory plays/configure-cluster.yml
-
-      - name: close down Wireguard connection
-        if: always()
-        run: sudo wg-quick down wg0

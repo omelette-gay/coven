@@ -19,6 +19,12 @@ variable "template_data" {
   default     = {}
 }
 
+variable "k8s_secret_labels" {
+  description = "Labels for the Secret, e.g. for Grafana's sidecar to find it. Only used if create_external_secret is true"
+  type        = map(string)
+  default     = {}
+}
+
 variable "k8s_secret_name" {
   description = "Name of the Kubernetes Secret created by External Secrets Operator. Required if create_external_secret is true"
   type        = string
@@ -68,4 +74,10 @@ variable "refresh_interval" {
     condition     = can(regex("^(0|([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h))+)$", var.refresh_interval))
     error_message = "refresh_interval must be a Go duration, e.g. 1h or 30m, or 0 to never refresh."
   }
+}
+
+variable "vault_kubernetes_auth_backend" {
+  description = "Path of Vault's Kubernetes auth method. Pass the auth backend's path from the stack that makes it, so the role is created after it"
+  type        = string
+  default     = "kubernetes"
 }

@@ -1,0 +1,185 @@
+alloy:
+  configMap:
+    content: |
+      discovery.kubernetes "kubernetes_pods" {
+        role = "pod"
+
+        selectors {
+          role  = "pod"
+          field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+        }
+      }
+
+      loki.process "kubernetes_pods" {
+        forward_to = [loki.write.default.receiver]
+
+        stage.cri { }
+      }
+
+      discovery.relabel "kubernetes_pods" {
+        targets = discovery.kubernetes.kubernetes_pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_controller_name"]
+          regex         = "([0-9a-z-.]+?)(-[0-9a-f]{8,10})?"
+          target_label  = "__tmp_controller_name"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name", "__meta_kubernetes_pod_label_app", "__tmp_controller_name", "__meta_kubernetes_pod_name"]
+          regex         = "^;*([^;]+)(;.*)?$"
+          target_label  = "app"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance", "__meta_kubernetes_pod_label_instance"]
+          regex         = "^;*([^;]+)(;.*)?$"
+          target_label  = "instance"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component", "__meta_kubernetes_pod_label_component"]
+          regex         = "^;*([^;]+)(;.*)?$"
+          target_label  = "component"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          target_label  = "node_name"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+
+        rule {
+          source_labels = ["namespace", "app"]
+          separator     = "/"
+          target_label  = "job"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+          separator     = "/"
+          target_label  = "__path__"
+          replacement   = "/var/log/pods/*$1/*.log"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotationpresent_kubernetes_io_config_hash", "__meta_kubernetes_pod_annotation_kubernetes_io_config_hash", "__meta_kubernetes_pod_container_name"]
+          separator     = "/"
+          regex         = "true/(.*)"
+          target_label  = "__path__"
+          replacement   = "/var/log/pods/*$1/*.log"
+        }
+      }
+
+      loki.source.file "kubernetes_pods" {
+        targets    = discovery.relabel.kubernetes_pods.output
+        forward_to = [loki.process.kubernetes_pods.receiver]
+
+        file_match {
+          enabled = true
+        }
+      }
+
+      discovery.relabel "systemd_logs" {
+        targets = []
+
+        rule {
+          source_labels = ["__journal__systemd_unit"]
+          target_label  = "unit"
+        }
+      }
+
+      loki.source.journal "systemd_var_log" {
+        format_as_json = true
+        max_age        = "12h0m0s"
+        path           = "/var/log/journal"
+        relabel_rules  = discovery.relabel.systemd_logs.rules
+        forward_to     = [loki.write.default.receiver]
+        labels         = {
+          service    = "systemd-journal",
+          node_name = coalesce(sys.env("HOSTNAME"), constants.hostname),
+        }
+      }
+
+      loki.source.journal "systemd_run_log" {
+        format_as_json = true
+        max_age        = "12h0m0s"
+        path           = "/run/log/journal"
+        relabel_rules  = discovery.relabel.systemd_logs.rules
+        forward_to     = [loki.write.default.receiver]
+        labels         = {
+          service    = "systemd-journal",
+          node_name = coalesce(sys.env("HOSTNAME"), constants.hostname),
+        }
+      }
+
+      loki.source.kubernetes_events "cluster_events" {
+        forward_to = [loki.process.cluster_events.receiver]
+      }
+
+      loki.process "cluster_events" {
+        forward_to = [loki.write.default.receiver]
+
+        stage.json {
+            expressions = {
+            action    = "action",
+            api_version = "apiVersion",
+            count     = "count",
+            event_time = "eventTime",
+            message   = "message",
+            reason    = "reason",
+            type      = "type",
+            namespace = "metadata.namespace",
+            name      = "metadata.name",
+            obj_kind  = "involvedObject.kind",
+            obj_name  = "involvedObject.name",
+          }
+        }
+
+        stage.labels {
+          values = {
+            clear     = "action",
+            namespace = "namespace",
+            reason    = "reason",
+            type      = "type",
+            job       = "kubernetes-events",
+          }
+        }
+      }
+
+      loki.write "default" {
+        endpoint {
+          url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
+        }
+      }
+  mounts:
+    varlog: true
+    extra:
+      - name: run-log-journal
+        mountPath: /run/log/journal
+        readOnly: true
+  # clustering ensures k8s events are de-duped
+  clustering:
+    enabled: true
+controller:
+  volumes:
+    extra:
+      - name: run-log-journal
+        hostPath:
+          path: /run/log/journal
+serviceMonitor:
+  enabled: true

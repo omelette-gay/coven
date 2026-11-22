@@ -1,0 +1,111 @@
+# Imports what Ansible installed into the bootstrap stack (#561). Remove these blocks once they've been applied.
+
+import {
+  to = module.bootstrap.kubernetes_namespace_v1.monitoring
+  id = "monitoring"
+}
+
+import {
+  to = module.bootstrap.module.longhorn.kubernetes_namespace_v1.longhorn
+  id = "longhorn-system"
+}
+
+import {
+  to = module.bootstrap.module.cert_manager.kubernetes_namespace_v1.cert_manager
+  id = "cert-manager"
+}
+
+import {
+  to = module.bootstrap.module.cnpg.kubernetes_namespace_v1.cnpg
+  id = "cnpg-system"
+}
+
+import {
+  to = module.bootstrap.module.vault.kubernetes_namespace_v1.vault
+  id = "vault"
+}
+
+import {
+  to = module.bootstrap.module.external_secrets.kubernetes_namespace_v1.external_secrets
+  id = "external-secrets"
+}
+
+import {
+  to = module.bootstrap.module.keycloak.kubernetes_namespace_v1.keycloak
+  id = "keycloak"
+}
+
+import {
+  to = module.bootstrap.module.longhorn.helm_release.longhorn
+  id = "longhorn-system/longhorn"
+}
+
+import {
+  to = module.bootstrap.module.kube_prometheus_stack.helm_release.kube_prometheus_stack
+  id = "monitoring/kube-prometheus"
+}
+
+import {
+  to = module.bootstrap.module.kube_prometheus_stack.helm_release.blackbox_exporter
+  id = "monitoring/blackbox-exporter"
+}
+
+import {
+  to = module.bootstrap.module.kube_prometheus_stack.helm_release.helm_exporter
+  id = "monitoring/helm-exporter"
+}
+
+import {
+  to = module.bootstrap.kubernetes_manifest.traefik_config
+  id = "apiVersion=helm.cattle.io/v1,kind=HelmChartConfig,namespace=kube-system,name=traefik"
+}
+
+import {
+  to = module.bootstrap.module.cert_manager.helm_release.cert_manager
+  id = "cert-manager/cert-manager"
+}
+
+import {
+  to = module.bootstrap.kubernetes_manifest.redirect_https
+  id = "apiVersion=traefik.io/v1alpha1,kind=Middleware,namespace=kube-system,name=redirect-https"
+}
+
+import {
+  to = module.bootstrap.module.cnpg.helm_release.cnpg
+  id = "cnpg-system/cnpg"
+}
+
+import {
+  to = module.bootstrap.module.cnpg.helm_release.plugin_barman_cloud
+  id = "cnpg-system/plugin-barman-cloud"
+}
+
+import {
+  to = module.bootstrap.module.vault.kubernetes_manifest.vault_block_metrics_path
+  id = "apiVersion=traefik.io/v1alpha1,kind=Middleware,namespace=vault,name=block-metrics-path"
+}
+
+import {
+  to = module.bootstrap.module.vault.helm_release.vault
+  id = "vault/vault"
+}
+
+import {
+  to = module.bootstrap.module.external_secrets.helm_release.external_secrets
+  id = "external-secrets/external-secrets"
+}
+
+import {
+  to = module.bootstrap.module.keycloak.helm_release.keycloak_db
+  id = "keycloak/db"
+}
+
+import {
+  to = module.bootstrap.module.keycloak.kubernetes_manifest.keycloak_block_metrics_path
+  id = "apiVersion=traefik.io/v1alpha1,kind=Middleware,namespace=keycloak,name=block-metrics-path"
+}
+
+import {
+  to = module.bootstrap.module.keycloak.helm_release.keycloak
+  id = "keycloak/keycloak"
+}

@@ -1,9 +1,0 @@
-outbound_mail_k8s_namespace: mail
-outbound_mail_dkim_secret_name: mail/dkim
-outbound_mail_dkim_k8s_secret: dkim
-outbound_mail_dkim_key_size: 2048
-outbound_mail_dkim_key_type: RSA
-
-smtp_relay:
-  host: "mail.{{ outbound_mail_k8s_namespace }}.svc.cluster.local"
-  port: 587

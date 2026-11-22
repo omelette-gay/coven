@@ -14,10 +14,6 @@ terraform {
       source  = "hetznercloud/hcloud"
       version = ">= 1.68.0"
     }
-    vault = {
-      source  = "hashicorp/vault"
-      version = ">= 5.10.1"
-    }
   }
 }
 

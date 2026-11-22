@@ -24,7 +24,7 @@ variable "ghcr_vault_secret_name" {
 }
 
 variable "ghcr_policy_name" {
-  description = "Vault policy that allows reading the GHCR credentials. Shared by every namespace, and created by the omelette.secrets Ansible role until that moves to Terraform"
+  description = "Vault policy that allows reading the GHCR credentials. Shared by every namespace, and created by the platform stack (tfmodules/stack-platform/vault.tf)"
   type        = string
   default     = "ghcr-creds-read"
 }

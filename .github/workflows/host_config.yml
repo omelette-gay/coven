@@ -12,7 +12,7 @@ jobs:
       contents: read
       id-token: write
     environment: coven
-    # shared with the cluster job in tfapply.yml, as both connect with the same WireGuard peer
+    # so two runs don't connect with the same WireGuard peer at once
     concurrency:
       group: coven-ansible
     steps:

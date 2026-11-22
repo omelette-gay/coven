@@ -11,10 +11,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
     }
-    vault = {
-      source  = "hashicorp/vault"
-      version = ">= 5.10.1"
-    }
   }
 }
 
@@ -32,6 +28,9 @@ module "credentials" {
   k8s_namespace            = var.namespace
   k8s_service_account_name = "${var.namespace}-${var.name}-object-store"
   vault_role_name          = "${var.namespace}-${var.name}-object-store"
+
+  vault_kv_mountpoint           = var.vault_kv_mountpoint
+  vault_kubernetes_auth_backend = var.vault_kubernetes_auth_backend
 }
 
 # Only made here when the volume needs backing up: the chart can only label its own volume through commonLabels, which
@@ -70,7 +69,8 @@ resource "helm_release" "this" {
   create_namespace = false
   wait             = true
 
-  values = [
+  # compact drops the metrics values when they're off, so other stores' values don't change
+  values = compact([
     yamlencode({
       mode = {
         standalone = merge(
@@ -98,13 +98,31 @@ resource "helm_release" "this" {
       }
 
       config = {
-        rustfs = {
-          log_level = "warn"
-        }
+        rustfs = merge(
+          { log_level = "warn" },
+          var.otlp_metrics ? {
+            obs_endpoint = {
+              enabled       = true
+              base_endpoint = "http://kube-prometheus-kube-prome-prometheus.monitoring.svc.cluster.local:9090/api/v1/otlp"
+              use_stdout    = true
+              metrics       = { enabled = true }
+            }
+          } : {}
+        )
       }
-    })
-  ]
-
+    }),
+    # labels for the metrics RustFS sends Prometheus
+    var.otlp_metrics ? yamlencode({
+      extraEnv = [
+        { name = "OTEL_SERVICE_NAME", value = "${var.name}-rustfs" },
+        { name = "K8S_POD_NAME", valueFrom = { fieldRef = { fieldPath = "metadata.name" } } },
+        {
+          name  = "OTEL_RESOURCE_ATTRIBUTES"
+          value = "service.namespace=${var.namespace},service.instance.id=$(K8S_POD_NAME),k8s.namespace.name=${var.namespace},k8s.pod.name=$(K8S_POD_NAME)"
+        },
+      ]
+    }) : "",
+  ])
 }
 
 resource "kubernetes_job_v1" "bucket" {
