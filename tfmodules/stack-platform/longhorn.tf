@@ -1,6 +1,7 @@
 # Longhorn is installed by bootstrap. Its backups go to GCS with an HMAC key that coven's platform stack writes to Vault.
 module "longhorn_backup_credentials" {
   source = "../vault-k8s-secret"
+  count  = var.backup_bucket != null ? 1 : 0
 
   vault_secret_name             = "backups/service-account-creds"
   vault_kv_mountpoint           = local.vault.kv_mountpoint
@@ -13,6 +14,8 @@ module "longhorn_backup_credentials" {
 
 # Backs up volumes labelled for it off-site, such as Vault's (labelled by the bootstrap stack)
 resource "kubernetes_manifest" "longhorn_backup_job" {
+  count = var.backup_bucket != null ? 1 : 0
+
   manifest = {
     apiVersion = "longhorn.io/v1beta2"
     kind       = "RecurringJob"

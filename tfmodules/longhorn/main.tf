@@ -51,8 +51,9 @@ resource "helm_release" "longhorn" {
       snapshotDataIntegrityImmediateCheckAfterSnapshotCreation = true
       fastReplicaRebuildEnabled                                = true
     }
-    defaultBackupStore = {
-      backupTarget                 = "s3://coven-backups@europe-west2/"
+    # with no backup bucket (the testlab), volumes aren't backed up off-site
+    defaultBackupStore = var.backup_bucket == null ? {} : {
+      backupTarget                 = "s3://${var.backup_bucket}@europe-west2/"
       backupTargetCredentialSecret = var.backup_credentials_secret
       pollInterval                 = 180
     }

@@ -2,6 +2,7 @@ module "longhorn" {
   source = "../longhorn"
 
   namespace                 = var.namespaces.longhorn
+  backup_bucket             = var.backup_bucket
   backup_credentials_secret = var.longhorn_backup_credentials_secret
 
   monitoring_namespace         = kubernetes_namespace_v1.monitoring.metadata[0].name

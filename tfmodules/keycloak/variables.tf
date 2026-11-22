@@ -30,7 +30,14 @@ variable "bootstrap_admin_password" {
   sensitive   = true
 }
 
-variable "backup_credentials_secret" {
-  description = "Secret holding the GCP service account key the database backs up with, which the platform stack syncs from Vault. Backups fail until it exists"
+variable "backup_bucket" {
+  description = "GCS bucket the database backs up to, or null for no backups (as on the testlab)"
   type        = string
+  default     = null
+}
+
+variable "backup_credentials_secret" {
+  description = "Secret holding the GCP service account key the database backs up with, which the platform stack syncs from Vault. Backups fail until it exists. Only used with a backup_bucket"
+  type        = string
+  default     = null
 }

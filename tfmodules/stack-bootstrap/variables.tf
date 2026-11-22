@@ -112,6 +112,12 @@ variable "keycloak_bootstrap_admin_username" {
   type        = string
 }
 
+variable "backup_bucket" {
+  description = "GCS bucket Keycloak's database and Longhorn back up to, or null for no backups (as on the testlab)"
+  type        = string
+  default     = null
+}
+
 variable "longhorn_backup_job_name" {
   description = "Name of the Longhorn recurring job that backs labelled volumes up off-site, which the platform stack makes. Vault's volume is labelled for it"
   type        = string

@@ -30,7 +30,7 @@ resource "kubernetes_namespace_v1" "keycloak" {
 }
 
 # Keycloak's database. Backups go to GCS with the service account key platform syncs from Vault, so on a fresh cluster
-# they fail until platform has been applied.
+# they fail until platform has been applied. Without a backup_bucket there are no backups.
 resource "helm_release" "keycloak_db" {
   name       = "db"
   namespace  = kubernetes_namespace_v1.keycloak.metadata[0].name
@@ -40,40 +40,45 @@ resource "helm_release" "keycloak_db" {
   atomic     = true
   wait       = true
 
-  values = [yamlencode({
-    cluster = {
-      instances = 2
-      initdb = {
-        database = "keycloak"
+  values = [yamlencode(merge(
+    {
+      cluster = {
+        instances = 2
+        initdb = {
+          database = "keycloak"
+        }
+        monitoring = { enabled = true }
       }
-      monitoring = { enabled = true }
-    }
-    backups = {
-      enabled = true
-      method  = "plugin"
-      pluginConfiguration = {
-        name = "barman-cloud.cloudnative-pg.io"
-      }
-      provider = "google"
-      google = {
-        bucket = "coven-backups"
-        path   = "/cnpg/keycloak/"
-      }
-      secret = {
-        name   = var.backup_credentials_secret
-        create = false
-      }
-      scheduledBackups = [{
-        name                 = "daily-backup"
-        schedule             = "0 30 8,20 * * *"
-        backupOwnerReference = "self"
-        method               = "plugin"
+    },
+    # with no backup bucket (the testlab), the database isn't backed up
+    var.backup_bucket == null ? {} : {
+      backups = {
+        enabled = true
+        method  = "plugin"
         pluginConfiguration = {
           name = "barman-cloud.cloudnative-pg.io"
         }
-      }]
-    }
-  })]
+        provider = "google"
+        google = {
+          bucket = var.backup_bucket
+          path   = "/cnpg/keycloak/"
+        }
+        secret = {
+          name   = var.backup_credentials_secret
+          create = false
+        }
+        scheduledBackups = [{
+          name                 = "daily-backup"
+          schedule             = "0 30 8,20 * * *"
+          backupOwnerReference = "self"
+          method               = "plugin"
+          pluginConfiguration = {
+            name = "barman-cloud.cloudnative-pg.io"
+          }
+        }]
+      }
+    },
+  ))]
 }
 
 # Hides Keycloak's realm metrics from the web. Prometheus scrapes them inside the cluster.

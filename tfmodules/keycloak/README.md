@@ -14,5 +14,6 @@ deleting it doesn't restart Keycloak. Delete the temporary admin and unset the p
 
 ## Backups
 
-The database backs up to `gs://coven-backups/cnpg/keycloak/` with the service account key the platform stack syncs from
-Vault, so on a fresh cluster backups fail until platform has been applied.
+With `backup_bucket` set, the database backs up to `gs://<backup_bucket>/cnpg/keycloak/` with the service account key
+the platform stack syncs from Vault, so on a fresh cluster backups fail until platform has been applied. The testlab
+sets no bucket, so it doesn't back up.

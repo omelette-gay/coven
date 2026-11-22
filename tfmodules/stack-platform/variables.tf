@@ -174,6 +174,12 @@ variable "dkim_key_revision" {
   }
 }
 
+variable "backup_bucket" {
+  description = "GCS bucket Keycloak's database and Longhorn back up to, or null for no backups (as on the testlab). With none, the backup credentials aren't synced and there's no backup job"
+  type        = string
+  default     = null
+}
+
 variable "longhorn_backup_job_name" {
   description = "Name of the Longhorn recurring job that backs labelled volumes up off-site. The bootstrap stack labels Vault's volume for it"
   type        = string

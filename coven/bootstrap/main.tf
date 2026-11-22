@@ -82,6 +82,8 @@ locals {
     keycloak         = "keycloak"
   }
 
+  backup_bucket = "coven-backups"
+
   # Made by platform, used by bootstrap's services
   longhorn_backup_job_name           = "nightly-backup"
   longhorn_backup_credentials_secret = "gcp-backup-creds"
@@ -101,6 +103,7 @@ module "bootstrap" {
   vault_host                         = local.vault_host
   keycloak_url                       = local.keycloak_url
   keycloak_realm                     = local.keycloak_realm
+  backup_bucket                      = local.backup_bucket
   longhorn_backup_job_name           = local.longhorn_backup_job_name
   longhorn_backup_credentials_secret = local.longhorn_backup_credentials_secret
   keycloak_backup_credentials_secret = local.keycloak_backup_credentials_secret
