@@ -1,9 +1,24 @@
+terraform {
+  required_version = ">= 1.9.0"
+
+  required_providers {
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 3.2.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 3.2.1"
+    }
+  }
+}
+
 resource "kubernetes_namespace_v1" "cnpg" {
   metadata {
-    name = "cnpg-system"
+    name = var.namespace
     # added by Helm when it made the namespace, kept so the import doesn't change it
     labels = {
-      name = "cnpg-system"
+      name = var.namespace
     }
   }
 }
@@ -24,8 +39,6 @@ resource "helm_release" "cnpg" {
       grafanaDashboard  = { create = true }
     }
   })]
-
-  depends_on = [helm_release.prometheus_operator_crds]
 }
 
 # Lets the PostgreSQL clusters back up to GCS (see docs/backups-and-recovery.md)
@@ -38,6 +51,5 @@ resource "helm_release" "plugin_barman_cloud" {
   atomic     = true
   wait       = true
 
-  # its webhook certificate comes from cert-manager
-  depends_on = [helm_release.cnpg, helm_release.cert_manager]
+  depends_on = [helm_release.cnpg]
 }

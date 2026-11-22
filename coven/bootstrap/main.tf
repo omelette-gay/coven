@@ -35,10 +35,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~> 3.5"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.9"
-    }
   }
 }
 
@@ -69,6 +65,12 @@ module "bootstrap" {
   cluster_domain     = "coven.omelette.gay"
   cluster_issuer     = "letsencrypt"
   letsencrypt_server = "https://acme-v02.api.letsencrypt.org/directory"
+
+  grafana_host   = "monitoring.coven.omelette.gay"
+  vault_host     = "vault.coven.omelette.gay"
+  keycloak_host  = "auth.coven.omelette.gay"
+  keycloak_realm = "omelette.gay"
+  smtp_relay     = "mail.mail.svc.cluster.local:587"
 
   keycloak_bootstrap_admin_password = var.keycloak_bootstrap_admin_password
 }

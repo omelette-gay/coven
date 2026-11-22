@@ -10,27 +10,15 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
     }
-    hcloud = {
-      source  = "hetznercloud/hcloud"
-      version = ">= 1.68.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.9.0"
-    }
   }
 }
 
+# The services here are modules, ordered with depends_on where one needs another installed first. ADR 002 warns against
+# depends_on on modules because it delays the module's data sources until apply, but none of these modules has any (the
+# one data source this stack needs, the controller nodes, is in monitoring.tf), so it's safe here. Keep it that way.
+
 locals {
-  grafana_host  = "monitoring.${var.cluster_domain}"
-  vault_host    = "vault.${var.cluster_domain}"
-  keycloak_host = "auth.${var.cluster_domain}"
-  keycloak_url  = "https://${local.keycloak_host}/auth"
-
-  # outbound mail is installed by platform, but its address is fixed
-  smtp_relay = "mail.mail.svc.cluster.local:587"
-
-  # Longhorn volumes with these labels are backed up off-site by the recurring job platform creates
+  # Longhorn volumes with these labels are backed up off-site by the recurring job the platform stack creates
   longhorn_recurring_job_name = "nightly-backup"
   longhorn_backup_labels = {
     "recurring-job.longhorn.io/source"                               = "enabled"

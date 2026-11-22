@@ -6,52 +6,52 @@ import {
 }
 
 import {
-  to = module.bootstrap.kubernetes_namespace_v1.longhorn
+  to = module.bootstrap.module.longhorn.kubernetes_namespace_v1.longhorn
   id = "longhorn-system"
 }
 
 import {
-  to = module.bootstrap.kubernetes_namespace_v1.cert_manager
+  to = module.bootstrap.module.cert_manager.kubernetes_namespace_v1.cert_manager
   id = "cert-manager"
 }
 
 import {
-  to = module.bootstrap.kubernetes_namespace_v1.cnpg
+  to = module.bootstrap.module.cnpg.kubernetes_namespace_v1.cnpg
   id = "cnpg-system"
 }
 
 import {
-  to = module.bootstrap.kubernetes_namespace_v1.vault
+  to = module.bootstrap.module.vault.kubernetes_namespace_v1.vault
   id = "vault"
 }
 
 import {
-  to = module.bootstrap.kubernetes_namespace_v1.external_secrets
+  to = module.bootstrap.module.external_secrets.kubernetes_namespace_v1.external_secrets
   id = "external-secrets"
 }
 
 import {
-  to = module.bootstrap.kubernetes_namespace_v1.keycloak
+  to = module.bootstrap.module.keycloak.kubernetes_namespace_v1.keycloak
   id = "keycloak"
 }
 
 import {
-  to = module.bootstrap.helm_release.longhorn
+  to = module.bootstrap.module.longhorn.helm_release.longhorn
   id = "longhorn-system/longhorn"
 }
 
 import {
-  to = module.bootstrap.helm_release.kube_prometheus_stack
+  to = module.bootstrap.module.kube_prometheus_stack.helm_release.kube_prometheus_stack
   id = "monitoring/kube-prometheus"
 }
 
 import {
-  to = module.bootstrap.helm_release.blackbox_exporter
+  to = module.bootstrap.module.kube_prometheus_stack.helm_release.blackbox_exporter
   id = "monitoring/blackbox-exporter"
 }
 
 import {
-  to = module.bootstrap.helm_release.helm_exporter
+  to = module.bootstrap.module.kube_prometheus_stack.helm_release.helm_exporter
   id = "monitoring/helm-exporter"
 }
 
@@ -61,7 +61,7 @@ import {
 }
 
 import {
-  to = module.bootstrap.helm_release.cert_manager
+  to = module.bootstrap.module.cert_manager.helm_release.cert_manager
   id = "cert-manager/cert-manager"
 }
 
@@ -71,41 +71,41 @@ import {
 }
 
 import {
-  to = module.bootstrap.helm_release.cnpg
+  to = module.bootstrap.module.cnpg.helm_release.cnpg
   id = "cnpg-system/cnpg"
 }
 
 import {
-  to = module.bootstrap.helm_release.plugin_barman_cloud
+  to = module.bootstrap.module.cnpg.helm_release.plugin_barman_cloud
   id = "cnpg-system/plugin-barman-cloud"
 }
 
 import {
-  to = module.bootstrap.kubernetes_manifest.vault_block_metrics_path
+  to = module.bootstrap.module.vault.kubernetes_manifest.vault_block_metrics_path
   id = "apiVersion=traefik.io/v1alpha1,kind=Middleware,namespace=vault,name=block-metrics-path"
 }
 
 import {
-  to = module.bootstrap.helm_release.vault
+  to = module.bootstrap.module.vault.helm_release.vault
   id = "vault/vault"
 }
 
 import {
-  to = module.bootstrap.helm_release.external_secrets
+  to = module.bootstrap.module.external_secrets.helm_release.external_secrets
   id = "external-secrets/external-secrets"
 }
 
 import {
-  to = module.bootstrap.helm_release.keycloak_db
+  to = module.bootstrap.module.keycloak.helm_release.keycloak_db
   id = "keycloak/db"
 }
 
 import {
-  to = module.bootstrap.kubernetes_manifest.keycloak_block_metrics_path
+  to = module.bootstrap.module.keycloak.kubernetes_manifest.keycloak_block_metrics_path
   id = "apiVersion=traefik.io/v1alpha1,kind=Middleware,namespace=keycloak,name=block-metrics-path"
 }
 
 import {
-  to = module.bootstrap.helm_release.keycloak
+  to = module.bootstrap.module.keycloak.helm_release.keycloak
   id = "keycloak/keycloak"
 }

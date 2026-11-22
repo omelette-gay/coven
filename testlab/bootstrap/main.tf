@@ -17,14 +17,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~> 3.5"
     }
-    hcloud = {
-      source  = "hetznercloud/hcloud"
-      version = "~> 1.70"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.9"
-    }
   }
 }
 
@@ -40,15 +32,18 @@ provider "kubernetes" {
   config_context = "local"
 }
 
-provider "hcloud" {
-  token = "0000000000000000000000000000000000000000000000000000000000000000"
-}
-
 module "bootstrap" {
   source = "../../tfmodules/stack-bootstrap"
 
   cluster_domain = "coven.local"
   cluster_issuer = "vault"
+
+  grafana_host   = "monitoring.coven.local"
+  vault_host     = "vault.coven.local"
+  keycloak_host  = "auth.coven.local"
+  keycloak_realm = "omelette.gay"
+  smtp_relay     = "mail.mail.svc.cluster.local:587"
+  insecure_tls   = true
   # Keycloak's hostname doesn't resolve inside the testlab
   host_aliases = [{
     ip        = "192.168.57.100"
