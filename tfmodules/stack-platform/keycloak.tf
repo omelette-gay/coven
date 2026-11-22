@@ -7,6 +7,8 @@ resource "keycloak_realm" "omelette_gay" {
 
   user_managed_access         = true
   default_signature_algorithm = "RS256"
+  # accounts are only made by us (see docs/sso.md)
+  registration_allowed = false
 
   smtp_server {
     from = "keycloak@${var.cluster_domain}"
