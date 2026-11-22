@@ -284,3 +284,63 @@ import {
   to = module.platform.kubernetes_manifest.longhorn_snapshot_job
   id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=daily-snapshot"
 }
+
+import {
+  to = module.platform.kubernetes_namespace_v1.external_dns[0]
+  id = "external-dns"
+}
+
+import {
+  to = module.platform.module.external_dns_hetzner_token[0].kubernetes_service_account_v1.reader
+  id = "external-dns/hetzner-secret-reader"
+}
+
+import {
+  to = module.platform.module.external_dns_hetzner_token[0].vault_policy.reader
+  id = "hetzner-hetzner"
+}
+
+import {
+  to = module.platform.module.external_dns_hetzner_token[0].vault_kubernetes_auth_backend_role.reader
+  id = "auth/kubernetes/role/hetzner-hetzner"
+}
+
+import {
+  to = module.platform.module.external_dns_hetzner_token[0].kubernetes_manifest.secret_store
+  id = "apiVersion=external-secrets.io/v1,kind=SecretStore,namespace=external-dns,name=vault-hetzner-hetzner"
+}
+
+import {
+  to = module.platform.module.external_dns_hetzner_token[0].kubernetes_manifest.external_secret[0]
+  id = "apiVersion=external-secrets.io/v1,kind=ExternalSecret,namespace=external-dns,name=hetzner"
+}
+
+import {
+  to = module.platform.helm_release.external_dns[0]
+  id = "external-dns/hetzner"
+}
+
+import {
+  to = module.platform.hcloud_zone_rrset.extra["strix_a"]
+  id = "798597/strix.xdc/A"
+}
+
+import {
+  to = module.platform.hcloud_zone_rrset.extra["strix_aaaa"]
+  id = "798597/strix.xdc/AAAA"
+}
+
+import {
+  to = module.platform.hcloud_zone_rrset.extra["janus_a"]
+  id = "798597/janus.gs/A"
+}
+
+import {
+  to = module.platform.hcloud_zone_rrset.extra["janus_aaaa"]
+  id = "798597/janus.gs/AAAA"
+}
+
+import {
+  to = module.platform.hcloud_zone_rrset.extra["grimhilde_a"]
+  id = "798597/grimhilde.gs/A"
+}
