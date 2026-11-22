@@ -115,6 +115,16 @@ variable "vault_keycloak_secret_revision" {
   }
 }
 
+variable "keycloak_automation_password_revision" {
+  description = "Increase this to give Terraform's own Keycloak user a new password, written to Keycloak and Vault together"
+  type        = number
+  default     = 1
+  validation {
+    condition     = var.keycloak_automation_password_revision >= 1 && floor(var.keycloak_automation_password_revision) == var.keycloak_automation_password_revision
+    error_message = "keycloak_automation_password_revision must be a whole number, 1 or more."
+  }
+}
+
 variable "discord_alerts" {
   description = "Whether to send Grafana and Alertmanager alerts to Discord, using the webhook URL in Vault at gitops/grafana-discord-notifier"
   type        = bool

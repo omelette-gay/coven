@@ -35,16 +35,11 @@ migration, delete them locally first, as there's nothing to import on a fresh cl
 
 4. Apply platform. With the temporary admin's password still set, it logs in to Keycloak as `temp-admin`, and creates
    the realm, Vault's configuration (including GitHub Actions' access) and Terraform's own Keycloak user,
-   `ansible-automation`:
+   `ansible-automation`, whose password it writes to Vault. Terraform logs in as that user from now on:
 
        ./terraform.sh --local apply platform
 
-5. Give `ansible-automation` a password in Keycloak's master realm (Users, then Credentials), and store it in Vault, so
-   Terraform can log in as it from now on:
-
-       vault kv put -address https://vault.coven.local -tls-skip-verify secret/gitops/keycloak-master-credentials username=ansible-automation password=...
-
-6. Log in to Keycloak as `temp-admin` and create yourself two users:
+5. Log in to Keycloak as `temp-admin` and create yourself two users:
 
    - In the `omelette.gay` realm (the one used to log in to everything other than Keycloak's own admin console), and
      add it to the `admins` group. Check you can log in with `./login.sh --local`.
@@ -54,7 +49,7 @@ migration, delete them locally first, as there's nothing to import on a fresh cl
    `ansible-automation` is also a master-realm admin, but it's Terraform's. Only use its credentials (in Vault at
    `gitops/keycloak-master-credentials`) as break-glass.
 
-7. Delete `temp-admin` in the master realm, unset the password, and apply bootstrap again, which deletes the Secret
+6. Delete `temp-admin` in the master realm, unset the password, and apply bootstrap again, which deletes the Secret
    that held it. Then revoke the root token, and apply apps:
 
        unset TF_VAR_keycloak_bootstrap_admin_password
