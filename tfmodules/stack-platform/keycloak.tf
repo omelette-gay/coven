@@ -23,10 +23,36 @@ resource "keycloak_group" "admins" {
 
 # The user Terraform logs in to Keycloak as, through the credentials in Vault at gitops/keycloak-master-credentials. On a
 # fresh cluster, platform's first apply logs in as Keycloak's temporary admin instead (see docs/bootstrapping.md).
+#
+# Its password is generated when keycloak_automation_password_revision changes, and written to Keycloak and Vault
+# together without being stored in state. The provider logs in when the apply starts, so the apply that rotates it carries
+# on with its existing session.
+ephemeral "random_password" "automation" {
+  length  = 64
+  special = false
+}
+
 resource "keycloak_user" "automation" {
   realm_id = "master"
   username = "ansible-automation"
   enabled  = true
+
+  initial_password {
+    value_wo         = ephemeral.random_password.automation.result
+    value_wo_version = tostring(var.keycloak_automation_password_revision)
+    temporary        = false
+  }
+}
+
+resource "vault_kv_secret_v2" "keycloak_automation" {
+  mount = local.vault.kv_mountpoint
+  name  = "gitops/keycloak-master-credentials"
+
+  data_json_wo = jsonencode({
+    username = keycloak_user.automation.username
+    password = ephemeral.random_password.automation.result
+  })
+  data_json_wo_version = var.keycloak_automation_password_revision
 }
 
 data "keycloak_role" "master_admin" {
