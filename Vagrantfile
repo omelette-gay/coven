@@ -32,7 +32,7 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.provider "virtualbox" do |v|
-    v.memory = 10240
+    v.memory = 16384
     v.cpus = 2
   end
 
@@ -63,8 +63,8 @@ Vagrant.configure("2") do |config|
     config.vm.provider "hyperv" do |v|
       v.vmname = "coven-testlab"
 
-      v.memory = 10240
-      v.maxmemory = 10240
+      v.memory = 16384
+      v.maxmemory = 16384
       v.cpus = 2
     end
   end
