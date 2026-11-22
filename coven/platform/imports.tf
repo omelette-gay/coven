@@ -249,3 +249,38 @@ import {
   to = module.platform.helm_release.alloy
   id = "monitoring/alloy"
 }
+
+import {
+  to = module.platform.module.longhorn_backup_credentials.kubernetes_service_account_v1.reader
+  id = "longhorn-system/longhorn-gcp-backup-creds"
+}
+
+import {
+  to = module.platform.module.longhorn_backup_credentials.vault_policy.reader
+  id = "longhorn-gcp-backup-creds"
+}
+
+import {
+  to = module.platform.module.longhorn_backup_credentials.vault_kubernetes_auth_backend_role.reader
+  id = "auth/kubernetes/role/longhorn-gcp-backup-creds"
+}
+
+import {
+  to = module.platform.module.longhorn_backup_credentials.kubernetes_manifest.secret_store
+  id = "apiVersion=external-secrets.io/v1,kind=SecretStore,namespace=longhorn-system,name=vault-longhorn-gcp-backup-creds"
+}
+
+import {
+  to = module.platform.module.longhorn_backup_credentials.kubernetes_manifest.external_secret[0]
+  id = "apiVersion=external-secrets.io/v1,kind=ExternalSecret,namespace=longhorn-system,name=gcp-backup-creds"
+}
+
+import {
+  to = module.platform.kubernetes_manifest.longhorn_backup_job
+  id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=nightly-backup"
+}
+
+import {
+  to = module.platform.kubernetes_manifest.longhorn_snapshot_job
+  id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=daily-snapshot"
+}
