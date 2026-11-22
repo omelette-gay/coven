@@ -70,10 +70,16 @@ If you want to run Terraform locally, you will also need to log in to GCP.
 
     gcloud auth application-default login
 
-Now you can run `terraform apply` in `coven/bootstrap/`, `coven/platform/` and `coven/apps/`, in that order, to apply
-any Terraform changes. The bootstrap stack can't read Vault, so give it the Hetzner API token first:
+CI applies Terraform on every merge to `main`, so only apply to coven by hand as break-glass. `./terraform.sh` plans or
+applies one stack, or all three in order, and stops if one fails. It checks your kubectl context is coven's, and reads
+the Hetzner API token the bootstrap stack needs from Vault:
 
-    export HCLOUD_TOKEN=$(vault kv get -field=api_token secret/gitops/hetzner)
+    ./terraform.sh --coven plan all
+    ./terraform.sh --coven apply platform
+
+If Vault or Keycloak is down, log in with `./bootstrap-auth.sh --coven` instead of `./login.sh`. Only bootstrap can be
+applied then, as platform and apps need Vault, and you'll need to set `HCLOUD_TOKEN` yourself, as the script can't read
+it from Vault.
 
 # Testlab
 
@@ -132,8 +138,13 @@ to specify the inventory as `testlab/inventory`. Following this, you can specify
     uv run ansible-playbook -i testlab/inventory plays/configure-hosts.yml
     uv run ansible-playbook -i testlab/inventory plays/configure-cluster.yml
 
-Now you can run `terraform apply` in `testlab/bootstrap/`, `testlab/platform/` and `testlab/apps/`, in that order, to
-apply any Terraform changes.
+Now you can apply the Terraform stacks, in order:
+
+    ./terraform.sh --local apply all
+
+Use `bootstrap`, `platform` or `apps` instead of `all` for a single stack, and `plan` instead of `apply` to see what
+would change. Any further arguments are passed on to Terraform.
+
 The tfstate for the testlab is local, stored in gitignored files.
 
 # How To
