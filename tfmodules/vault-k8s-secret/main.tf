@@ -100,7 +100,12 @@ resource "kubernetes_manifest" "external_secret" {
       }
       target = merge(
         { name = var.k8s_secret_name },
-        length(var.template_data) > 0 ? { template = { data = var.template_data } } : {}
+        length(var.template_data) > 0 || length(var.k8s_secret_labels) > 0 ? {
+          template = merge(
+            length(var.template_data) > 0 ? { data = var.template_data } : {},
+            length(var.k8s_secret_labels) > 0 ? { metadata = { labels = var.k8s_secret_labels } } : {},
+          )
+        } : {}
       )
       dataFrom = [{
         extract = {

@@ -70,7 +70,8 @@ resource "helm_release" "this" {
   create_namespace = false
   wait             = true
 
-  values = [
+  # compact drops the metrics values when they're off, so other stores' values don't change
+  values = compact([
     yamlencode({
       mode = {
         standalone = merge(
@@ -98,12 +99,31 @@ resource "helm_release" "this" {
       }
 
       config = {
-        rustfs = {
-          log_level = "warn"
-        }
+        rustfs = merge(
+          { log_level = "warn" },
+          var.otlp_metrics ? {
+            obs_endpoint = {
+              enabled       = true
+              base_endpoint = "http://kube-prometheus-kube-prome-prometheus.monitoring.svc.cluster.local:9090/api/v1/otlp"
+              use_stdout    = true
+              metrics       = { enabled = true }
+            }
+          } : {}
+        )
       }
-    })
-  ]
+    }),
+    # labels for the metrics RustFS sends Prometheus
+    var.otlp_metrics ? yamlencode({
+      extraEnv = [
+        { name = "OTEL_SERVICE_NAME", value = "${var.name}-rustfs" },
+        { name = "K8S_POD_NAME", valueFrom = { fieldRef = { fieldPath = "metadata.name" } } },
+        {
+          name  = "OTEL_RESOURCE_ATTRIBUTES"
+          value = "service.namespace=${var.namespace},service.instance.id=$(K8S_POD_NAME),k8s.namespace.name=${var.namespace},k8s.pod.name=$(K8S_POD_NAME)"
+        },
+      ]
+    }) : "",
+  ])
 
 }
 

@@ -1,0 +1,97 @@
+global:
+ # ensure the credentials for Rustfs are imported
+  extraEnvFrom:
+    - secretRef:
+        name: ${object_store_secret}
+
+loki:
+  # define database versions (if new ones come out, they can be specified with an epoch here)
+  schemaConfig:
+    configs:
+      - from: "2025-01-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+
+  # use rustfs for storage
+  storage:
+    type: s3
+    bucketNames:
+      chunks: loki-chunks
+      ruler: loki-ruler
+      admin: loki-admin
+    s3:
+      endpoint: ${object_store_endpoint}
+      accessKeyId: $${RUSTFS_ACCESS_KEY}
+      secretAccessKey: $${RUSTFS_SECRET_KEY}
+      s3ForcePathStyle: true
+      insecure: true
+
+  # trust all connections inside the cluster
+  auth_enabled: false
+
+  # force the system to be okay with only a single replica
+  commonConfig:
+    replication_factor: 1
+
+  # enable retention
+  limits_config:
+    retention_period: 12w
+  compactor:
+    working_directory: /var/loki/data/retention
+    compaction_interval: 10m
+    retention_enabled: true
+    retention_delete_delay: 2h
+    retention_delete_worker_count: 100
+    delete_request_store: s3
+
+chunksCache:
+  allocatedMemory: ${chunks_cache_memory}
+  allocatedCPU: 50m # this is set very low because we're currently only a single node cluster
+
+memberlist:
+  service:
+    publishNotReadyAddresses: true
+
+# enabling monitoring
+monitoring:
+  dashboards:
+    enabled: true
+  rules:
+    enabled: true
+  alerts:
+    enabled: true
+  serviceMonitor:
+    enabled: true
+
+# deploy only a single instance
+deploymentMode: SingleBinary
+singleBinary:
+  replicas: 1
+
+# Zero out replica counts of other deployment modes
+backend:
+  replicas: 0
+read:
+  replicas: 0
+write:
+  replicas: 0
+ingester:
+  replicas: 0
+querier:
+  replicas: 0
+queryFrontend:
+  replicas: 0
+queryScheduler:
+  replicas: 0
+distributor:
+  replicas: 0
+compactor:
+  replicas: 0
+indexGateway:
+  replicas: 0
+bloomGateway:
+  replicas: 0

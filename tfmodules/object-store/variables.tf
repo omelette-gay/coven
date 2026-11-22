@@ -40,3 +40,9 @@ variable "buckets" {
     error_message = "buckets must contain at least one bucket name of 3-63 lowercase letters, digits and hyphens, short enough that create-<name>-bucket-<bucket> fits in 63 characters."
   }
 }
+
+variable "otlp_metrics" {
+  description = "Whether RustFS sends metrics to Prometheus over OTLP"
+  type        = bool
+  default     = false
+}

@@ -66,8 +66,9 @@ locals {
   }
 }
 
+# Groups whose IDs aren't passed in are looked up by name, so they must exist when the stack is planned
 data "keycloak_group" "this" {
-  for_each = local.group_roles
+  for_each = { for group, roles in local.group_roles : group => roles if !contains(keys(var.group_ids), group) }
 
   realm_id = var.realm_id
   name     = each.key
@@ -77,7 +78,7 @@ resource "keycloak_group_roles" "this" {
   for_each = local.group_roles
 
   realm_id   = var.realm_id
-  group_id   = data.keycloak_group.this[each.key].id
+  group_id   = try(var.group_ids[each.key], data.keycloak_group.this[each.key].id)
   role_ids   = [for role in each.value : keycloak_role.this[role].id]
   exhaustive = false
 }

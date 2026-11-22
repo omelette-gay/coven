@@ -47,6 +47,12 @@ variable "role_groups" {
   }
 }
 
+variable "group_ids" {
+  description = "IDs of groups in role_groups that are made in the same stack, as a map of group name to ID, so they don't have to exist before the stack is planned. Other groups are looked up by name"
+  type        = map(string)
+  default     = {}
+}
+
 variable "k8s_namespace" {
   description = "Namespace for the client credentials Secret"
   type        = string

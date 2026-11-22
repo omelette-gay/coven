@@ -19,6 +19,12 @@ variable "template_data" {
   default     = {}
 }
 
+variable "k8s_secret_labels" {
+  description = "Labels for the Secret, e.g. for Grafana's sidecar to find it. Only used if create_external_secret is true"
+  type        = map(string)
+  default     = {}
+}
+
 variable "k8s_secret_name" {
   description = "Name of the Kubernetes Secret created by External Secrets Operator. Required if create_external_secret is true"
   type        = string

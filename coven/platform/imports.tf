@@ -179,3 +179,73 @@ import {
   to = module.platform.kubernetes_manifest.vault_cluster_issuer
   id = "apiVersion=cert-manager.io/v1,kind=ClusterIssuer,name=vault"
 }
+
+import {
+  to = module.platform.module.grafana_sso.keycloak_openid_client.this
+  id = "omelette.gay/65155a71-5c19-454c-b501-01789254cfa9"
+}
+
+import {
+  to = module.platform.module.grafana_sso.keycloak_openid_user_client_role_protocol_mapper.roles
+  id = "omelette.gay/client/65155a71-5c19-454c-b501-01789254cfa9/9174f0d8-073b-4fd4-acbd-c5c30ed57936"
+}
+
+import {
+  to = module.platform.module.grafana_sso.keycloak_role.this["grafana-admin"]
+  id = "omelette.gay/f160357a-b286-4079-8ce7-b249abaafe12"
+}
+
+import {
+  to = module.platform.module.grafana_sso.keycloak_group_roles.this["admins"]
+  id = "omelette.gay/9347e574-b522-462d-9b0d-1d0a5d28a0bd"
+}
+
+import {
+  to = module.platform.module.grafana_sso.kubernetes_secret_v1.this
+  id = "monitoring/grafana-keycloak-creds"
+}
+
+import {
+  to = module.platform.kubernetes_manifest.grafana_probe
+  id = "apiVersion=monitoring.coreos.com/v1,kind=Probe,namespace=monitoring,name=grafana-https"
+}
+
+import {
+  to = module.platform.kubernetes_manifest.alertmanager_discord[0]
+  id = "apiVersion=monitoring.coreos.com/v1alpha1,kind=AlertmanagerConfig,namespace=monitoring,name=alertmanager-discord-notifier"
+}
+
+import {
+  to = module.platform.module.loki_object_store.helm_release.this
+  id = "monitoring/loki-rustfs"
+}
+
+import {
+  to = module.platform.module.loki_object_store.kubernetes_job_v1.bucket["loki-chunks"]
+  id = "monitoring/create-loki-bucket-loki-chunks"
+}
+
+import {
+  to = module.platform.module.loki_object_store.kubernetes_job_v1.bucket["loki-ruler"]
+  id = "monitoring/create-loki-bucket-loki-ruler"
+}
+
+import {
+  to = module.platform.module.loki_object_store.kubernetes_job_v1.bucket["loki-admin"]
+  id = "monitoring/create-loki-bucket-loki-admin"
+}
+
+import {
+  to = module.platform.helm_release.loki
+  id = "monitoring/loki"
+}
+
+import {
+  to = module.platform.kubernetes_config_map_v1.loki_data_source
+  id = "monitoring/loki-data-source"
+}
+
+import {
+  to = module.platform.helm_release.alloy
+  id = "monitoring/alloy"
+}
