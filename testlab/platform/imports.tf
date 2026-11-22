@@ -46,7 +46,7 @@ import {
 }
 
 import {
-  to = module.platform.kubernetes_manifest.keycloak_probe
+  to = module.platform.kubernetes_manifest.probe["keycloak"]
   id = "apiVersion=monitoring.coreos.com/v1,kind=Probe,namespace=keycloak,name=keycloak-https"
 }
 
@@ -136,7 +136,7 @@ import {
 }
 
 import {
-  to = module.platform.kubernetes_manifest.vault_probe
+  to = module.platform.kubernetes_manifest.probe["vault"]
   id = "apiVersion=monitoring.coreos.com/v1,kind=Probe,namespace=vault,name=vault-https"
 }
 
@@ -206,42 +206,42 @@ import {
 }
 
 import {
-  to = module.platform.kubernetes_manifest.grafana_probe
+  to = module.platform.kubernetes_manifest.probe["grafana"]
   id = "apiVersion=monitoring.coreos.com/v1,kind=Probe,namespace=monitoring,name=grafana-https"
 }
 
 import {
-  to = module.platform.module.loki_object_store.helm_release.this
+  to = module.platform.module.logging.module.object_store.helm_release.this
   id = "monitoring/loki-rustfs"
 }
 
 import {
-  to = module.platform.module.loki_object_store.kubernetes_job_v1.bucket["loki-chunks"]
+  to = module.platform.module.logging.module.object_store.kubernetes_job_v1.bucket["loki-chunks"]
   id = "monitoring/create-loki-bucket-loki-chunks"
 }
 
 import {
-  to = module.platform.module.loki_object_store.kubernetes_job_v1.bucket["loki-ruler"]
+  to = module.platform.module.logging.module.object_store.kubernetes_job_v1.bucket["loki-ruler"]
   id = "monitoring/create-loki-bucket-loki-ruler"
 }
 
 import {
-  to = module.platform.module.loki_object_store.kubernetes_job_v1.bucket["loki-admin"]
+  to = module.platform.module.logging.module.object_store.kubernetes_job_v1.bucket["loki-admin"]
   id = "monitoring/create-loki-bucket-loki-admin"
 }
 
 import {
-  to = module.platform.helm_release.loki
+  to = module.platform.module.logging.helm_release.loki
   id = "monitoring/loki"
 }
 
 import {
-  to = module.platform.kubernetes_config_map_v1.loki_data_source
+  to = module.platform.module.logging.kubernetes_config_map_v1.loki_data_source
   id = "monitoring/loki-data-source"
 }
 
 import {
-  to = module.platform.helm_release.alloy
+  to = module.platform.module.logging.helm_release.alloy
   id = "monitoring/alloy"
 }
 
@@ -281,51 +281,51 @@ import {
 }
 
 import {
-  to = module.platform.kubernetes_namespace_v1.mail
+  to = module.platform.module.outbound_mail.kubernetes_namespace_v1.mail
   id = "mail"
 }
 
 import {
-  to = module.platform.module.dkim_key.kubernetes_service_account_v1.reader
+  to = module.platform.module.outbound_mail.module.dkim_key.kubernetes_service_account_v1.reader
   id = "mail/outbound-mail-dkim"
 }
 
 import {
-  to = module.platform.module.dkim_key.vault_policy.reader
+  to = module.platform.module.outbound_mail.module.dkim_key.vault_policy.reader
   id = "outbound-mail-dkim"
 }
 
 import {
-  to = module.platform.module.dkim_key.vault_kubernetes_auth_backend_role.reader
+  to = module.platform.module.outbound_mail.module.dkim_key.vault_kubernetes_auth_backend_role.reader
   id = "auth/kubernetes/role/outbound-mail-dkim"
 }
 
 import {
-  to = module.platform.module.dkim_key.kubernetes_manifest.secret_store
+  to = module.platform.module.outbound_mail.module.dkim_key.kubernetes_manifest.secret_store
   id = "apiVersion=external-secrets.io/v1,kind=SecretStore,namespace=mail,name=vault-outbound-mail-dkim"
 }
 
 import {
-  to = module.platform.module.dkim_key.kubernetes_manifest.external_secret[0]
+  to = module.platform.module.outbound_mail.module.dkim_key.kubernetes_manifest.external_secret[0]
   id = "apiVersion=external-secrets.io/v1,kind=ExternalSecret,namespace=mail,name=dkim"
 }
 
 import {
-  to = module.platform.helm_release.mail
+  to = module.platform.module.outbound_mail.helm_release.mail
   id = "mail/mail"
 }
 
 import {
-  to = module.platform.kubernetes_namespace_v1.mariadb
+  to = module.platform.module.mariadb_operator.kubernetes_namespace_v1.mariadb
   id = "mariadb-system"
 }
 
 import {
-  to = module.platform.helm_release.mariadb_operator_crds
+  to = module.platform.module.mariadb_operator.helm_release.mariadb_operator_crds
   id = "mariadb-system/mariadb-operator-crds"
 }
 
 import {
-  to = module.platform.helm_release.mariadb_operator
+  to = module.platform.module.mariadb_operator.helm_release.mariadb_operator
   id = "mariadb-system/mariadb-operator"
 }

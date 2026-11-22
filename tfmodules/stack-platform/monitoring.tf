@@ -9,23 +9,34 @@ module "grafana_sso" {
   realm_id            = keycloak_realm.omelette_gay.id
   client_id           = "grafana"
   client_name         = "grafana"
-  valid_redirect_uris = ["https://${local.grafana_host}/login/generic_oauth"]
+  valid_redirect_uris = ["https://${var.grafana_host}/login/generic_oauth"]
   client_roles        = ["grafana-admin"]
   role_groups         = { grafana-admin = [keycloak_group.admins.name] }
   group_ids           = { (keycloak_group.admins.name) = keycloak_group.admins.id }
   keycloak_url        = var.keycloak_url
-  k8s_namespace       = "monitoring"
+  k8s_namespace       = local.namespaces.monitoring
   k8s_secret_name     = "grafana-keycloak-creds"
   secret_revision     = var.grafana_keycloak_secret_revision
 }
 
-resource "kubernetes_manifest" "grafana_probe" {
+# Checks over HTTPS that the services bootstrap installs are up (the HttpProbeFailed alert)
+locals {
+  probes = {
+    keycloak = { namespace = local.namespaces.keycloak, url = "${var.keycloak_url}/realms/master/" }
+    vault    = { namespace = local.namespaces.vault, url = "https://${var.vault_host}/ui/vault/auth" }
+    grafana  = { namespace = local.namespaces.monitoring, url = "https://${var.grafana_host}/login" }
+  }
+}
+
+resource "kubernetes_manifest" "probe" {
+  for_each = local.probes
+
   manifest = {
     apiVersion = "monitoring.coreos.com/v1"
     kind       = "Probe"
     metadata = {
-      name      = "grafana-https"
-      namespace = "monitoring"
+      name      = "${each.key}-https"
+      namespace = each.value.namespace
     }
     spec = {
       interval = "60s"
@@ -33,7 +44,7 @@ resource "kubernetes_manifest" "grafana_probe" {
       prober   = local.blackbox_prober
       targets = {
         staticConfig = {
-          static = ["https://${local.grafana_host}/login"]
+          static = [each.value.url]
         }
       }
     }
@@ -46,12 +57,14 @@ module "grafana_discord_contact_point" {
   source = "../vault-k8s-secret"
   count  = var.discord_alerts ? 1 : 0
 
-  vault_secret_name        = "gitops/grafana-discord-notifier"
-  k8s_secret_name          = "grafana-discord-notifier"
-  k8s_secret_labels        = { grafana_alert = "1" }
-  k8s_namespace            = "monitoring"
-  k8s_service_account_name = "grafana-discord-notifier"
-  vault_role_name          = "grafana-discord-notifier"
+  vault_secret_name             = "gitops/grafana-discord-notifier"
+  vault_kv_mountpoint           = local.vault.kv_mountpoint
+  vault_kubernetes_auth_backend = local.vault.kubernetes_auth_backend
+  k8s_secret_name               = "grafana-discord-notifier"
+  k8s_secret_labels             = { grafana_alert = "1" }
+  k8s_namespace                 = local.namespaces.monitoring
+  k8s_service_account_name      = "grafana-discord-notifier"
+  vault_role_name               = "grafana-discord-notifier"
   template_data = {
     "discord-notifier.yaml" = <<-EOT
       apiVersion: 1
@@ -61,7 +74,7 @@ module "grafana_discord_contact_point" {
             - uid: discord
               type: discord
               settings:
-                avatar_url: https://${local.grafana_host}/public/img/grafana_icon.svg
+                avatar_url: https://${var.grafana_host}/public/img/grafana_icon.svg
                 url: {{ .webhook_url }}
                 use_discord_username: true
               disableResolveMessage: false
@@ -73,11 +86,13 @@ module "alertmanager_discord_webhook" {
   source = "../vault-k8s-secret"
   count  = var.discord_alerts ? 1 : 0
 
-  vault_secret_name        = "gitops/grafana-discord-notifier"
-  k8s_secret_name          = "discord-alerting-webhook"
-  k8s_namespace            = "monitoring"
-  k8s_service_account_name = "discord-alerting-webhook"
-  vault_role_name          = "discord-alerting-webhook"
+  vault_secret_name             = "gitops/grafana-discord-notifier"
+  vault_kv_mountpoint           = local.vault.kv_mountpoint
+  vault_kubernetes_auth_backend = local.vault.kubernetes_auth_backend
+  k8s_secret_name               = "discord-alerting-webhook"
+  k8s_namespace                 = local.namespaces.monitoring
+  k8s_service_account_name      = "discord-alerting-webhook"
+  vault_role_name               = "discord-alerting-webhook"
 }
 
 resource "kubernetes_manifest" "alertmanager_discord" {
@@ -88,7 +103,7 @@ resource "kubernetes_manifest" "alertmanager_discord" {
     kind       = "AlertmanagerConfig"
     metadata = {
       name      = "alertmanager-discord-notifier"
-      namespace = "monitoring"
+      namespace = local.namespaces.monitoring
     }
     spec = {
       route = {
@@ -109,67 +124,13 @@ resource "kubernetes_manifest" "alertmanager_discord" {
   }
 }
 
-# Logs: Alloy on each node sends pods' logs, the systemd journal and Kubernetes events to Loki, which keeps them in RustFS
-module "loki_object_store" {
-  source = "../object-store"
+module "logging" {
+  source = "../logging"
 
-  name         = "loki"
-  namespace    = "monitoring"
-  storage_size = var.loki_storage_size
-  buckets      = ["loki-chunks", "loki-ruler", "loki-admin"]
-  otlp_metrics = true
-}
+  namespace           = local.namespaces.monitoring
+  storage_size        = var.loki_storage_size
+  chunks_cache_memory = var.loki_chunks_cache_memory
 
-resource "helm_release" "loki" {
-  name       = "loki"
-  namespace  = "monitoring"
-  repository = "https://grafana-community.github.io/helm-charts/"
-  chart      = "loki"
-  version    = "21.2.3"
-  atomic     = true
-  wait       = true
-  timeout    = 600
-
-  values = [templatefile("${path.module}/values/loki.yaml.tftpl", {
-    object_store_secret   = module.loki_object_store.credentials_secret_name
-    object_store_endpoint = module.loki_object_store.endpoint
-    chunks_cache_memory   = var.loki_chunks_cache_memory
-  })]
-}
-
-resource "kubernetes_config_map_v1" "loki_data_source" {
-  metadata {
-    name      = "loki-data-source"
-    namespace = "monitoring"
-    labels = {
-      grafana_datasource = "1"
-    }
-  }
-
-  data = {
-    "loki-stack-datasource.yaml" = chomp(<<-EOT
-      apiVersion: 1
-      datasources:
-        - name: Loki
-          type: loki
-          access: proxy
-          url: http://loki-gateway
-          version: 1
-    EOT
-    )
-  }
-}
-
-resource "helm_release" "alloy" {
-  name       = "alloy"
-  namespace  = "monitoring"
-  repository = "https://grafana.github.io/helm-charts"
-  chart      = "alloy"
-  version    = "1.16.0"
-  atomic     = true
-  wait       = true
-
-  values = [file("${path.module}/values/alloy.yaml")]
-
-  depends_on = [helm_release.loki]
+  vault_kv_mountpoint           = local.vault.kv_mountpoint
+  vault_kubernetes_auth_backend = local.vault.kubernetes_auth_backend
 }

@@ -7,4 +7,8 @@ module "glitchtip" {
   keycloak_secret_revision = var.glitchtip_keycloak_secret_revision
   postgresql_instances     = var.glitchtip_postgresql_instances
   sender_email             = var.glitchtip_sender_email
+  keycloak_realm           = keycloak_realm.omelette_gay.realm
+
+  vault_kv_mountpoint           = local.vault.kv_mountpoint
+  vault_kubernetes_auth_backend = local.vault.kubernetes_auth_backend
 }

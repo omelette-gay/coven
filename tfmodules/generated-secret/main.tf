@@ -41,10 +41,11 @@ module "secret" {
   source = "../vault-k8s-secret"
 
   # Refers to the secret in Vault, so that the sync is created after it
-  vault_secret_name        = vault_kv_secret_v2.this.name
-  vault_kv_mountpoint      = var.vault_kv_mountpoint
-  k8s_secret_name          = var.k8s_secret_name
-  k8s_namespace            = var.k8s_namespace
-  k8s_service_account_name = var.k8s_service_account_name
-  vault_role_name          = var.vault_role_name
+  vault_secret_name             = vault_kv_secret_v2.this.name
+  vault_kv_mountpoint           = var.vault_kv_mountpoint
+  vault_kubernetes_auth_backend = var.vault_kubernetes_auth_backend
+  k8s_secret_name               = var.k8s_secret_name
+  k8s_namespace                 = var.k8s_namespace
+  k8s_service_account_name      = var.k8s_service_account_name
+  vault_role_name               = var.vault_role_name
 }

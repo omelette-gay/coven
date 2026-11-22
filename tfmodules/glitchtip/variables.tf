@@ -67,3 +67,15 @@ variable "sender_email" {
     error_message = "sender_email must be an email address."
   }
 }
+
+variable "vault_kv_mountpoint" {
+  description = "Vault KV v2 mount for GlitchTip's secrets. Pass the mount's path from the stack that makes it, so the secrets are written after it"
+  type        = string
+  default     = "secret"
+}
+
+variable "vault_kubernetes_auth_backend" {
+  description = "Path of Vault's Kubernetes auth method. Pass the auth backend's path from the stack that makes it, so the roles are created after it"
+  type        = string
+  default     = "kubernetes"
+}

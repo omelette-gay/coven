@@ -46,3 +46,15 @@ variable "otlp_metrics" {
   type        = bool
   default     = false
 }
+
+variable "vault_kv_mountpoint" {
+  description = "Vault KV v2 mount for the secret. Pass the mount's path from the stack that makes it, so the secret is written after it"
+  type        = string
+  default     = "secret"
+}
+
+variable "vault_kubernetes_auth_backend" {
+  description = "Path of Vault's Kubernetes auth method. Pass the auth backend's path from the stack that makes it, so the role is created after it"
+  type        = string
+  default     = "kubernetes"
+}

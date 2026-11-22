@@ -127,23 +127,20 @@ module "platform" {
   glitchtip_keycloak_secret_revision = 2
 
   cluster_domain     = "coven.omelette.gay"
+  keycloak_realm     = "omelette.gay"
+  grafana_host       = "monitoring.coven.omelette.gay"
+  vault_host         = "vault.coven.omelette.gay"
   kubernetes_api_url = "https://strix.xdc.omelette.gay:6443"
 
   discord_alerts    = true
   loki_storage_size = "50Gi"
 
-  dns = {
-    enabled = true
-    extra_records = {
-      strix_a     = { name = "strix.xdc", type = "A", values = ["168.119.4.112"] }
-      strix_aaaa  = { name = "strix.xdc", type = "AAAA", values = ["2a01:4f8:242:4f21::2"] }
-      janus_a     = { name = "janus.gs", type = "A", values = ["51.148.152.196"] }
-      janus_aaaa  = { name = "janus.gs", type = "AAAA", values = ["2a02:8011:d017:dba5::1"] }
-      grimhilde_a = { name = "grimhilde.gs", type = "A", values = ["192.168.178.36"] }
-    }
-    # strix, which outbound mail runs on
-    mail_ipv4_addresses = ["168.119.4.112"]
+  dns_zone = {
+    id   = data.hcloud_zone.omelette_gay.id
+    name = data.hcloud_zone.omelette_gay.name
   }
+  # strix, which outbound mail runs on
+  mail_ipv4_addresses = ["168.119.4.112"]
   outbound_mail_node_selector = {
     "coven.omelette.gay/location" = "xdc"
   }

@@ -150,9 +150,9 @@ resource "keycloak_openid_client" "vault" {
   enabled               = true
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
-  root_url              = "https://${local.vault_host}"
+  root_url              = "https://${var.vault_host}"
   valid_redirect_uris = [
-    "https://${local.vault_host}/ui/vault/auth/keycloak/oidc/callback",
+    "https://${var.vault_host}/ui/vault/auth/keycloak/oidc/callback",
     "http://localhost:8250/oidc/callback", # for CLI login
   ]
 
@@ -216,25 +216,4 @@ resource "vault_jwt_auth_backend_role" "keycloak_admin" {
   token_policies        = [vault_policy.admin.name]
   token_max_ttl         = 8 * 60 * 60
   allowed_redirect_uris = keycloak_openid_client.vault.valid_redirect_uris
-}
-
-resource "kubernetes_manifest" "vault_probe" {
-  manifest = {
-    apiVersion = "monitoring.coreos.com/v1"
-    kind       = "Probe"
-    metadata = {
-      name      = "vault-https"
-      namespace = "vault"
-    }
-    spec = {
-      interval = "60s"
-      module   = "http_2xx"
-      prober   = local.blackbox_prober
-      targets = {
-        staticConfig = {
-          static = ["https://${local.vault_host}/ui/vault/auth"]
-        }
-      }
-    }
-  }
 }

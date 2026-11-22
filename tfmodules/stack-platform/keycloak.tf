@@ -1,11 +1,7 @@
-locals {
-  keycloak_realm = "omelette.gay"
-}
-
 # The realm everyone logs in to things with. Admin accounts for Keycloak itself are in the master realm. Who can use what
 # is up to each app (see docs/sso.md).
 resource "keycloak_realm" "omelette_gay" {
-  realm       = local.keycloak_realm
+  realm       = var.keycloak_realm
   internal_id = "omelette-gay"
   enabled     = true
 
@@ -14,8 +10,8 @@ resource "keycloak_realm" "omelette_gay" {
 
   smtp_server {
     from = "keycloak@${var.cluster_domain}"
-    host = local.smtp_host
-    port = local.smtp_port
+    host = module.outbound_mail.smtp_host
+    port = tostring(module.outbound_mail.smtp_port)
   }
 }
 
@@ -49,30 +45,11 @@ resource "keycloak_user_roles" "automation" {
 module "keycloak_backup_credentials" {
   source = "../vault-k8s-secret"
 
-  vault_secret_name        = "backups/service-account-key"
-  k8s_secret_name          = "keycloak-gcp-backup-creds"
-  k8s_namespace            = "keycloak"
-  k8s_service_account_name = "keycloak-gcp-backup-creds"
-  vault_role_name          = "keycloak-gcp-backup-creds"
-}
-
-resource "kubernetes_manifest" "keycloak_probe" {
-  manifest = {
-    apiVersion = "monitoring.coreos.com/v1"
-    kind       = "Probe"
-    metadata = {
-      name      = "keycloak-https"
-      namespace = "keycloak"
-    }
-    spec = {
-      interval = "60s"
-      module   = "http_2xx"
-      prober   = local.blackbox_prober
-      targets = {
-        staticConfig = {
-          static = ["${var.keycloak_url}/realms/master/"]
-        }
-      }
-    }
-  }
+  vault_secret_name             = "backups/service-account-key"
+  vault_kv_mountpoint           = local.vault.kv_mountpoint
+  vault_kubernetes_auth_backend = local.vault.kubernetes_auth_backend
+  k8s_secret_name               = "keycloak-gcp-backup-creds"
+  k8s_namespace                 = local.namespaces.keycloak
+  k8s_service_account_name      = "keycloak-gcp-backup-creds"
+  vault_role_name               = "keycloak-gcp-backup-creds"
 }

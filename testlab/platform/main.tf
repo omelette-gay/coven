@@ -94,6 +94,9 @@ module "platform" {
   glitchtip_sender_email         = "glitchtip@coven.local"
 
   cluster_domain     = "coven.local"
+  keycloak_realm     = "omelette.gay"
+  grafana_host       = "monitoring.coven.local"
+  vault_host         = "vault.coven.local"
   kubernetes_api_url = "https://192.168.57.100:6443"
   insecure_tls       = true
 

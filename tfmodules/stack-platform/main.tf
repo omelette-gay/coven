@@ -18,34 +18,32 @@ terraform {
       source  = "keycloak/keycloak"
       version = ">= 5.9.0"
     }
-    hcloud = {
-      source  = "hetznercloud/hcloud"
-      version = ">= 1.68.0"
-    }
     random = {
       source  = "hashicorp/random"
       version = ">= 3.9.0"
-    }
-    tls = {
-      source  = "hashicorp/tls"
-      version = ">= 4.1.0"
     }
   }
 }
 
 locals {
-  grafana_host = "monitoring.${var.cluster_domain}"
-  vault_host   = "vault.${var.cluster_domain}"
+  # namespaces the bootstrap stack makes
+  namespaces = {
+    monitoring   = "monitoring"
+    keycloak     = "keycloak"
+    vault        = "vault"
+    longhorn     = "longhorn-system"
+    cert_manager = "cert-manager"
+  }
 
-  smtp_host = "mail.mail.svc.cluster.local"
-  smtp_port = "587"
-
-  # the blackbox exporter installed by bootstrap, which probes our sites from inside the cluster
+  # the blackbox exporter bootstrap installs, which probes our sites from inside the cluster
   blackbox_prober = {
-    url  = "blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115"
+    url  = "blackbox-exporter-prometheus-blackbox-exporter.${local.namespaces.monitoring}.svc.cluster.local:9115"
     path = "/probe"
   }
 
-  # the omelette.gay zone, made by coven's bootstrap stack
-  omelette_gay_zone_id = "798597"
+  # Vault's mounts, so that everything using them is made after them on a fresh cluster
+  vault = {
+    kv_mountpoint           = vault_mount.secret.path
+    kubernetes_auth_backend = vault_auth_backend.kubernetes.path
+  }
 }

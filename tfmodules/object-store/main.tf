@@ -32,6 +32,9 @@ module "credentials" {
   k8s_namespace            = var.namespace
   k8s_service_account_name = "${var.namespace}-${var.name}-object-store"
   vault_role_name          = "${var.namespace}-${var.name}-object-store"
+
+  vault_kv_mountpoint           = var.vault_kv_mountpoint
+  vault_kubernetes_auth_backend = var.vault_kubernetes_auth_backend
 }
 
 # Only made here when the volume needs backing up: the chart can only label its own volume through commonLabels, which

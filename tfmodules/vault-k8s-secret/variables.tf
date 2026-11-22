@@ -75,3 +75,9 @@ variable "refresh_interval" {
     error_message = "refresh_interval must be a Go duration, e.g. 1h or 30m, or 0 to never refresh."
   }
 }
+
+variable "vault_kubernetes_auth_backend" {
+  description = "Path of Vault's Kubernetes auth method. Pass the auth backend's path from the stack that makes it, so the role is created after it"
+  type        = string
+  default     = "kubernetes"
+}

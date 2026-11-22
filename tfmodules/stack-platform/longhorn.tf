@@ -2,21 +2,24 @@
 module "longhorn_backup_credentials" {
   source = "../vault-k8s-secret"
 
-  vault_secret_name        = "backups/service-account-creds"
-  k8s_secret_name          = "gcp-backup-creds"
-  k8s_namespace            = "longhorn-system"
-  k8s_service_account_name = "longhorn-gcp-backup-creds"
-  vault_role_name          = "longhorn-gcp-backup-creds"
+  vault_secret_name             = "backups/service-account-creds"
+  vault_kv_mountpoint           = local.vault.kv_mountpoint
+  vault_kubernetes_auth_backend = local.vault.kubernetes_auth_backend
+  k8s_secret_name               = "gcp-backup-creds"
+  k8s_namespace                 = local.namespaces.longhorn
+  k8s_service_account_name      = "longhorn-gcp-backup-creds"
+  vault_role_name               = "longhorn-gcp-backup-creds"
 }
 
-# Backs up volumes labelled for it (see backup_labels in bootstrap) off-site
+# Backs up volumes labelled for it off-site. Its name must match longhorn_recurring_job_name in the bootstrap stack,
+# which labels Vault's volume for it
 resource "kubernetes_manifest" "longhorn_backup_job" {
   manifest = {
     apiVersion = "longhorn.io/v1beta2"
     kind       = "RecurringJob"
     metadata = {
       name      = "nightly-backup"
-      namespace = "longhorn-system"
+      namespace = local.namespaces.longhorn
     }
     spec = {
       cron        = "30 7,19 * * *"
@@ -38,7 +41,7 @@ resource "kubernetes_manifest" "longhorn_snapshot_job" {
     kind       = "RecurringJob"
     metadata = {
       name      = "daily-snapshot"
-      namespace = "longhorn-system"
+      namespace = local.namespaces.longhorn
     }
     spec = {
       cron        = "0 3 * * *"

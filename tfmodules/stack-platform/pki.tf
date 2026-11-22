@@ -50,7 +50,7 @@ resource "vault_kubernetes_auth_backend_role" "cert_manager" {
   backend                          = vault_auth_backend.kubernetes.path
   role_name                        = "cert-manager"
   bound_service_account_names      = [kubernetes_service_account_v1.vault_issuer.metadata[0].name]
-  bound_service_account_namespaces = ["cert-manager"]
+  bound_service_account_namespaces = [local.namespaces.cert_manager]
   token_policies                   = [vault_policy.pki_issuer.name]
 }
 
@@ -59,7 +59,7 @@ resource "vault_kubernetes_auth_backend_role" "cert_manager" {
 resource "kubernetes_service_account_v1" "vault_issuer" {
   metadata {
     name      = "vault-issuer"
-    namespace = "cert-manager"
+    namespace = local.namespaces.cert_manager
   }
 
   automount_service_account_token = false
@@ -68,7 +68,7 @@ resource "kubernetes_service_account_v1" "vault_issuer" {
 resource "kubernetes_role_v1" "vault_issuer" {
   metadata {
     name      = "vault-issuer"
-    namespace = "cert-manager"
+    namespace = local.namespaces.cert_manager
   }
 
   rule {
@@ -82,13 +82,13 @@ resource "kubernetes_role_v1" "vault_issuer" {
 resource "kubernetes_role_binding_v1" "vault_issuer" {
   metadata {
     name      = "vault-issuer"
-    namespace = "cert-manager"
+    namespace = local.namespaces.cert_manager
   }
 
   subject {
     kind      = "ServiceAccount"
     name      = "cert-manager"
-    namespace = "cert-manager"
+    namespace = local.namespaces.cert_manager
   }
 
   role_ref {

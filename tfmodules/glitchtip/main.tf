@@ -36,6 +36,9 @@ module "secret_key" {
   k8s_namespace            = kubernetes_namespace_v1.this.metadata[0].name
   k8s_service_account_name = "glitchtip-secret-key"
   vault_role_name          = "glitchtip-secret-key"
+
+  vault_kv_mountpoint           = var.vault_kv_mountpoint
+  vault_kubernetes_auth_backend = var.vault_kubernetes_auth_backend
 }
 
 module "keycloak_client" {
@@ -59,6 +62,9 @@ module "object_store" {
   name      = "glitchtip"
   namespace = kubernetes_namespace_v1.this.metadata[0].name
   buckets   = ["glitchtip"]
+
+  vault_kv_mountpoint           = var.vault_kv_mountpoint
+  vault_kubernetes_auth_backend = var.vault_kubernetes_auth_backend
 
   depends_on = [kubernetes_namespace_v1.this]
 }

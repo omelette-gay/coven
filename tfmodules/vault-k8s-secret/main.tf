@@ -37,7 +37,7 @@ resource "vault_policy" "reader" {
 }
 
 resource "vault_kubernetes_auth_backend_role" "reader" {
-  backend                          = "kubernetes"
+  backend                          = var.vault_kubernetes_auth_backend
   role_name                        = var.vault_role_name
   bound_service_account_names      = [var.k8s_service_account_name]
   bound_service_account_namespaces = [var.k8s_namespace]
