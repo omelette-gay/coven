@@ -16,6 +16,11 @@ import {
 }
 
 import {
+  to = module.bootstrap.kubernetes_namespace_v1.cnpg
+  id = "cnpg-system"
+}
+
+import {
   to = module.bootstrap.helm_release.longhorn
   id = "longhorn-system/longhorn"
 }
@@ -48,4 +53,14 @@ import {
 import {
   to = module.bootstrap.kubernetes_manifest.redirect_https
   id = "apiVersion=traefik.io/v1alpha1,kind=Middleware,namespace=kube-system,name=redirect-https"
+}
+
+import {
+  to = module.bootstrap.helm_release.cnpg
+  id = "cnpg-system/cnpg"
+}
+
+import {
+  to = module.bootstrap.helm_release.plugin_barman_cloud
+  id = "cnpg-system/plugin-barman-cloud"
 }
