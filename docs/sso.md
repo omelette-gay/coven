@@ -49,7 +49,7 @@ That can be acceptable, but it should be a deliberate choice.
 | App | Client defined in | Gated by | A user with no roles gets |
 |---|---|---|---|
 | Vault | `tfmodules/stack-platform/vault.tf` | Vault's OIDC role only accepts tokens with its admin role (`bound_claims`) and audience (`bound_audiences`) | Login refused (1) |
-| Grafana | `tfmodules/stack-platform/monitoring.tf` (via `tfmodules/keycloak-client`); gate in Grafana's values in `tfmodules/stack-bootstrap` | `role_attribute_path` only gives a role to admins, and `role_attribute_strict` refuses anyone else | Login refused (1) |
+| Grafana | `tfmodules/stack-platform/monitoring.tf` (via `tfmodules/keycloak-client`); gate in `tfmodules/kube-prometheus-stack/values/grafana.yaml.tftpl` | `role_attribute_path` only gives a role to admins, and `role_attribute_strict` refuses anyone else | Login refused (1) |
 | Home Assistant | `coven/apps/home-assistant.tf`; gate in the `omelette-gay/home-assistant` chart | `auth_oidc` `roles.user` is `resident` and `roles.admin` is `admin`, so users need one of them | Login refused (1) |
 | Wedding | `coven/apps/wedding.tf`; gate in `omelette-gay/wedding` | Django admin requires `is_staff`, which SSO-created users don't have. RSVPs use invite codes, not login | An account that can't see anything (2) |
 | GlitchTip | `tfmodules/glitchtip` (via `tfmodules/keycloak-client`) | Everything is inside organizations. New users belong to none, and only superusers can create them (`ENABLE_ORGANIZATION_CREATION` defaults to false) | An account that can't see anything until invited to an organization (2) |

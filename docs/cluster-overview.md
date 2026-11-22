@@ -68,7 +68,8 @@ local Vagrant VM. Each environment has three stacks, each with its own state, ap
 - `apps/` - leaf services that nothing else in the cluster depends on.
 
 The bootstrap and platform stacks are shared modules (`tfmodules/stack-bootstrap/` and `tfmodules/stack-platform/`),
-so both environments run the same platform. Apps differ between environments, so each environment's `apps/` defines
+so both environments run the same platform. Each service in them is its own module in `tfmodules/` (e.g.
+`tfmodules/keycloak/`, `tfmodules/logging/`); see each stack's README. Apps differ between environments, so each environment's `apps/` defines
 them directly.
 
 Between them, they manage:
@@ -81,7 +82,7 @@ Between them, they manage:
 - Platform: Vault's auth methods, policies, secrets engines and CA, and cert-manager's Vault issuer; the `omelette.gay`
   realm, its `admins` group and Terraform's own Keycloak user; Grafana's SSO client and Discord alerting; Loki (with a
   RustFS object store) and Alloy; Longhorn's backup credentials and its nightly backup and daily snapshot jobs;
-  external-dns (`external-dns`) and extra DNS records; Postfix for outbound mail (`mail`), with its DKIM key and DNS
+  external-dns (`external-dns`), and on coven the machines' DNS records; Postfix for outbound mail (`mail`), with its DKIM key and DNS
   records; the MariaDB operator (`mariadb-system`)
 
 - GCP project resources: APIs, the `coven-tfstate` bucket (which keeps old versions of each stack's state for 30 days,
@@ -223,7 +224,7 @@ only talk to the Kubernetes API on strix, Vault and cloud APIs, so they don't ne
 ## Alerting
 
 - Alert rules are Prometheus rules. Our own rules are defined in `additionalPrometheusRulesMap` in
-  [tfmodules/stack-bootstrap/values/kube-prometheus-stack.yaml.tftpl](../tfmodules/stack-bootstrap/values/kube-prometheus-stack.yaml.tftpl);
+  [tfmodules/kube-prometheus-stack/values/alerts/](../tfmodules/kube-prometheus-stack/values/alerts/) (one file per group);
   others come with the kube-prometheus-stack defaults and with charts that ship their own `PrometheusRule`s (e.g.
   Loki). Prometheus picks up `ServiceMonitor`, `PodMonitor`, `Probe` and `PrometheusRule` resources from every
   namespace.

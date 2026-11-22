@@ -99,7 +99,7 @@ curl -s http://localhost:9093/api/v2/alerts | jq '.[] | {alert: .labels.alertnam
 ```
 
 Find the rule's expression. Our own rules are in `additionalPrometheusRulesMap` in
-[tfmodules/stack-bootstrap/values/kube-prometheus-stack.yaml.tftpl](../tfmodules/stack-bootstrap/values/kube-prometheus-stack.yaml.tftpl);
+[tfmodules/kube-prometheus-stack/values/alerts/](../tfmodules/kube-prometheus-stack/values/alerts/) (one file per group);
 upstream rules can be found from the cluster:
 
 ```shell
@@ -433,7 +433,7 @@ kubectl -n kube-system logs deploy/traefik
 
 A typical cause is an Ingress referencing a middleware (e.g. `kube-system-redirect-https@kubernetescrd`) or secret
 that doesn't exist. Traefik is configured through a `HelmChartConfig` in
-[tfmodules/stack-bootstrap/monitoring.tf](../tfmodules/stack-bootstrap/monitoring.tf).
+[tfmodules/stack-bootstrap/traefik.tf](../tfmodules/stack-bootstrap/traefik.tf).
 
 ### The Kubernetes API is unreachable
 
