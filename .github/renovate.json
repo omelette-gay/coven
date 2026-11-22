@@ -3,8 +3,14 @@
   "extends": [
     "config:recommended"
   ],
+  "minimumReleaseAge": "3 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
+  "internalChecksFilter": "strict",
   "lockFileMaintenance": {
-    "enabled": true
+    "enabled": true,
+    "schedule": [
+      "before 6am on monday"
+    ]
   },
   "customManagers": [
     {
@@ -39,12 +45,21 @@
   ],
   "packageRules": [
     {
-      "matchManagers": ["pep621", "terraform"],
+      "matchManagers": [
+        "pep621",
+        "terraform"
+      ],
       "rangeStrategy": "update-lockfile"
     },
     {
-      "matchDatasources": ["helm"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "description": "Platform: minor and patch updates to Helm charts at 1.0.0 or above, except charts whose minor releases are significant (see ADR 004)",
+      "matchDatasources": [
+        "helm"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "matchCurrentVersion": ">=1.0.0",
       "matchPackageNames": [
         "!cert-manager",
@@ -53,20 +68,177 @@
         "!mariadb-operator",
         "!mariadb-operator-crds"
       ],
-      "groupName": "Helm charts (non-major)",
-      "schedule": ["before 6am on monday"]
+      "groupName": "Platform (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ]
     },
     {
-      "matchDatasources": ["helm"],
-      "matchPackageNames": ["mariadb-operator", "mariadb-operator-crds"],
+      "description": "Platform: patch updates to every Helm chart, including 0.x charts and the exclusions above",
+      "matchDatasources": [
+        "helm"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "groupName": "Platform (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    },
+    {
+      "description": "Platform: rustfs/rc is only the client used by setup jobs, so its 0.x minor releases are grouped too",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "rustfs/rc"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "Platform (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    },
+    {
+      "description": "Platform: the Hetzner webhook is 0.x and manages DNS records, so only its patch releases are grouped",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "docker.io/hetzner/external-dns-hetzner-webhook"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "groupName": "Platform (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    },
+    {
+      "matchDatasources": [
+        "helm"
+      ],
+      "matchPackageNames": [
+        "mariadb-operator",
+        "mariadb-operator-crds"
+      ],
       "groupName": "mariadb-operator"
     },
     {
-      "description": "factoriotools/factorio also tags experimental releases with plain version numbers, so only follow the stable-x.y.z tags",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["factoriotools/factorio"],
-      "versioning": "regex:^stable-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
+      "description": "Apps: charts and images for the apps this repo deploys (not the self-deploying ones). Add each new app's charts and images here, following ADR 004. Patch and digest updates are always grouped. The Factorio image isn't listed, as it needs a pull request as soon as it's released",
+      "matchPackageNames": [
+        "itzg/minecraft-server",
+        "itzg/mc-backup",
+        "minecraft",
+        "ghcr.io/lunamultiplayer/lunamultiplayer/server",
+        "luna-multiplayer",
+        "factorio-server-charts"
+      ],
+      "groupName": "Apps (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ],
+      "matchUpdateTypes": [
+        "patch",
+        "digest"
+      ]
+    },
+    {
+      "description": "Apps: minor updates are only grouped at 1.0.0 or above, as 0.x minor releases can break things",
+      "matchPackageNames": [
+        "itzg/minecraft-server",
+        "itzg/mc-backup",
+        "minecraft",
+        "ghcr.io/lunamultiplayer/lunamultiplayer/server",
+        "luna-multiplayer",
+        "factorio-server-charts"
+      ],
+      "groupName": "Apps (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ],
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "matchCurrentVersion": ">=1.0.0"
+    },
+    {
+      "description": "Tooling: Python packages (lock file only) and Galaxy collections used by Ansible. xanmanning.k3s installs k3s on the nodes, so it gets its own pull request",
+      "matchManagers": [
+        "pep621",
+        "ansible-galaxy"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "matchPackageNames": [
+        "!xanmanning.k3s"
+      ],
+      "groupName": "Tooling (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    },
+    {
+      "description": "Tooling: in-range Terraform provider updates only change the lock files, and the plan on the pull request shows their effect",
+      "matchDatasources": [
+        "terraform-provider"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "Tooling (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    },
+    {
+      "description": "Tooling: Terraform CLI patch releases",
+      "matchManagers": [
+        "terraform-version"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "groupName": "Tooling (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    },
+    {
+      "description": "Tooling: GitHub Actions and the Helm CLI version used in CI",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "Tooling (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    },
+    {
+      "description": "factoriotools/factorio also tags experimental releases with plain version numbers, so only follow the stable-x.y.z tags. Factorio clients update themselves and the server version has to match, so raise a pull request as soon as a release is out, with no minimum release age",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "factoriotools/factorio"
+      ],
+      "versioning": "regex:^stable-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$",
+      "minimumReleaseAge": "0 days"
     }
   ],
-  "ignoreDeps": ["planka"]
+  "ignoreDeps": [
+    "planka"
+  ]
 }

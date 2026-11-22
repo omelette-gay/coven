@@ -110,5 +110,8 @@ There's no test suite. Before proposing a change:
 - Commit messages are a short sentence describing the change (e.g. "Replace Litestream with periodic k3s datastore
   snapshots"), with no type prefixes.
 - Pin new Helm chart versions in `Chart.yaml` and read them with `lookup('helm_chart', '<n>')`.
+- Renovate bundles updates using explicit lists in `.github/renovate.json`. When adding an app, add its charts and
+  images to the Apps rules, and follow [ADR 004](./adr/004-bundle-renovate-updates-weekly.md) to decide whether a new
+  chart or image belongs in a bundle or needs its own pull request.
 - New hard-to-reverse decisions get an ADR, and incidents get a write-up, in the same PR as the change. Follow the
   templates and naming rules in each folder's README and add the new file to its index.
