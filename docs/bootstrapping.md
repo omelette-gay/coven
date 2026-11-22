@@ -59,10 +59,11 @@ migration, delete them locally first, as there's nothing to import on a fresh cl
 
        unset TF_VAR_keycloak_bootstrap_admin_password
        ./terraform.sh --local apply bootstrap
-       vault token revoke -address https://vault.coven.local -tls-skip-verify -self
+       vault token revoke -address https://vault.coven.local -tls-skip-verify <the root token from step 3>
        ./terraform.sh --local apply apps
 
-   On coven, CI takes over from here.
+   Pass the root token itself rather than using `-self`: `./login.sh` replaced the token the Vault CLI uses with your
+   own, which is what you use from now on. On coven, CI takes over from here.
 
 ## Deploying to physical hardware on Hetzner
 
