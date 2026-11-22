@@ -314,3 +314,18 @@ import {
   to = module.platform.helm_release.mail
   id = "mail/mail"
 }
+
+import {
+  to = module.platform.kubernetes_namespace_v1.mariadb
+  id = "mariadb-system"
+}
+
+import {
+  to = module.platform.helm_release.mariadb_operator_crds
+  id = "mariadb-system/mariadb-operator-crds"
+}
+
+import {
+  to = module.platform.helm_release.mariadb_operator
+  id = "mariadb-system/mariadb-operator"
+}
