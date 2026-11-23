@@ -43,7 +43,7 @@ runs:
         sudo wg-quick up wg0
 
     - name: login to Vault
-      uses: hashicorp/vault-action@v4
+      uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
       with:
         url: https://vault.coven.omelette.gay
         method: jwt
@@ -52,7 +52,7 @@ runs:
         exportToken: true
 
     - name: login to GCP
-      uses: google-github-actions/auth@v3
+      uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
       with:
         project_id: coven-omelette-gay
         workload_identity_provider: projects/211831137824/locations/global/workloadIdentityPools/omelette-gay-github-actions/providers/omelette-gay-github-actions
@@ -66,10 +66,10 @@ runs:
         echo -e "${{ inputs.ssh-known-hosts }}" > ~/.ssh/known_hosts
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v10.3.3
+      uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
 
     - name: Install Helm
-      uses: azure/setup-helm@v5
+      uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5.1.0
       with:
         version: v4.3.2
 
