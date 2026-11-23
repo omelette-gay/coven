@@ -38,7 +38,9 @@ So a malicious "read-only" plan could get back to admin. **A plan is effectively
   repositories.** `gitops` can't use them while it's private.
 
 The GCP CI identity also has `iam.workloadIdentityPoolAdmin` over the project that holds its own GitHub pool. So it can
-change the conditions that decide who gets that identity.
+change the conditions that decide who gets that identity. It only has that role so the platform stack can manage the
+cluster's own pool (`coven/platform/workloadidentity.tf`), whose signing keys only change when the cluster is rebuilt.
+IAM Conditions can't limit the role to one pool, because IAM resources don't expose their names to conditions.
 
 ## Decision
 
@@ -64,8 +66,10 @@ with actions pinned to commit SHAs (#954) and Renovate's 3-day wait as the only 
    Chris or Meg (matched on user ID). Everything else, including Renovate, anyone given write access later and any
    other event, gets `coven-plan-review`, which needs Chris or Meg to approve it.
 4. **`coven` only allows `main`.** Its branch rule is checked against the run's ref, so a pull request can't use it.
-5. **Move the GitHub workload identity pool into its own GCP project**, managed only by project owners from their own
-   machines. CI keeps pool admin for the cluster's pool, but can't change the pool that decides who CI is.
+5. **CI can't change any workload identity pool.** The cluster's pool and provider move from `platform` to `bootstrap`,
+   next to the GitHub pool. Like the IAM grants already in `bootstrap`, they're applied locally by a project owner, and
+   CI's apply then finds nothing to change. CI loses `iam.workloadIdentityPoolAdmin` and gets
+   `iam.workloadIdentityPoolViewer`, so its plans can still read both pools and show drift.
 6. **The pull request comment is posted by a separate job without cloud credentials.** The plan text in the artifact is
    treated as untrusted text: it's only ever posted, never run or read into variables. (The comment job never moves to
    `workflow_run`.)
@@ -84,6 +88,12 @@ day, when we can already merge them.
 
 **Skip plans for Renovate pull requests.** No credentials for Renovate at all, but we'd lose the plan that shows what a
 chart update changes, which is the main reason to review it.
+
+**Move the GitHub pool into its own GCP project, in a separate owner-only stack.** CI wouldn't even need read access,
+but it adds a fourth stack and a second project to look after, for resources that rarely change.
+
+**Keep CI's pool admin, and limit it to the cluster's pool with an IAM condition.** Not possible: IAM Conditions can't
+see the names of IAM resources.
 
 **Pay for GitHub Pro or Team so `gitops` can use rulesets and environments now.** Team still doesn't give required
 reviewers on private repositories, and we're moving to a public repository anyway.
@@ -106,6 +116,12 @@ reviewers on private repositories, and we're moving to a public repository anywa
   copy.
 - The rulesets and environments are set in the repository settings, not in code. If they're misconfigured, for example
   `coven-plan-review` with no reviewers, the gate quietly disappears. The setup is documented in the cluster docs.
+- Changes to either workload identity pool (in practice, the cluster's signing keys after a rebuild) need a project owner
+  to apply `bootstrap` locally before merging, or CI's apply fails. Moving the cluster's pool between stacks needs a
+  `removed` block in `platform` and an `import` block in `bootstrap`.
+- Removing pool admin protects the gate, not everything else. CI still has `roles/editor`, which can create service
+  account keys, so a bad approval can still leave lasting access that way. Unlike a loosened pool condition, extra keys
+  show up in `gcloud iam service-accounts keys list`.
 - To check in the testlab before relying on it: `job_workflow_ref` is set as expected for reusable workflows, and Vault
   and GCP refuse a token from a branch copy and from a job with no environment.
 - **Worth adding later:** an alert on Vault audit log writes to `sys/auth*`, `sys/policy*`, `auth/github/role/*` and
