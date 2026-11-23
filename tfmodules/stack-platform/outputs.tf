@@ -17,3 +17,8 @@ output "vault_github_auth_backend" {
   description = "Path of Vault's GitHub Actions auth method"
   value       = vault_jwt_auth_backend.github.path
 }
+
+output "coven_ci_bound_claims" {
+  description = "The claims each of coven's CI workflows is bound on in Vault, by workflow (tfplan, tfapply and configure-hosts)"
+  value       = local.coven_ci_bound_claims
+}

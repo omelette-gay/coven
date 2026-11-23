@@ -2,119 +2,116 @@ name: Plan Terraform changes
 
 on:
   pull_request:
-    types: ["opened", "synchronize"]
+    types: ["opened", "synchronize", "reopened"]
+
+permissions: {}
 
 jobs:
-  tfplan:
-    name: plan Terraform changes (${{ matrix.stack }})
+  # Always main's copy of tfplan-stack.yml: only that copy gets credentials, and it chooses its own environment (ADR 006)
+  plan:
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [bootstrap, platform, apps]
+    uses: omelette-gay/coven/.github/workflows/tfplan-stack.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      stack: ${{ matrix.stack }}
+
+  # Posts each stack's plan without any cloud credentials. The artifact came from a job that ran the pull request's
+  # code, so it's only ever treated as text to post: never run, and never read into variables or outputs.
+  comment:
+    name: comment on PR (coven/${{ matrix.stack }})
+    needs: plan
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        stack:
-          - coven/bootstrap
-          - coven/platform
-          - coven/apps
+        stack: [bootstrap, platform, apps]
     permissions:
-      contents: read
-      id-token: write
       pull-requests: write
-    defaults:
-      run:
-        working-directory: ${{ matrix.stack }}/
     steps:
-      - name: checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: log in
-        uses: ./.github/actions/terraform-login
-
-      - name: Terraform fmt
-        id: fmt
-        run: terraform fmt -check
+      - name: download the plan
+        id: download
         continue-on-error: true
-
-      - name: Terraform init
-        id: init
-        run: terraform init -input=false -lockfile=readonly
-
-      - name: Terraform validate
-        id: validate
-        run: terraform validate -no-color
-
-      - name: Terraform plan
-        id: plan
-        run: terraform plan -no-color -input=false -lock=false -out=tfplan
-        continue-on-error: true
-
-      - name: render plan
-        if: steps.plan.outcome == 'success'
-        run: |
-          terraform show -no-color tfplan > plan.txt
-          {
-            echo "### Terraform plan: \`${{ matrix.stack }}\`"
-            echo '```'
-            head -c 900000 plan.txt   # the step summary is capped at 1 MiB
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tfplan-${{ matrix.stack }}
+          path: ${{ runner.temp }}/tfplan
 
       - name: comment on PR
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          STACK: ${{ matrix.stack }}
-          FMT_OUTCOME: ${{ steps.fmt.outcome }}
-          INIT_OUTCOME: ${{ steps.init.outcome }}
-          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
-          PLAN_OUTCOME: ${{ steps.plan.outcome }}
+          STACK: coven/${{ matrix.stack }}
+          PLAN_DIR: ${{ runner.temp }}/tfplan
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
+            const path = require('path');
             const env = process.env;
 
-            // 1. Read the rendered plan from disk, truncated to fit a GitHub comment (max 65,536 chars)
-            const planPath = `${env.STACK}/plan.txt`;
-            const MAX_PLAN = 60000;
-            let plan = fs.existsSync(planPath)
-              ? fs.readFileSync(planPath, 'utf8')
-              : 'Plan failed, see the run log for details.';
-            if (plan.length > MAX_PLAN) {
-              plan = plan.slice(0, MAX_PLAN) + `\n\n... plan truncated, the full plan is in the job summary: ${env.RUN_URL}`;
+            // 1. The step outcomes. Only known values are shown, so the artifact can't inject anything here.
+            const KNOWN = ['success', 'failure', 'skipped', 'found'];
+            let outcomes = {};
+            try {
+              outcomes = JSON.parse(fs.readFileSync(path.join(env.PLAN_DIR, 'outcomes.json'), 'utf8'));
+            } catch (e) {
+              // no artifact: the job failed before planning, or is waiting for approval and was cancelled
             }
+            const outcome = key => {
+              const value = outcomes && typeof outcomes === 'object' ? outcomes[key] : undefined;
+              return KNOWN.includes(value) ? value : 'unknown';
+            };
 
-            // 2. Build the comment
+            // 2. The plan. The comment is capped at 65,536 chars and the job summary at 1 MiB.
+            let plan;
+            try {
+              plan = fs.readFileSync(path.join(env.PLAN_DIR, 'plan.txt'), 'utf8');
+            } catch (e) {
+              plan = 'No plan. See the workflow run.';
+            }
+            const truncate = (text, max, note) => text.length > max ? `${text.slice(0, max)}\n\n... plan truncated${note}` : text;
+
+            // 3. Build the comment, with the plan in a fence longer than any run of backticks in it, so it can't close it
             const header = `### Terraform: \`${env.STACK}\``;
-            const body = [
-              header,
-              `#### Terraform Format and Style 🖌\`${env.FMT_OUTCOME}\``,
-              `#### Terraform Initialization ⚙️\`${env.INIT_OUTCOME}\``,
-              `#### Terraform Validation 🤖\`${env.VALIDATE_OUTCOME}\``,
-              `#### Terraform Plan 📖\`${env.PLAN_OUTCOME}\``,
-              '',
-              '<details><summary>Show Plan</summary>',
-              '',
-              '```',
-              plan,
-              '```',
-              '',
-              '</details>',
-              '',
-              `[Workflow run](${env.RUN_URL})`,
-            ].join('\n');
+            const render = text => {
+              const longestRun = Math.max(0, ...(text.match(/`+/g) || []).map(run => run.length));
+              const fence = '`'.repeat(Math.max(3, longestRun + 1));
+              return [
+                header,
+                `#### Terraform Format and Style 🖌\`${outcome('fmt')}\``,
+                `#### Terraform Initialization ⚙️\`${outcome('init')}\``,
+                `#### Terraform Validation 🤖\`${outcome('validate')}\``,
+                `#### Terraform Plan 📖\`${outcome('plan')}\``,
+                `#### gitleaks 🔑\`${outcome('gitleaks')}\``,
+                '',
+                '<details><summary>Show Plan</summary>',
+                '',
+                fence,
+                text,
+                fence,
+                '',
+                '</details>',
+                '',
+                `[Workflow run](${env.RUN_URL})`,
+              ].join('\n');
+            };
+            const body = render(truncate(plan, 60000, `, the full plan is in the job summary: ${env.RUN_URL}`));
+            await core.summary.addRaw(render(truncate(plan, 900000, ''))).write();
 
-            // 3. Update our existing comment for this stack, or create one
+            // 4. Update our existing comment for this stack, or create one
             const comments = await github.paginate(github.rest.issues.listComments, {
               ...context.repo,
               issue_number: context.issue.number,
             });
-            const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes(header));
+            const existing = comments.find(c => c.user.login === 'github-actions[bot]' && c.body.startsWith(header));
             if (existing) {
               await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
             } else {
               await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
             }
-
-      - name: fail if Terraform plan failed
-        if: steps.plan.outcome == 'failure'
-        run: exit 1

@@ -19,6 +19,10 @@ terraform {
     prefix = "terraform/bootstrap"
   }
   required_providers {
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.4"
+    }
     google = {
       source  = "hashicorp/google"
       version = "~> 8.10"

@@ -1,5 +1,13 @@
 name: Log in for Terraform
-description: Logs in to Vault, the coven cluster and GCP, and sets up Terraform, so a stack can be planned or applied
+description: Logs in to Vault, the coven cluster and GCP, and sets up Terraform, so a stack can be planned or applied. Vault and GCP only accept main's copy of each reusable workflow, in its own environments (see ADR 006)
+
+inputs:
+  vault-role:
+    description: The Vault JWT role for this workflow, e.g. coven-tfplan
+    required: true
+  kubernetes-role:
+    description: The Vault role that gives this workflow cluster credentials, e.g. github-coven-tfplan
+    required: true
 
 runs:
   using: composite
@@ -10,7 +18,7 @@ runs:
         url: https://vault.coven.omelette.gay
         method: jwt
         path: github
-        role: gitops
+        role: ${{ inputs.vault-role }}
         exportToken: true
         # the bootstrap stack can't read Vault itself, so give it the Hetzner token through the environment
         secrets: |
@@ -18,10 +26,10 @@ runs:
 
     - name: log in to k8s
       id: k8s_auth
-      uses: omelette-gay/vault-k8s-login-action@fcbdf7dd6fd2b0c201e4c2923e9cec529abcd95c # v1
+      uses: omelette-gay/vault-k8s-login-action@26c0418f9db1fbb00424af775ffa04ef72dc21c4 # v1.1.1
       with:
-        vault-github-role: github-gitops
-        vault-k8s-role: github-gitops
+        vault-github-role: ${{ inputs.kubernetes-role }}
+        vault-k8s-role: ${{ inputs.kubernetes-role }}
         vault-server: https://vault.coven.omelette.gay
         cluster-role-binding: "true"
         k8s-controller-url: https://strix.xdc.omelette.gay:6443
@@ -50,7 +58,7 @@ runs:
       uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
       with:
         project_id: coven-omelette-gay
-        workload_identity_provider: projects/211831137824/locations/global/workloadIdentityPools/omelette-gay-github-actions/providers/omelette-gay-github-actions
+        workload_identity_provider: projects/211831137824/locations/global/workloadIdentityPools/omelette-gay-github-actions/providers/coven-github-actions
 
     # setup-terraform has no input for a version file, so read it here. Renovate keeps the file up to date
     - name: read the Terraform version

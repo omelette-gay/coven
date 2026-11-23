@@ -1,0 +1,36 @@
+name: Configure coven hosts
+
+# Called by host_config.yml at @main. Vault and GCP only give credentials to main's copy of this workflow, in the coven
+# environment, which only allows main and holds the WireGuard and SSH secrets (ADR 006). Keep it thin: the logic is in
+# .github/actions/configure-hosts.
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  configure:
+    name: configure coven hosts
+    runs-on: ubuntu-latest
+    environment: coven
+    # so two runs don't connect with the same WireGuard peer at once
+    concurrency:
+      group: coven-ansible
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: configure hosts
+        uses: ./.github/actions/configure-hosts
+        with:
+          wireguard-private-key: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+          wireguard-server-public-key: ${{ secrets.WIREGUARD_SERVER_PUBLIC_KEY }}
+          wireguard-server-preshared-key: ${{ secrets.WIREGUARD_SERVER_PRESHARED_KEY }}
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
