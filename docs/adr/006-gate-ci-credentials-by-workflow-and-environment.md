@@ -48,7 +48,7 @@ IAM Conditions can't limit the role to one pool, because IAM resources don't exp
 with actions pinned to commit SHAs (#954) and Renovate's 3-day wait as the only mitigations.**
 
 1. **Protect `main` with a ruleset:** changes only through pull requests, no force-pushes or deletion, and no bypass
-   for anyone, including the Renovate app.
+   for anyone, including the Renovate app. A second ruleset blocks creating a tag called `main`.
 2. **Only workflows on `main` get credentials.** Each credentialed job is a reusable workflow, called at `@main`:
 
    | Reusable workflow | Environment | Called by |
@@ -59,8 +59,14 @@ with actions pinned to commit SHAs (#954) and Renovate's 3-day wait as the only 
 
    Each has its own Vault role (all still admin, so audit logs show which one acted) and its own GCP principal, bound
    on `repository_id`, `job_workflow_ref` (`omelette-gay/coven/.github/workflows/<file>@refs/heads/main`) and the
-   `environment` claim. A pull request that changes a caller to use its own branch's copy, or a new workflow that asks
-   for an environment, gets refused.
+   `environment` claim.
+
+   **The binding is the control, not the `@main` in the callers.** GitHub sets `job_workflow_ref`, and a workflow can't
+   change it. A pull request can edit `tfplan.yml` to call its own copy (`@refs/pull/N/merge`), a branch (`@refs/heads/x`)
+   or a tag, or copy the steps straight into `tfplan.yml`, but each of those gives a different `job_workflow_ref`, so
+   Vault and GCP refuse it. The same goes for a new workflow that asks for an environment. The `@main` in the callers
+   only makes legitimate runs match the binding. The only way to get `@refs/heads/main` is to run code that's on
+   `main`, and the ruleset makes sure that only happens through a merged pull request.
 3. **The plan workflow picks its environment from the event, never from inputs.** It's `coven-plan` only when the event
    is a pull request from this repository, and both the pull request's author and the user who triggered the run are
    Chris or Meg (matched on user ID). Everything else, including Renovate, anyone given write access later and any
@@ -73,6 +79,10 @@ with actions pinned to commit SHAs (#954) and Renovate's 3-day wait as the only 
 6. **The pull request comment is posted by a separate job without cloud credentials.** The plan text in the artifact is
    treated as untrusted text: it's only ever posted, never run or read into variables. (The comment job never moves to
    `workflow_run`.)
+7. **The reusable workflows stay thin:** check out the code, choose the environment, call a composite action, upload the
+   artifact. Everything else goes in the composite actions (`.github/actions/`), which run from the pull request's
+   checkout, so pull requests test it. `lint.yml`, which has no credentials, runs `actionlint` and `zizmor` on every
+   workflow change, including changes to the reusable workflows.
 
 ## Alternatives considered
 
@@ -112,8 +122,13 @@ reviewers on private repositories, and we're moving to a public repository anywa
   credentials. Its pull requests still need one of us to merge them.
 - Renovate's plans wait for a click, about one per weekly bundle (ADR 004), plus one per separate update and rebase.
   The rebases are what's most likely to get approved without looking.
-- Changes to the reusable workflows aren't exercised by their own pull request's plan, as plans always run `main`'s
-  copy.
+- **A change to `tfplan-stack.yml` itself isn't run by its own pull request**, because plans always run `main`'s copy. It
+  first runs on the next pull request after merging, and a broken plan fails without changing anything.
+  `tfapply-stack.yml` and `configure-hosts.yml` first run when they deploy, as they do today. Everything else in a pull
+  request (the composite actions, Terraform code, providers, and the workflows without credentials) runs from the pull
+  request, so most action updates are still tested, as the important actions live in the composite actions. A pull
+  request can change *what* runs with the credentials, as it already can through the Terraform code, but not *whether*
+  it gets them: the environment is chosen before any of its steps run.
 - The rulesets and environments are set in the repository settings, not in code. If they're misconfigured, for example
   `coven-plan-review` with no reviewers, the gate quietly disappears. The setup is documented in the cluster docs.
 - Changes to either workload identity pool (in practice, the cluster's signing keys after a rebuild) need a project owner
@@ -123,6 +138,7 @@ reviewers on private repositories, and we're moving to a public repository anywa
   account keys, so a bad approval can still leave lasting access that way. Unlike a loosened pool condition, extra keys
   show up in `gcloud iam service-accounts keys list`.
 - To check in the testlab before relying on it: `job_workflow_ref` is set as expected for reusable workflows, and Vault
-  and GCP refuse a token from a branch copy and from a job with no environment.
+  and GCP refuse a token from the pull request's own copy, from a branch, from a tag called `main`, from steps copied
+  into the caller, and from a job with no environment.
 - **Worth adding later:** an alert on Vault audit log writes to `sys/auth*`, `sys/policy*`, `auth/github/role/*` and
   `auth/token/create*` that don't come from an apply run.
