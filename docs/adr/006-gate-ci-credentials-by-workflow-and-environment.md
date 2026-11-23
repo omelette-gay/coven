@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Proposed |
+| **Status** | Accepted |
 | **Date** | 2026-11-23 |
 | **Related** | [ADR 005](./005-publish-a-filtered-copy-of-this-repository-as-coven.md) (the move to `coven`), [ADR 004](./004-bundle-renovate-updates-weekly.md) (Renovate bundles and the 3-day wait), [#844](https://github.com/omelette-gay/gitops/issues/844), #954 (actions pinned to commit SHAs) |
 

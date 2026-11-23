@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Proposed |
+| **Status** | Accepted |
 | **Date** | 2026-11-23 |
 | **Related** | [ADR 006](./006-gate-ci-credentials-by-workflow-and-environment.md) (CI credentials for `coven`), [#844](https://github.com/omelette-gay/gitops/issues/844) (making the repo public), [#843](https://github.com/omelette-gay/gitops/issues/843) (self-hosted runners, not planned), [#561](https://github.com/omelette-gay/gitops/issues/561) (secret rotation during the Terraform migration) |
 
