@@ -208,13 +208,15 @@
       ]
     },
     {
-      "description": "Tooling: GitHub Actions and the Helm CLI version used in CI",
+      "description": "Tooling: GitHub Actions and the Helm CLI version used in CI. Actions are pinned to commit SHAs, so digest updates (e.g. when a tag like v1 moves) and pinning any newly added action are bundled too",
       "matchManagers": [
         "github-actions"
       ],
       "matchUpdateTypes": [
         "minor",
-        "patch"
+        "patch",
+        "digest",
+        "pinDigest"
       ],
       "groupName": "Tooling (non-major)",
       "schedule": [
