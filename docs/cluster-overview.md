@@ -259,6 +259,9 @@ which repository ([ADR 006](./adr/006-gate-ci-credentials-by-workflow-and-enviro
 
 ### The environments
 
+The environments and rulesets are configured in GitHub, not in code.
+[working-in-public.md](./working-in-public.md#repository-settings) has the exact settings and how to check them.
+
 | Environment | Rules | Used by |
 |---|---|---|
 | `coven` | Only `main`. Holds the WireGuard and SSH secrets | apply and the host playbook |
