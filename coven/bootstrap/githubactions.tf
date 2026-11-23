@@ -93,6 +93,14 @@ resource "google_secret_manager_secret_iam_member" "ci_k3s_token_accessor" {
   member    = each.value
 }
 
+# Ansible's gcp_secret_manager lookup lists the secret's versions to find the latest before reading it, and
+# secretAccessor doesn't include listing. Terraform's principals get it from roles/editor.
+resource "google_secret_manager_secret_iam_member" "ci_k3s_token_viewer" {
+  secret_id = google_secret_manager_secret.k3s_token.secret_id
+  role      = "roles/secretmanager.viewer"
+  member    = local.coven_ci_principals["configure-hosts coven"]
+}
+
 # Lets CI's plans read both workload identity pools and show drift. roles/editor doesn't cover them. CI can't change
 # them: they're applied by a project owner (see the top of this file).
 resource "google_project_iam_member" "ci_workload_identity_pool_viewer" {
