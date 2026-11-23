@@ -30,6 +30,7 @@
     group: root
     mode: '0600'
   diff: false # don't print the key when run with --diff
+  no_log: true # or if the task fails
 
 - name: Write backup configuration
   ansible.builtin.template:

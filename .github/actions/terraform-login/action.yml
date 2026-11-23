@@ -37,13 +37,14 @@ runs:
           vCyvWCodXqQCIFn+wIsfK9e2QFftm/idiRRRhpqHVcP4F0HUaTuNNsz2
           -----END CERTIFICATE-----
 
+    # the kubeconfig holds a service account token, so it goes through env rather than into the logged script
     - name: write kubeconfig out
       shell: bash
+      env:
+        KUBECONFIG_CONTENT: ${{ steps.k8s_auth.outputs.kubeconfig }}
       run: |
         mkdir ~/.kube
-        cat >~/.kube/config <<EOF
-        ${{ steps.k8s_auth.outputs.kubeconfig }}
-        EOF
+        (umask 077 && printf '%s\n' "$KUBECONFIG_CONTENT" > ~/.kube/config)
 
     - name: login to GCP
       uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
