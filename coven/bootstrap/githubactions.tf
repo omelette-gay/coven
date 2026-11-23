@@ -146,6 +146,17 @@ resource "google_project_iam_member" "ci_workload_identity_pool_viewer" {
   member  = each.value
 }
 
+# Lets CI's plans and applies read the billing account and manage the budget in billing.tf. Not billing admin, which
+# could change who has access to the billing account. gitops's billing admin was granted by hand, and goes with
+# gitops's trust (ADR 005, step 7).
+resource "google_billing_account_iam_member" "ci_costs_manager" {
+  for_each = { for key, principal in local.terraform_ci_principals : key => principal if key != "gitops" }
+
+  billing_account_id = data.google_billing_account.account.id
+  role               = "roles/billing.costsManager"
+  member             = each.value
+}
+
 moved {
   from = google_project_iam_member.gitops_repo_role
   to   = google_project_iam_member.ci_editor["gitops"]

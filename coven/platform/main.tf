@@ -19,12 +19,6 @@ terraform {
     prefix = "terraform/platform"
   }
   required_providers {
-    # Only for data.external.coven_service_account_issuer, which moved to bootstrap and is still in this stack's state.
-    # Remove with the removed blocks in workloadidentity.tf.
-    external = {
-      source  = "hashicorp/external"
-      version = "~> 2.4"
-    }
     google = {
       source  = "hashicorp/google"
       version = "~> 8.10"
