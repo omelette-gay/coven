@@ -21,20 +21,26 @@ inputs:
 runs:
   using: composite
   steps:
+    # Secrets reach run: scripts only through env. GitHub prints each script in the log with any ${{ }} already
+    # substituted, so a secret written straight into the script relies on masking, which misses multi-line values.
     - name: connect to janus
       shell: bash
+      env:
+        WIREGUARD_PRIVATE_KEY: ${{ inputs.wireguard-private-key }}
+        WIREGUARD_SERVER_PUBLIC_KEY: ${{ inputs.wireguard-server-public-key }}
+        WIREGUARD_SERVER_PRESHARED_KEY: ${{ inputs.wireguard-server-preshared-key }}
       run: |
         sudo apt-get install -y wireguard
 
         cat <<EOF | sudo tee /etc/wireguard/wg0.conf >/dev/null
         [Interface]
-        PrivateKey = ${{ inputs.wireguard-private-key }}
+        PrivateKey = $WIREGUARD_PRIVATE_KEY
         Address = 192.168.178.204/24,fd1e:6349:c40a::204/64
         MTU = 1392
 
         [Peer]
-        PublicKey = ${{ inputs.wireguard-server-public-key }}
-        PresharedKey = ${{ inputs.wireguard-server-preshared-key }}
+        PublicKey = $WIREGUARD_SERVER_PUBLIC_KEY
+        PresharedKey = $WIREGUARD_SERVER_PRESHARED_KEY
         AllowedIPs = 192.168.178.0/24,fd1e:6349:c40a::/64
         Endpoint = janus.gs.omelette.gay:59384
         PersistentKeepalive = 25
@@ -59,11 +65,14 @@ runs:
 
     - name: provision SSH key
       shell: bash
+      env:
+        SSH_KEY: ${{ inputs.ssh-key }}
+        SSH_KNOWN_HOSTS: ${{ inputs.ssh-known-hosts }}
+      # %b expands \n escapes like the echo -e this replaced, in case a secret was saved with them on one line
       run: |
         mkdir -p ~/.ssh
-        echo -e "${{ inputs.ssh-key }}" > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
-        echo -e "${{ inputs.ssh-known-hosts }}" > ~/.ssh/known_hosts
+        (umask 077 && printf '%b\n' "$SSH_KEY" > ~/.ssh/id_ed25519)
+        printf '%b\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
     - name: Install uv
       uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3

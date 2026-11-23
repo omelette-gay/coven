@@ -33,6 +33,9 @@ this repo (see [the agent instructions](./docs/agents.md)) do more without needi
   `tflint --recursive --config "$PWD/.tflint.hcl"` from the repo root
 - [ansible-lint](https://docs.ansible.com/projects/lint/installing/): `uv tool install ansible-lint`
 - [ShellCheck](https://github.com/koalaman/shellcheck#installing)
+- [actionlint](https://github.com/rhysd/actionlint) for checking GitHub Actions workflows: `uv tool install actionlint-py`.
+  [zizmor](https://docs.zizmor.sh/) checks them for security problems, and runs without installing with
+  `uvx zizmor .github/`
 
 If you run an AI agent natively on Windows (e.g. Claude Code in VS Code without the WSL extension), it runs these
 tools through WSL with `wsl --shell-type login <command>`, so they need to be on your `PATH` in a login shell. Check

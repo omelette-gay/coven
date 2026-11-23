@@ -1,8 +1,10 @@
+# no_log because the file holds the private and preshared keys, so a failure or --diff would print them
 - name: create interface config file
   template:
     src: wg0.conf.j2
     dest: /etc/wireguard/wg0.conf
     mode: '0600'
+  no_log: true
 
 - name: enable wireguard interface
   systemd_service:
