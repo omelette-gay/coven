@@ -152,8 +152,8 @@ can't create those records on a brand new zone, because it's installed by platfo
 Vault).
 
 We considered having bootstrap create static records for `vault.coven.omelette.gay`, `auth.coven.omelette.gay` and
-`monitoring.coven.omelette.gay`, but decided against it. external-dns already owns those records, and two tools owning
-the same record would undo each other's changes whenever an ingress changes. The records only go missing if the zone
+`monitoring.coven.omelette.gay`, but decided against it. external-dns manages those records, as it does every ingress's,
+and two tools managing the same record would undo each other's changes whenever an ingress changes. The records only go missing if the zone
 itself is recreated, as they live in Hetzner rather than in the cluster: rebuilding the cluster keeps them. So in that
 case they're added by hand before bootstrap, and replaced by external-dns once platform is up (see
 [bootstrapping](../bootstrapping.md)). external-dns manages every record for the cluster's ingresses.
