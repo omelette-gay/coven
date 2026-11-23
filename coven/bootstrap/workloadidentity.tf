@@ -40,14 +40,3 @@ resource "google_iam_workload_identity_pool_provider" "coven" {
     jwks_json  = data.external.coven_service_account_issuer.result.jwks
   }
 }
-
-# Moved here from the platform stack (ADR 006). These can go once every environment's state has them.
-import {
-  to = google_iam_workload_identity_pool.coven
-  id = "projects/${var.project_id}/locations/global/workloadIdentityPools/coven"
-}
-
-import {
-  to = google_iam_workload_identity_pool_provider.coven
-  id = "projects/${var.project_id}/locations/global/workloadIdentityPools/coven/providers/coven-k3s"
-}

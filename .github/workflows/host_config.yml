@@ -11,6 +11,10 @@ jobs:
   configure:
     # Always main's copy: only that copy gets credentials (ADR 006)
     uses: omelette-gay/coven/.github/workflows/configure-hosts.yml@main
+    # The WireGuard and SSH secrets are coven environment secrets. The reusable workflow's job runs in that
+    # environment, but its secrets context was empty until the caller passed inherit. There are no repository or
+    # organisation secrets, so this passes nothing else.
+    secrets: inherit # zizmor: ignore[secrets-inherit]
     permissions:
       contents: read
       id-token: write
