@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Proposed |
 | **Date** | 2026-11-23 |
-| **Related** | [#844](https://github.com/omelette-gay/gitops/issues/844) (making the repo public), [#843](https://github.com/omelette-gay/gitops/issues/843) (self-hosted runners, not planned), [#561](https://github.com/omelette-gay/gitops/issues/561) (secret rotation during the Terraform migration) |
+| **Related** | [ADR 006](./006-gate-ci-credentials-by-workflow-and-environment.md) (CI credentials for `coven`), [#844](https://github.com/omelette-gay/gitops/issues/844) (making the repo public), [#843](https://github.com/omelette-gay/gitops/issues/843) (self-hosted runners, not planned), [#561](https://github.com/omelette-gay/gitops/issues/561) (secret rotation during the Terraform migration) |
 
 ## Context
 
@@ -36,26 +36,27 @@ until each one is deleted. If we miss one, it's public for good.
 **Keep `omelette-gay/gitops` private as the archive, and publish a filtered copy of its history as a new repository,
 `omelette-gay/coven`.**
 
-1. Fix the CI credentials first (separate plan and apply identities, apply bound to `main` and the `coven`
-   environment), because they matter whichever repository CI runs in.
-2. On a local mirror clone, use `git filter-repo` to:
+1. On a local mirror clone, use `git filter-repo` to:
    - remove the Terraform state and plan files
    - replace the home address
    - rewrite `#N` references in commit messages to `omelette-gay/gitops#N`, so they don't link to unrelated issues in
      the new repository
    - optionally change author emails with a mailmap
-3. Check the result locally, before it's pushed anywhere: gitleaks over the full history, and greps for the address
+2. Check the result locally, before it's pushed anywhere: gitleaks over the full history, and greps for the address
    and any other values on the list. Keep the redaction list outside the repository and delete it afterwards.
-4. Create `coven` as a **private** repository and push the filtered history. It has no pull request refs, workflow
-   runs or comments to clean up.
-5. Set up CI trust for `coven` (Vault JWT roles and GCP workload identity), bound on `repository_id` rather than the
-   repository name, plus environments, secrets, branch rules, Renovate, and references from the self-deploying app
-   repositories.
-6. Transfer the issues worth keeping from `gitops` to `coven` after checking their text and edit history. Issues can't
+3. Create `coven` as a **private** repository and push the filtered history. It has no pull request refs, workflow
+   runs or comments to clean up. **It gets no CI credentials while it's private**: nothing in Vault or GCP trusts it
+   yet, so its workflows can't reach the cluster.
+4. Transfer the issues worth keeping from `gitops` to `coven` after checking their text and edit history. Issues can't
    be transferred from a private repository to a public one, so this happens while `coven` is still private.
-7. Apply the repository settings from #844 (secret scanning and push protection, approval for fork pull requests,
+5. Apply the repository settings from #844 (secret scanning and push protection, approval for fork pull requests,
    read-only default `GITHUB_TOKEN`, `SECURITY.md`), then make `coven` public.
-8. Archive `gitops`.
+6. Set up the `main` ruleset and the environments, then CI trust for `coven`, as in
+   [ADR 006](./006-gate-ci-credentials-by-workflow-and-environment.md). On GitHub Free, rulesets, environment branch
+   rules and required reviewers only work on public repositories, so this has to wait until step 5. `coven`'s trust is
+   new and sits alongside `gitops`'s, so nothing breaks while both exist.
+7. Move the remaining secrets, variables, Renovate and the references from the self-deploying app repositories to
+   `coven`, then remove `gitops`'s CI trust and archive it.
 
 Every secret found in history is still rotated, as decided in #844. With this approach, rotation is good hygiene
 rather than something that blocks going public.
