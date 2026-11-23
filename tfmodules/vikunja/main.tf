@@ -64,7 +64,7 @@ module "keycloak_client" {
   k8s_secret_name     = "vikunja-oidc"
 }
 
-# The GCP service account key the Barman Cloud plugin uses to write backups and WAL to GCS, as for Keycloak and Planka
+# The GCP service account key the Barman Cloud plugin uses to write backups and WAL to GCS, as for Keycloak
 module "backup_credentials" {
   source = "../vault-k8s-secret"
 
@@ -117,7 +117,7 @@ resource "helm_release" "db" {
           create = false
           name   = module.backup_credentials.k8s_secret_name
         }
-        # Staggered from Planka (08:00 and 20:00) and Keycloak (08:30 and 20:30)
+        # Staggered from Keycloak (08:30 and 20:30)
         scheduledBackups = [{
           name                 = "daily-backup"
           schedule             = "0 0 9,21 * * *"

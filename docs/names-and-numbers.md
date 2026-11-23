@@ -8,7 +8,7 @@ This document explains the naming scheme and important numbers associated with o
 Our primary domain name is omelette.gay.
 
 Services which are exposed to the outside world are named "service.omelette.gay" (or on the root
-using DNS-SD if there's a single instance needed and the service uses DNS-SD), e.g., planka.omelette.gay.
+using DNS-SD if there's a single instance needed and the service uses DNS-SD), e.g., tasks.omelette.gay.
 
 Infrastructure related services (e.g., monitoring) and other pieces of infrastructure names (e.g.,
 machines) are then named under a subdomain corresponding to the network it is on, or the cluster

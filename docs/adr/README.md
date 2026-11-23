@@ -62,6 +62,6 @@ What we gain, what we give up, and what we'll need to watch for.
 | ADR | Decision | Status |
 |---|---|---|
 | [001](./001-replace-litestream-with-snapshots.md) | Replace Litestream with periodic datastore snapshots | Accepted |
-| [002](./002-three-stack-terraform-for-cluster-configuration.md) | Use three layered Terraform stacks for cluster configuration | Proposed |
+| [002](./002-three-stack-terraform-for-cluster-configuration.md) | Use three layered Terraform stacks for cluster configuration | Accepted |
 | [003](./003-update-dependencies-within-ranges-through-lock-files.md) | Update dependencies within version ranges through lock files, and group non-major Helm chart updates | Accepted; grouping superseded by 004 |
 | [004](./004-bundle-renovate-updates-weekly.md) | Bundle non-major Renovate updates into weekly pull requests by area | Accepted |

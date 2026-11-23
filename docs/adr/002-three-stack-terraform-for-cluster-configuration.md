@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Proposed |
+| **Status** | Accepted |
 | **Date** | 2026-10-26 |
 | **Related** | [Issue #561: migrate k8s configuration to Terraform](https://github.com/omelette-gay/gitops/issues/561) |
 
@@ -81,8 +81,7 @@ Contains:
   Keycloak reads as optional environment variables, so it's only in state while it's needed
 - Coven only: the GCP project and APIs, the `coven-tfstate` bucket, GitHub Actions workload identity, billing budget
   alerts, the `coven-backups` bucket and its lifecycle rules, the backup service account (not its key), the
-  `k3s-cluster-token` secret, the `omelette.gay` DNS zone, and static DNS records for the hostnames bootstrap's own
-  services need (see [DNS](#dns))
+  `k3s-cluster-token` secret, and the `omelette.gay` DNS zone (see [DNS](#dns))
 
 Every custom resource in this stack whose CRD is installed by this stack (the ClusterIssuer, the Keycloak CNPG cluster)
 is created through a `helm_release`, never `kubernetes_manifest`.
@@ -138,7 +137,7 @@ on coven, the Fastmail and Bluesky DNS records and the zones for domains other t
 | `billing.tf` | bootstrap | Project-level, alongside `gcpinit.tf` |
 | `k3s.tf` | bootstrap | Must exist before k3s is installed |
 | `backups.tf` | bootstrap and platform | Bucket, lifecycle rules and service account in bootstrap; the key, its rotation and the Vault write in platform, as bootstrap can't use the `vault` provider |
-| `domains.tf` | bootstrap and apps | `omelette.gay` and its static records in bootstrap; other zones move into the file of the app they belong to |
+| `domains.tf` | bootstrap and apps | `omelette.gay` in bootstrap; other zones move into the file of the app they belong to |
 | `fastmail.tf` | apps | Records in the `omelette.gay` zone, found by name |
 | `bsky.tf` | apps | As above |
 | GlitchTip | platform | |
@@ -149,12 +148,15 @@ on coven, the Fastmail and Bluesky DNS records and the zones for domains other t
 
 Platform's `vault` and `keycloak` providers connect to `vault.coven.omelette.gay` and `auth.coven.omelette.gay` at plan
 time, and their certificates come from Let's Encrypt's HTTP-01 challenge, which needs the names to resolve. external-dns
-can't create those records, because it's installed by platform (its Hetzner token comes from Vault). So bootstrap
-creates static A and AAAA records pointing at strix's public addresses for `vault.coven.omelette.gay`,
-`auth.coven.omelette.gay` and `monitoring.coven.omelette.gay`. external-dns manages every other record.
+can't create those records on a brand new zone, because it's installed by platform (its Hetzner token comes from
+Vault).
 
-external-dns only changes records it owns (marked by its TXT records), so it should leave the static records alone.
-Confirm this before relying on it.
+We considered having bootstrap create static records for `vault.coven.omelette.gay`, `auth.coven.omelette.gay` and
+`monitoring.coven.omelette.gay`, but decided against it. external-dns manages those records, as it does every ingress's,
+and two tools managing the same record would undo each other's changes whenever an ingress changes. The records only go missing if the zone
+itself is recreated, as they live in Hetzner rather than in the cluster: rebuilding the cluster keeps them. So in that
+case they're added by hand before bootstrap, and replaced by external-dns once platform is up (see
+[bootstrapping](../bootstrapping.md)). external-dns manages every record for the cluster's ingresses.
 
 If external-dns is configured with `domainFilters`, adding a zone for a new app also needs a change to platform.
 
@@ -259,7 +261,7 @@ token secret before it can install k3s. So:
 
 1. Comment out the `backend "gcs"` block in `coven/bootstrap`, and apply only the cloud resources with `-target`
    (the project, the state bucket, workload identity, the backup bucket and service account, the cluster token secret,
-   the `omelette.gay` zone and its static records).
+   the `omelette.gay` zone).
 2. Re-enable the backend and run `terraform init -migrate-state`.
 3. Populate `k3s-cluster-token` as described in `docs/bootstrapping.md`, and continue with the steps above.
 
@@ -397,7 +399,8 @@ and its plan step catches mistakes before they're applied.
 - **Grafana SSO depends on an optional Kubernetes secret.** Bootstrap's kube-prometheus-stack values include the full
   OAuth configuration with a fixed client ID and URLs, and reference `grafana-keycloak-creds` through `envFromSecrets`
   with `optional: true`. SSO doesn't work until platform creates the client and secret, but Grafana doesn't crash.
-- **Three hostnames have static DNS records** that must be changed by hand in Terraform if strix's addresses change.
+- **Recreating the `omelette.gay` zone needs three records added by hand** (for Vault, Keycloak and Grafana) before
+  bootstrap, until external-dns takes them over.
 - **`prometheus-operator-crds` must stay in step with kube-prometheus-stack**, which the Renovate group handles. The
   CRDs must never be older than the chart that uses them.
 - **Terraform state contains secrets**, such as Keycloak client secrets, and Keycloak's temporary admin password while

@@ -47,7 +47,7 @@ variable "keycloak_secret_revision" {
 }
 
 variable "postgresql_instances" {
-  description = "Number of CNPG PostgreSQL instances. Keep it at 2 or more on coven, like Keycloak and Planka, as the cluster chart's alerts expect a standby. The single-node testlab can use 1"
+  description = "Number of CNPG PostgreSQL instances. Keep it at 2 or more on coven, like Keycloak, as the cluster chart's alerts expect a standby. The single-node testlab can use 1"
   type        = number
   default     = 2
   validation {

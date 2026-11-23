@@ -56,6 +56,8 @@ provider "kubernetes" {
   config_context = "local"
 }
 
+# The testlab has no public DNS, so this is never used, but Terraform still configures the provider (for the
+# outbound-mail module's DNS records, which the testlab doesn't make) and it won't start without a token
 provider "hcloud" {
   token = "0000000000000000000000000000000000000000000000000000000000000000"
 }
