@@ -85,6 +85,7 @@ resource "helm_release" "this" {
   repository    = "https://gitlab.com/api/v4/projects/16325141/packages/helm/stable"
   chart         = "glitchtip"
   version       = "9.2.0"
+  atomic        = true
   timeout       = 900
   wait          = true
   wait_for_jobs = true

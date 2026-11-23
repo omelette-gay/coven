@@ -108,9 +108,12 @@ variable "sender_email" {
 }
 
 variable "host_aliases" {
-  description = "Extra /etc/hosts entries for the Vikunja pod, as a map of IP address to hostnames. Only for the testlab, where cluster DNS can't resolve Keycloak's hostname"
-  type        = map(list(string))
-  default     = {}
+  description = "Extra /etc/hosts entries for the Vikunja pod. Only for the testlab, where cluster DNS can't resolve Keycloak's hostname"
+  type = list(object({
+    ip        = string
+    hostnames = list(string)
+  }))
+  default = []
 }
 
 variable "trusted_ca_secret_name" {

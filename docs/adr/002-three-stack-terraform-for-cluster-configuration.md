@@ -222,8 +222,8 @@ stack's merged and applied first.
 
 **Merges to `main`.** The same rule decides which stacks are applied, still in order.
 
-**Drift detection.** A scheduled workflow plans every stack with `-detailed-exitcode` once a day, and fails if any plan
-has changes, so drift and missed applies are noticed.
+**Drift detection.** There's no scheduled drift check. Every pull request's plan shows any drift in the stacks it
+touches, which we decided was enough: a daily plan of every stack wasn't worth the CI minutes for a cluster this size.
 
 **Ansible.** In the long run, the host configuration workflow and the Terraform workflow are independent. Until the
 migration is complete, the cluster-level Ansible play (`plays/configure-cluster.yml`, split out of

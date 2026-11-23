@@ -22,6 +22,6 @@
 #
 #   # Cluster DNS can't resolve the testlab's Keycloak, and its certificate is from Vault's CA, which the ingress
 #   # certificate's Secret carries in ca.crt
-#   host_aliases           = { "192.168.57.100" = ["auth.coven.local"] }
+#   host_aliases           = [{ ip = "192.168.57.100", hostnames = ["auth.coven.local"] }]
 #   trusted_ca_secret_name = "vikunja-tls"
 # }

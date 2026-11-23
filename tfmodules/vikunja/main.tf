@@ -180,7 +180,7 @@ resource "helm_release" "this" {
           "omelette.gay/keycloak-secret-revision" = tostring(var.keycloak_secret_revision)
         }
 
-        hostAliases = [for ip, hostnames in var.host_aliases : { ip = ip, hostnames = hostnames }]
+        hostAliases = var.host_aliases
 
         persistence = merge(
           {

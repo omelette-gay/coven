@@ -25,7 +25,14 @@ variable "allow_degraded_volumes" {
   default     = false
 }
 
-variable "backup_credentials_secret" {
-  description = "Secret holding the credentials for backing up to GCS, which the platform stack syncs from Vault. Backups fail until it exists"
+variable "backup_bucket" {
+  description = "GCS bucket (in europe-west2) Longhorn backs volumes up to, or null for no off-site backups (as on the testlab)"
   type        = string
+  default     = null
+}
+
+variable "backup_credentials_secret" {
+  description = "Secret holding the credentials for backing up to GCS, which the platform stack syncs from Vault. Backups fail until it exists. Only used with a backup_bucket"
+  type        = string
+  default     = null
 }

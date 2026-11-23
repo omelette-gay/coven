@@ -96,7 +96,7 @@ variable "glitchtip_keycloak_secret_revision" {
 }
 
 variable "grafana_keycloak_secret_revision" {
-  description = "Increase this to rotate Grafana's Keycloak client secret. Grafana reads it when it starts, so restart it afterwards"
+  description = "Increase this to rotate Grafana's Keycloak client secret. Grafana is restarted to read the new one"
   type        = number
   default     = 1
   validation {
@@ -172,6 +172,12 @@ variable "dkim_key_revision" {
     condition     = var.dkim_key_revision >= 1 && floor(var.dkim_key_revision) == var.dkim_key_revision
     error_message = "dkim_key_revision must be a whole number, 1 or more."
   }
+}
+
+variable "backup_bucket" {
+  description = "GCS bucket Keycloak's database and Longhorn back up to, or null for no backups (as on the testlab). With none, the backup credentials aren't synced and there's no backup job"
+  type        = string
+  default     = null
 }
 
 variable "longhorn_backup_job_name" {

@@ -73,7 +73,7 @@ Things to know about these:
 - **Default roles** (Realm settings → User registration → Default roles) are given to every user. They should only be
   `offline_access`, `uma_authorization` and the `account` client's roles. Never add `realm-management` roles or app
   roles here.
-- **Self-registration** is off. It's Keycloak's default, but it isn't set in code.
+- **Self-registration** is off (`registration_allowed = false` in `tfmodules/stack-platform/keycloak.tf`).
 - **Users can edit their own profile**, including their email address, through the account console. Apps shouldn't
   trust an email address to identify an existing account unless it's verified.
 
@@ -177,8 +177,6 @@ feature: build it in the testlab first, manage it with Terraform, and record the
 
 - **Group membership isn't in code.** The realm, the `admins` group and the role mappings are in Terraform, but other
   groups and who's in each group are managed in the Keycloak UI. Because the module never removes a grant, a role added to a group by hand isn't reverted. See #904.
-- **Self-registration is off by default but isn't set in code.** Set `registration_allowed = false` on the realm in
-  `tfmodules/stack-platform/keycloak.tf`.
 - **GlitchTip's `ENABLE_ORGANIZATION_CREATION` isn't set explicitly.** Set it to `false` in `tfmodules/glitchtip`.
 - **Wedding links logins to existing accounts by email** without checking `email_verified` (`omelette_wedding/auth.py`
   in the wedding repo). Keycloak doesn't allow two users to share an email, which limits this, but it should match on

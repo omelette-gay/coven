@@ -7,6 +7,8 @@ resource "keycloak_realm" "omelette_gay" {
 
   user_managed_access         = true
   default_signature_algorithm = "RS256"
+  # accounts are only made by us (see docs/sso.md)
+  registration_allowed = false
 
   smtp_server {
     from = "keycloak@${var.cluster_domain}"
@@ -70,6 +72,7 @@ resource "keycloak_user_roles" "automation" {
 # The service account key Keycloak's database backs up to GCS with (see docs/backups-and-recovery.md)
 module "keycloak_backup_credentials" {
   source = "../vault-k8s-secret"
+  count  = var.backup_bucket != null ? 1 : 0
 
   vault_secret_name             = "backups/service-account-key"
   vault_kv_mountpoint           = local.vault.kv_mountpoint
