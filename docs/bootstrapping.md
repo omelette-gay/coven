@@ -107,6 +107,12 @@ disable the `backend "gcs"` block in `coven/bootstrap/`, then run Terraform loca
 Once the initial project is created, you will also need to populate the secret `k3s-cluster-token` in GCP with the
 token for the cluster (in `/var/lib/rancher/k3s/server/token` on a controller).
 
+If the `omelette.gay` zone is new too, it has no records for the cluster yet, but Vault and Keycloak need theirs to get
+certificates before platform (which installs external-dns) can be applied. Add A and AAAA records by hand in Hetzner's
+DNS console for `vault.coven`, `auth.coven` and `monitoring.coven`, pointing at strix's public addresses. Once platform
+is applied and external-dns is running, delete them: external-dns won't change records it didn't make, and recreates
+them as its own. (Rebuilding the cluster on its own doesn't need this, as the records are kept in Hetzner.)
+
 # GitHub actions
 
 GitHub's SSH keys are deployed onto the servers via Ansible, however GitHub needs also to be configured to trust
