@@ -88,7 +88,7 @@ resource "helm_release" "db" {
     yamlencode({
       cluster = {
         instances = var.postgresql_instances
-        # Pinned to a minimal image until there's a ClusterImageCatalog to follow (#875). Without this, the chart
+        # Pinned to a minimal image until there's a ClusterImageCatalog to follow (#128). Without this, the chart
         # picks the deprecated rolling `16` tag
         imageName = "ghcr.io/cloudnative-pg/postgresql:18.7-202611122305-minimal-trixie"
         initdb = {

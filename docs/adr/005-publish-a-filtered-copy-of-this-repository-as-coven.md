@@ -4,18 +4,18 @@
 |---|---|
 | **Status** | Accepted |
 | **Date** | 2026-11-23 |
-| **Related** | [ADR 006](./006-gate-ci-credentials-by-workflow-and-environment.md) (CI credentials for `coven`), [#844](https://github.com/omelette-gay/gitops/issues/844) (making the repo public), [#843](https://github.com/omelette-gay/gitops/issues/843) (self-hosted runners, not planned), [#561](https://github.com/omelette-gay/gitops/issues/561) (secret rotation during the Terraform migration) |
+| **Related** | [ADR 006](./006-gate-ci-credentials-by-workflow-and-environment.md) (CI credentials for `coven`), [#124](https://github.com/omelette-gay/coven/issues/124) (making the repo public), [#123](https://github.com/omelette-gay/coven/issues/123) (self-hosted runners, not planned), [#100](https://github.com/omelette-gay/coven/issues/100) (secret rotation during the Terraform migration) |
 
 ## Context
 
 We keep running out of free GitHub Actions minutes. Standard GitHub-hosted runners are free for public repositories, and
 we use Coven for professional development, so a public repository that shows how we work is useful in its own right.
-#843 (self-hosted runners with fallback) was closed in favour of going public.
+#123 (self-hosted runners with fallback) was closed in favour of going public.
 
 What has to stay private:
 
 - **Our home address.** It has been in the tree since December 2024 (`096d169`), so almost all of the 1,822 commits on
-  `main` contain it. It was also in #844's text and edit history, which has since been cleaned up. An audit found it
+  `main` contain it. It was also in #124's text and edit history, which has since been cleaned up. An audit found it
   nowhere else on GitHub.
 - **Terraform state.** `cloud-resources/terraform.tfstate` and its backup were committed nine times between August and
   October 2025. State holds every attribute in plaintext, including secrets, and also things that can't be rotated,
@@ -50,7 +50,7 @@ that window, so we keep it short, and an urgent fix is applied by one of us from
      the new repository
    - optionally change author emails with a mailmap
 
-   The script for this, with its checks, is recorded on #844.
+   The script for this, with its checks, is recorded on #124.
 2. Check the result locally, before it's pushed anywhere: gitleaks over the full history, and greps for the address
    and any other values on the list. Keep the redaction list outside the repository and delete it afterwards.
 3. Create `coven` as a **private** repository and push the filtered history. It has no pull request refs, workflow
@@ -59,7 +59,7 @@ that window, so we keep it short, and an urgent fix is applied by one of us from
    runs that would fail and use up minutes, and don't install Renovate on it yet.
 4. Transfer the issues worth keeping from `gitops` to `coven` after checking their text and edit history. Issues can't
    be transferred from a private repository to a public one, so this happens while `coven` is still private.
-5. Apply the repository settings from #844 (secret scanning and push protection, approval for fork pull requests,
+5. Apply the repository settings from #124 (secret scanning and push protection, approval for fork pull requests,
    read-only default `GITHUB_TOKEN`, `SECURITY.md`), then make `coven` public.
 6. Set up the `main` ruleset and the environments, then CI trust for `coven`, as in
    [ADR 006](./006-gate-ci-credentials-by-workflow-and-environment.md). On GitHub Free, rulesets, environment branch
@@ -70,7 +70,7 @@ that window, so we keep it short, and an urgent fix is applied by one of us from
    `coven`. Change links in the docs that point at transferred `gitops` issues to their new `coven` numbers. Then
    remove `gitops`'s CI trust and archive it.
 
-Every secret found in history is still rotated, as decided in #844. With this approach, rotation is good hygiene
+Every secret found in history is still rotated, as decided in #124. With this approach, rotation is good hygiene
 rather than something that blocks going public.
 
 ## Alternatives considered
@@ -89,7 +89,7 @@ unfiltered history to the public repository by default. It would also break the 
 pull requests, and the commit message references above couldn't point at the archive. `coven` also describes the
 repository better than `gitops`.
 
-**Self-hosted runners on Coven (#843).** A lot of moving parts (ARC, a status reporter, a GCP watchdog), and falling
+**Self-hosted runners on Coven (#123).** A lot of moving parts (ARC, a status reporter, a GCP watchdog), and falling
 back to GitHub-hosted runners does nothing in the months it's needed, when the minutes have run out.
 
 **Stay private and pay for minutes.** Cheap, and still an option as a stopgap, but it doesn't give us a public

@@ -74,7 +74,7 @@ The Keycloak client's Secret has the same keys for every app: `client_id`, `clie
 `token_endpoint`, `userinfo_endpoint` and `jwks_endpoint` (see the [module](../tfmodules/keycloak-client/)). The client's
 roles are passed through as the `roles` claim when logging in, and the app is responsible for reacting appropriately to
 them. `role_groups` grants roles to groups that already exist; it doesn't manage the groups or who's in them (tracked in
-#904). Any user in the realm can log in to any client, so read [single sign-on](./sso.md) before adding a Keycloak
+#140). Any user in the realm can log in to any client, so read [single sign-on](./sso.md) before adding a Keycloak
 client to an app.
 
 Like every other change, it's applied when it's merged to `main` (see the [cluster overview](./cluster-overview.md)).

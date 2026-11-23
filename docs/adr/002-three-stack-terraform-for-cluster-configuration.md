@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Accepted |
 | **Date** | 2026-10-26 |
-| **Related** | [Issue #561: migrate k8s configuration to Terraform](https://github.com/omelette-gay/gitops/issues/561) |
+| **Related** | [Issue #100: migrate k8s configuration to Terraform](https://github.com/omelette-gay/coven/issues/100) |
 
 ## Context
 

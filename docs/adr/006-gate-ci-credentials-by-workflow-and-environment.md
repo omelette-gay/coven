@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Accepted |
 | **Date** | 2026-11-23 |
-| **Related** | [ADR 005](./005-publish-a-filtered-copy-of-this-repository-as-coven.md) (the move to `coven`), [ADR 004](./004-bundle-renovate-updates-weekly.md) (Renovate bundles and the 3-day wait), [#844](https://github.com/omelette-gay/gitops/issues/844), #954 (actions pinned to commit SHAs) |
+| **Related** | [ADR 005](./005-publish-a-filtered-copy-of-this-repository-as-coven.md) (the move to `coven`), [ADR 004](./004-bundle-renovate-updates-weekly.md) (Renovate bundles and the 3-day wait), [#124](https://github.com/omelette-gay/coven/issues/124), omelette-gay/gitops#954 (actions pinned to commit SHAs) |
 
 ## Context
 
@@ -45,7 +45,7 @@ IAM Conditions can't limit the role to one pool, because IAM resources don't exp
 ## Decision
 
 **This applies to `coven`, once it's public (ADR 005, step 6). `gitops` keeps its current setup until it's archived,
-with actions pinned to commit SHAs (#954) and Renovate's 3-day wait as the only mitigations.**
+with actions pinned to commit SHAs (omelette-gay/gitops#954) and Renovate's 3-day wait as the only mitigations.**
 
 1. **Protect `main` with a ruleset:** changes only through pull requests, no force-pushes or deletion, and no bypass
    for anyone, including the Renovate app. A second ruleset blocks creating a tag called `main`.
