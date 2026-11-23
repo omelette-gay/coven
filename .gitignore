@@ -4,3 +4,11 @@ __pycache__
 .terraform
 /testlab/**/terraform.tfstate*
 /.claude/settings.local.json
+
+# Terraform state and plans hold secrets in plaintext, so they must never be committed
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+plan.txt
+crash.log
