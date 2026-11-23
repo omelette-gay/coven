@@ -11,7 +11,7 @@
 
 ## Summary
 
-Merging [PR #911](https://github.com/omelette-gay/gitops/pull/911) ("Keep generated secrets out of Terraform state")
+Merging [PR omelette-gay/gitops#911](https://github.com/omelette-gay/gitops/pull/911) ("Keep generated secrets out of Terraform state")
 renamed the Secrets holding GlitchTip's object-store credentials, which forced Terraform to replace the one-off Job that
 creates the RustFS bucket. The replacement Job's image, `minio/mc:latest`, can no longer be pulled from Docker Hub, so
 the Job never completed, the `platform` apply failed, and GlitchTip's Helm release was never updated to use the new
@@ -35,12 +35,12 @@ Secrets. The RustFS data volume was not touched.
 
 | Time (UTC) | Event |
 |---|---|
-| 2026-11-14 14:12 | PR #911 merged to `main` |
+| 2026-11-14 14:12 | PR omelette-gay/gitops#911 merged to `main` |
 | 2026-11-14 14:13 | `tfapply.yml` plans 14 to add, 2 to change, 4 to destroy. The old Secrets and the `configure_oidc` and bucket Jobs are destroyed. New Vault secrets, ExternalSecrets and the new bucket Job are created |
 | 2026-11-14 14:14 | New bucket Job created. Its pod goes into `ImagePullBackOff` |
 | 2026-11-14 14:24 | Terraform gives up waiting: `job: glitchtip/create-glitchtip-bucket-glitchtip is not in complete state`. Apply fails |
 | 2026-11-16 | Stuck-job alert investigated. Docker Hub found to be refusing `minio/mc` (see below) |
-| 2026-11-16 ~10:50 | [PR #923](https://github.com/omelette-gay/gitops/pull/923) merged: replaces `minio/mc` with `rustfs/rc`. Stuck GlitchTip Job deleted manually |
+| 2026-11-16 ~10:50 | [PR omelette-gay/gitops#923](https://github.com/omelette-gay/gitops/pull/923) merged: replaces `minio/mc` with `rustfs/rc`. Stuck GlitchTip Job deleted manually |
 | 2026-11-16 ~11:00 | Terraform apply completes. Helm release updated to revision 5. Both GlitchTip web pods running, RustFS accepting writes with the new credentials. `KubeJobNotCompleted` resolves |
 | 2026-11-16 ~11:10 | Ansible `configure-cluster.yml` fails: the Loki bucket-creation Jobs in `monitoring` still have `minio/mc:latest` in their spec, and `spec.template` is immutable on a Job. Kubernetes rejects the patch |
 | 2026-11-16 ~11:20 | Old Loki bucket Jobs deleted manually. Ansible re-run recreates them with `rustfs/rc` and they complete |
@@ -124,7 +124,7 @@ immediately.
 
 ## References
 
-- [PR #911: Keep generated secrets out of Terraform state](https://github.com/omelette-gay/gitops/pull/911)
+- [PR omelette-gay/gitops#911: Keep generated secrets out of Terraform state](https://github.com/omelette-gay/gitops/pull/911)
 - [Failed `tfapply.yml` run](https://github.com/omelette-gay/gitops/actions/runs/43603668234)
-- [PR #923: Replace `minio/mc` with `rustfs/rc`](https://github.com/omelette-gay/gitops/pull/923)
+- [PR omelette-gay/gitops#923: Replace `minio/mc` with `rustfs/rc`](https://github.com/omelette-gay/gitops/pull/923)
 - [Secrets](../secrets.md)

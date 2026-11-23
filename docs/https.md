@@ -1,6 +1,6 @@
 # Exposing services to the web over HTTPS
 
-**WARNING:** this will not work on the Vagrant testlab (please see https://github.com/omelette-gay/gitops/issues/57)
+**WARNING:** this will not work on the Vagrant testlab (please see https://github.com/omelette-gay/coven/issues/28)
 
 k3s uses Traefik by default as a reverse proxy through to the different services hosted in our cluster. Traefik on k8s
 works by looking at all of the Ingress objects registered in k8s and then creating routing rules to send traffic

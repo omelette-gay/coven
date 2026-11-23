@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Accepted |
 | **Date** | 2026-10-24 |
-| **Related** | [Incident: Litestream stalled k3s datastore writes](../incidents/2026-10-23-litestream-stalled-k3s-datastore-writes.md), pull requests #787 and #808 |
+| **Related** | [Incident: Litestream stalled k3s datastore writes](../incidents/2026-10-23-litestream-stalled-k3s-datastore-writes.md), pull requests omelette-gay/gitops#787 and omelette-gay/gitops#808 |
 
 ## Context
 
@@ -44,7 +44,7 @@ Take a snapshot of the datastore every 6 hours instead of replicating it continu
 ## Alternatives considered
 
 **Keep Litestream, but tune it.** Litestream's design depends on holding a read transaction open and controlling
-checkpoints. Lowering the sync frequency (which we tried in #801, to cut costs) doesn't change that. With kine's
+checkpoints. Lowering the sync frequency (which we tried in omelette-gay/gitops#801, to cut costs) doesn't change that. With kine's
 constant writes, any continuous replicator that works this way will contend with k3s. We don't need second-level RPO,
 so it isn't worth the risk.
 

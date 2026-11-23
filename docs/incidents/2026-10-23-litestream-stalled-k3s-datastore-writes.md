@@ -31,18 +31,18 @@ kept flapping. Stopping Litestream by hand mitigated it, and it was then removed
 
 | Time (UTC) | Event |
 |---|---|
-| 2026-10-22, time not recorded | Litestream deployed to strix by hand, before #787 had been reviewed or merged. The change was committed at 21:14 UTC. |
-| 2026-10-23 17:44 | #787 merged, adding Litestream to `omelette.k3s-backup`. The deploy leaves Litestream running on strix, where it already was. |
-| 2026-10-23 18:05 | #794 merged: Renovate bumps Litestream from 0.5.14 to 0.5.17. |
+| 2026-10-22, time not recorded | Litestream deployed to strix by hand, before omelette-gay/gitops#787 had been reviewed or merged. The change was committed at 21:14 UTC. |
+| 2026-10-23 17:44 | omelette-gay/gitops#787 merged, adding Litestream to `omelette.k3s-backup`. The deploy leaves Litestream running on strix, where it already was. |
+| 2026-10-23 18:05 | omelette-gay/gitops#794 merged: Renovate bumps Litestream from 0.5.14 to 0.5.17. |
 | 2026-10-23 19:19 | First `KubePodCrashLooping` alert for leader-elected controllers; it keeps flapping from then on. This was about 1h15m after the 0.5.17 upgrade deployed. Whether the upgrade made things worse, or the stalls had just built up enough to trip the alert, isn't known. |
-| 2026-10-24 13:52 | #801 merged: Litestream's sync and compaction frequency reduced, to cut GCS operation costs. |
-| 2026-10-24 14:32 | #804 merged: Litestream config updated to the 0.5 format. |
+| 2026-10-24 13:52 | omelette-gay/gitops#801 merged: Litestream's sync and compaction frequency reduced, to cut GCS operation costs. |
+| 2026-10-24 14:32 | omelette-gay/gitops#804 merged: Litestream config updated to the 0.5 format. |
 | 2026-10-24, time not recorded | Cause identified as Litestream. Litestream stopped by hand on strix, and the `Slow SQL` count drops dramatically within the hour. |
-| 2026-10-24 | Fix to replace Litestream with periodic snapshots opened for review as #808. |
+| 2026-10-24 | Fix to replace Litestream with periodic snapshots opened for review as omelette-gay/gitops#808. |
 | 2026-10-24 ~22:10 | Fix deployed to coven by running Ansible from the branch, ahead of merging, to save GitHub Actions minutes in case it needed several attempts. Litestream removed from strix. |
 | 2026-10-24 22:11 | First snapshot taken (`state-20261024T221107Z.db.gz`). |
 | 2026-10-24 ~22:16 | Post-deploy checks run. `k3s-datastore-backup-verify` passes every check except one: 1 of 473 Secrets in the snapshot isn't encrypted (see [follow-up actions](#follow-up-actions)). |
-| 2026-10-24 22:40 | #808 merged, so `main` matches what's running on coven again. |
+| 2026-10-24 22:40 | omelette-gay/gitops#808 merged, so `main` matches what's running on coven again. |
 | After 22:40, time not recorded | `monitoring/kube-prometheus-kube-prome-admission` rewritten so it's stored encrypted. A new backup passes every `k3s-datastore-backup-verify` check. |
 
 ## Root cause
@@ -80,7 +80,7 @@ restarted, and failed again.
 
 - **Mitigation:** Litestream was stopped by hand on strix. Note that it would have been started again by the next
   merge to `main`, as the role set it to `state: started`.
-- **Fix:** #808 removes Litestream from strix completely. It replaces it with a systemd timer that takes a consistent
+- **Fix:** omelette-gay/gitops#808 removes Litestream from strix completely. It replaces it with a systemd timer that takes a consistent
   snapshot of the datastore every 6 hours and uploads it to GCS, with alerts if the backups stop. See
   [ADR 001](../adr/001-replace-litestream-with-snapshots.md) for why, and
   [backups and recovery](../backups-and-recovery.md#k3s-control-plane--sqlite-state) for how it works.
@@ -118,11 +118,11 @@ restarted, and failed again.
 
 ## Follow-up actions
 
-- [x] Deploy the fix (#808) and run the post-deploy checks in its description, including
+- [x] Deploy the fix (omelette-gay/gitops#808) and run the post-deploy checks in its description, including
       `sudo k3s-datastore-backup-verify` on strix.
 - [x] Confirm the leader-election restart counts stop climbing and `Slow SQL` warnings stop after the deploy.
 - [x] Remove the Litestream clean-up tasks (`remove_litestream.yml`) now they've run on coven.
-- [x] Merge #808 before any other pull request, so `main` matches what's on coven and a deploy from `main` can't bring
+- [x] Merge omelette-gay/gitops#808 before any other pull request, so `main` matches what's on coven and a deploy from `main` can't bring
       Litestream back.
 - [x] Find the one Secret that isn't stored encrypted. It's `monitoring/kube-prometheus-kube-prome-admission`, the
       Prometheus Operator admission webhook's TLS certificate and key. A Helm hook job creates it once and skips it if
@@ -142,4 +142,4 @@ The times of the manual Litestream deploy, the diagnosis and the manual stop wer
 
 - [ADR 001: Replace Litestream with periodic datastore snapshots](../adr/001-replace-litestream-with-snapshots.md)
 - [Backups and recovery: k3s control plane & SQLite state](../backups-and-recovery.md#k3s-control-plane--sqlite-state)
-- Pull requests #787 (added Litestream), #794, #801, #804 and #808 (replaced it with snapshots)
+- Pull requests omelette-gay/gitops#787 (added Litestream), omelette-gay/gitops#794, omelette-gay/gitops#801, omelette-gay/gitops#804 and omelette-gay/gitops#808 (replaced it with snapshots)

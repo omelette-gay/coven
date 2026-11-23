@@ -175,7 +175,7 @@ feature: build it in the testlab first, manage it with Terraform, and record the
 ## Known gaps
 
 - **Group membership isn't in code.** The realm, the `admins` group and the role mappings are in Terraform, but other
-  groups and who's in each group are managed in the Keycloak UI. Because the module never removes a grant, a role added to a group by hand isn't reverted. See #904.
+  groups and who's in each group are managed in the Keycloak UI. Because the module never removes a grant, a role added to a group by hand isn't reverted. See #140.
 - **GlitchTip's `ENABLE_ORGANIZATION_CREATION` isn't set explicitly.** Set it to `false` in `tfmodules/glitchtip`.
 - **Wedding links logins to existing accounts by email** without checking `email_verified` (`omelette_wedding/auth.py`
   in the wedding repo). Keycloak doesn't allow two users to share an email, which limits this, but it should match on
