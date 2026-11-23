@@ -1,10 +1,13 @@
 name: Apply a Terraform stack
 
+# Called by tfapply.yml at @main. Vault and GCP only give credentials to main's copy of this workflow, in the coven
+# environment, which only allows main (ADR 006). Keep it thin: the logic is in .github/actions/terraform-apply.
+
 on:
   workflow_call:
     inputs:
       stack:
-        description: The root module to apply, e.g. coven/bootstrap
+        description: The coven stack to apply, bootstrap, platform or apps
         required: true
         type: string
       timeout-minutes:
@@ -13,26 +16,24 @@ on:
         type: number
         default: 60
 
+permissions: {}
+
 jobs:
   tfapply:
-    name: apply ${{ inputs.stack }}
+    name: apply coven/${{ inputs.stack }}
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
+    environment: coven
     permissions:
       contents: read
       id-token: write
-    defaults:
-      run:
-        working-directory: ${{ inputs.stack }}/
     steps:
       - name: checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: log in
-        uses: ./.github/actions/terraform-login
-
-      - name: Terraform init
-        run: terraform init -input=false -lockfile=readonly
-
-      - name: Terraform apply
-        run: terraform apply -no-color -auto-approve -input=false -lock-timeout=10m
+      - name: apply
+        uses: ./.github/actions/terraform-apply
+        with:
+          stack: ${{ inputs.stack }}

@@ -1,0 +1,56 @@
+name: Plan a Terraform stack
+
+# Called by tfplan.yml at @main. Vault and GCP only give credentials to main's copy of this workflow (ADR 006), so
+# changes to it first run on the next pull request after they're merged. Keep it thin: the logic is in
+# .github/actions/terraform-plan, which runs from the pull request's checkout.
+
+on:
+  workflow_call:
+    inputs:
+      stack:
+        description: The coven stack to plan, bootstrap, platform or apps
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  plan:
+    name: plan coven/${{ inputs.stack }}
+    runs-on: ubuntu-latest
+    # Chosen from the event, never from inputs, so a caller can't pick it. coven-plan needs no approval, so it's only
+    # for pull requests from this repository that Chris (462992) or Meg (116823812) opened, and that one of them
+    # triggered. Everything else, including Renovate, waits in coven-plan-review for one of them to approve it.
+    environment: >-
+      ${{
+        (
+          github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.id == github.repository_id
+          && (github.event.pull_request.user.id == 462992 || github.event.pull_request.user.id == 116823812)
+          && (github.actor_id == '462992' || github.actor_id == '116823812')
+        )
+        && 'coven-plan' || 'coven-plan-review'
+      }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: plan
+        id: plan
+        uses: ./.github/actions/terraform-plan
+        with:
+          stack: ${{ inputs.stack }}
+
+      # Read by the comment job in tfplan.yml, which has no cloud credentials
+      - name: upload the plan
+        if: ${{ !cancelled() && steps.plan.outputs.artifact-path != '' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tfplan-${{ inputs.stack }}
+          path: ${{ steps.plan.outputs.artifact-path }}
+          retention-days: 7

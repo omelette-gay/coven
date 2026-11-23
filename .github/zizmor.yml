@@ -1,0 +1,11 @@
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # Callers use main's copy of the reusable workflows on purpose: only that copy gets credentials (ADR 006)
+        "omelette-gay/coven/*": ref-pin
+        "*": hash-pin
+  self-repository:
+    # The reusable workflows run the composite actions from the pull request's checkout on purpose, so pull requests
+    # test them (ADR 006). $/ would run main's copy.
+    disable: true

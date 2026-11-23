@@ -11,25 +11,32 @@ concurrency:
   group: coven-terraform
   cancel-in-progress: false
 
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
 
+# Always main's copy of tfapply-stack.yml: only that copy gets credentials (ADR 006)
 jobs:
   bootstrap:
-    uses: ./.github/workflows/tfapply-stack.yml
+    uses: omelette-gay/coven/.github/workflows/tfapply-stack.yml@main
+    permissions:
+      contents: read
+      id-token: write
     with:
-      stack: coven/bootstrap
+      stack: bootstrap
 
   platform:
     needs: bootstrap
-    uses: ./.github/workflows/tfapply-stack.yml
+    uses: omelette-gay/coven/.github/workflows/tfapply-stack.yml@main
+    permissions:
+      contents: read
+      id-token: write
     with:
-      stack: coven/platform
+      stack: platform
 
   apps:
     needs: platform
-    uses: ./.github/workflows/tfapply-stack.yml
+    uses: omelette-gay/coven/.github/workflows/tfapply-stack.yml@main
+    permissions:
+      contents: read
+      id-token: write
     with:
-      stack: coven/apps
-
+      stack: apps

@@ -124,7 +124,7 @@ resource "vault_jwt_auth_backend" "github" {
   }
 }
 
-# This repository's workflows, which apply Terraform, as admins
+# The gitops repo's workflows, as admins. Removed with gitops's trust when gitops is archived (ADR 005, step 7).
 resource "vault_jwt_auth_backend_role" "gitops" {
   backend         = vault_jwt_auth_backend.github.path
   role_name       = "gitops"
@@ -135,6 +135,45 @@ resource "vault_jwt_auth_backend_role" "gitops" {
     repository = "omelette-gay/gitops"
   }
   token_policies = [vault_policy.admin.name]
+}
+
+locals {
+  # Each of coven's reusable workflows, and the environments it may run in. Only main's copy of the workflow, running
+  # in one of those environments, can log in (ADR 006). Keep in step with coven_ci_workflows in
+  # coven/bootstrap/githubactions.tf.
+  coven_ci_workflows = {
+    "tfplan"          = { workflow = "tfplan-stack.yml", environments = ["coven-plan", "coven-plan-review"] }
+    "tfapply"         = { workflow = "tfapply-stack.yml", environments = ["coven"] }
+    "configure-hosts" = { workflow = "configure-hosts.yml", environments = ["coven"] }
+  }
+
+  coven_ci_bound_claims = {
+    for name, ci in local.coven_ci_workflows : name => {
+      # gh api repos/omelette-gay/coven --jq .id. The ID, not the name, so a repository that takes the name later
+      # doesn't inherit this trust.
+      repository_id = "1469182305"
+      # Set by GitHub to the reusable workflow's own path and ref. A pull request's or branch's copy of the workflow,
+      # or its steps copied into another workflow, get a different value.
+      job_workflow_ref = "omelette-gay/coven/.github/workflows/${ci.workflow}@refs/heads/main"
+      # The provider splits a comma-separated value into a list, any of which matches. A job without an environment
+      # has no environment claim, so it's refused.
+      environment = join(",", ci.environments)
+    }
+  }
+}
+
+# coven's reusable workflows, as admins. Each has its own role, so Vault's audit log shows which one acted.
+resource "vault_jwt_auth_backend_role" "coven_ci" {
+  for_each = local.coven_ci_bound_claims
+
+  backend           = vault_jwt_auth_backend.github.path
+  role_name         = "coven-${each.key}"
+  role_type         = "jwt"
+  user_claim        = "actor"
+  bound_audiences   = ["https://github.com/omelette-gay"]
+  bound_claims_type = "string" # exact matches, not globs
+  bound_claims      = each.value
+  token_policies    = [vault_policy.admin.name]
 }
 
 # People log in to Vault through Keycloak, and those with the vault-admin role (the admins group) get the admin policy

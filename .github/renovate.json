@@ -22,6 +22,17 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\n\\s*\\w+\\s*=\\s*\"(?<currentValue>[^\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?\""
       ]
+    },
+    {
+      "customType": "regex",
+      "description": "Images run with docker run in workflows, e.g. the linters in lint.yml, pinned as image:version@digest",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/[^/]+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "(?<depName>rhysd/actionlint|ghcr\\.io/zizmorcore/zizmor):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [
@@ -217,6 +228,22 @@
         "patch",
         "digest",
         "pinDigest"
+      ],
+      "groupName": "Tooling (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    },
+    {
+      "description": "Tooling: the linters lint.yml runs as images. gitleaks, in the terraform-plan action, is pinned by checksum, which Renovate can't update, so it's updated by hand",
+      "matchPackageNames": [
+        "rhysd/actionlint",
+        "ghcr.io/zizmorcore/zizmor"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
       ],
       "groupName": "Tooling (non-major)",
       "schedule": [

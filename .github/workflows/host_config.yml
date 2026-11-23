@@ -4,33 +4,13 @@ on:
   push:
     branches:
       - main
+
+permissions: {}
+
 jobs:
   configure:
-    name: Configure Coven hosts
-    runs-on: ubuntu-latest
+    # Always main's copy: only that copy gets credentials (ADR 006)
+    uses: omelette-gay/coven/.github/workflows/configure-hosts.yml@main
     permissions:
       contents: read
       id-token: write
-    environment: coven
-    # so two runs don't connect with the same WireGuard peer at once
-    concurrency:
-      group: coven-ansible
-    steps:
-      - name: checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: set up Ansible
-        uses: ./.github/actions/ansible-setup
-        with:
-          wireguard-private-key: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
-          wireguard-server-public-key: ${{ secrets.WIREGUARD_SERVER_PUBLIC_KEY }}
-          wireguard-server-preshared-key: ${{ secrets.WIREGUARD_SERVER_PRESHARED_KEY }}
-          ssh-key: ${{ secrets.SSH_KEY }}
-          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
-
-      - name: run Ansible
-        run: uv run ansible-playbook -u github -i coven/inventory plays/configure-hosts.yml
-
-      - name: close down Wireguard connection
-        if: always()
-        run: sudo wg-quick down wg0

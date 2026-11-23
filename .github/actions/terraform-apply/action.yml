@@ -1,0 +1,36 @@
+name: Apply a Terraform stack
+description: Logs in, then applies one coven stack
+
+inputs:
+  stack:
+    description: The coven stack to apply, bootstrap, platform or apps
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: check the stack
+      shell: bash
+      env:
+        STACK: ${{ inputs.stack }}
+      run: |
+        case "$STACK" in
+          bootstrap | platform | apps) ;;
+          *) echo "::error::Unknown stack '$STACK'"; exit 1 ;;
+        esac
+
+    - name: log in
+      uses: ./.github/actions/terraform-login
+      with:
+        vault-role: coven-tfapply
+        kubernetes-role: github-coven-tfapply
+
+    - name: Terraform init
+      shell: bash
+      working-directory: coven/${{ inputs.stack }}
+      run: terraform init -input=false -lockfile=readonly
+
+    - name: Terraform apply
+      shell: bash
+      working-directory: coven/${{ inputs.stack }}
+      run: terraform apply -no-color -auto-approve -input=false -lock-timeout=10m

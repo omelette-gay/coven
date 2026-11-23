@@ -37,7 +37,9 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 
 - **Deploys happen from GitHub Actions on merge to `main`**: `host_config.yml` runs `plays/configure-hosts.yml`, and
   `tfapply.yml` applies the Terraform stacks in order. `tfplan.yml` posts a Terraform plan on every PR. A change isn't
-  done until it's in code and merged; manual changes on the cluster get reverted or cause drift.
+  done until it's in code and merged; manual changes on the cluster get reverted or cause drift. Only `main`'s copy of
+  the reusable workflows they call can log in to Vault and GCP: read
+  [CI and its credentials](./cluster-overview.md#ci-and-its-credentials) before changing anything in `.github/`.
 - **Ansible configures the hosts; Terraform configures everything on the cluster**, in three stacks (see
   [ADR 002](./adr/002-three-stack-terraform-for-cluster-configuration.md) and the cluster overview).
 - **Self-deploying apps** (e.g. `wedding`, `home-assistant`) are defined in their own repos. This repo only sets up

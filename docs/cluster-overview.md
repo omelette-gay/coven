@@ -12,7 +12,8 @@ For the practical "how do I start investigating" guide, see [diagnosing issues](
   really a fix once it is in code.
 - **Changes are deployed by GitHub Actions on merge to `main`.** The host playbook and `terraform apply` run
   automatically on every push to `main` (see [.github/workflows/](../.github/workflows/)). Terraform also runs a plan on
-  every pull request. So "what changed recently?" can usually be answered with `git log` on this repo.
+  every pull request. So "what changed recently?" can usually be answered with `git log` on this repo. Only `main`'s
+  workflows get credentials, and some plans wait for approval: see [CI and its credentials](#ci-and-its-credentials).
 - **Dependency versions are bumped automatically by Renovate.** Helm chart versions are pinned in the `helm_release`
   resources in the `.tf` files, and Terraform provider versions in the lock files. Renovate PRs are merged frequently, so
   a recent chart upgrade is a common cause of new alerts.
@@ -88,7 +89,8 @@ Between them, they manage:
 - GCP project resources: APIs, the `coven-tfstate` bucket (which keeps old versions of each stack's state for 30 days,
   as state holds secrets), the `coven-backups` bucket (with a 14-day expiry on objects under `k3s/` only) and backup
   service account (with keys rotated every 30
-  days and written into Vault), the `k3s-cluster-token` secret, GitHub Actions workload identity, billing budget alerts
+  days and written into Vault), the `k3s-cluster-token` secret, the workload identity pools for GitHub Actions and for the
+  cluster's service accounts (applied by a project owner, as CI can only read them), billing budget alerts
 - Hetzner DNS zones and static records (Fastmail, Bluesky and GitHub verification, GitHub Pages CNAMEs)
 - `glitchtip` namespace - GlitchTip error tracking (errors.omelette.gay)
 - `vikunja` namespace - Vikunja task lists and kanban boards (tasks.omelette.gay), with its Postgres cluster and a
@@ -173,7 +175,7 @@ grimhilde has no public address, so how you reach it depends on where you are:
 | GitHub Actions            | Over the internet                       | Through a WireGuard tunnel to janus, which the workflow brings up |
 | Anywhere else             | Over the internet                       | Not directly reachable; jump through strix, which is on the home LAN via its own tunnel |
 
-The Ansible job (in [.github/workflows/host_config.yml](../.github/workflows/host_config.yml)) brings up its own
+The Ansible job (in [.github/workflows/configure-hosts.yml](../.github/workflows/configure-hosts.yml)) brings up its own
 WireGuard peer (192.168.178.204) to janus before running the playbook, so it can reach grimhilde, and takes it down
 again afterwards. A concurrency group stops two runs using the peer at once. If that tunnel can't be established (for
 example because janus or the home internet connection is down), it will fail. The Terraform jobs
@@ -220,6 +222,87 @@ only talk to the Kubernetes API on strix, Vault and cloud APIs, so they don't ne
 - **Vault UI**: https://vault.coven.omelette.gay (see the README for how to log in).
 - **Prometheus, Alertmanager, Loki, the Traefik dashboard and the Longhorn UI are not exposed to the internet** -
   use `kubectl port-forward` to reach them.
+
+## CI and its credentials
+
+CI is admin over the cluster, Vault and GCP: a Terraform plan has to read secrets that lead back to admin, so even a
+plan is effectively admin, and so is approving one. So credentials are gated on which workflow is running, not just
+which repository ([ADR 006](./adr/006-gate-ci-credentials-by-workflow-and-environment.md)).
+
+**Only `main`'s copy of three reusable workflows gets credentials.** The workflows that run on events call them at
+`@main`:
+
+| Reusable workflow | Environment | Vault roles | Called by |
+|---|---|---|---|
+| [tfplan-stack.yml](../.github/workflows/tfplan-stack.yml) | `coven-plan` or `coven-plan-review` | `coven-tfplan`, `github-coven-tfplan` | `tfplan.yml`, on pull requests |
+| [tfapply-stack.yml](../.github/workflows/tfapply-stack.yml) | `coven` | `coven-tfapply`, `github-coven-tfapply` | `tfapply.yml`, on push to `main` |
+| [configure-hosts.yml](../.github/workflows/configure-hosts.yml) | `coven` | `coven-configure-hosts` | `host_config.yml`, on push to `main` |
+
+- **The Vault roles and GCP principals are bound on three claims** that GitHub puts in the job's OIDC token, which no
+  workflow can change: `repository_id` (coven's ID, so a new repository with the same name gets nothing),
+  `job_workflow_ref` (`omelette-gay/coven/.github/workflows/<file>@refs/heads/main`) and `environment`. The Vault roles
+  are in [tfmodules/stack-platform/vault.tf](../tfmodules/stack-platform/vault.tf) and
+  [coven/platform/githubactions.tf](../coven/platform/githubactions.tf). The GCP principals use their own provider,
+  `coven-github-actions`, in [coven/bootstrap/githubactions.tf](../coven/bootstrap/githubactions.tf).
+- **A pull request can't get credentials by editing the workflows.** Calling its own copy of a reusable workflow, a
+  branch's or a tag's, copying the steps into the caller, or adding a new workflow that asks for an environment all
+  give a different `job_workflow_ref` or no `environment`, so Vault and GCP refuse them. The ruleset on `main` makes
+  sure code only gets there through a merged pull request.
+- **A pull request can change what runs with the credentials.** The reusable workflows only check out the code and
+  call a composite action in [.github/actions/](../.github/actions/), which runs from the pull request's checkout, as
+  does the Terraform code. So pull requests test the composite actions, but changes to the reusable workflows
+  themselves only run once they're merged.
+- **GCP:** the plan and apply principals get `roles/editor`, the k3s token, read-only access to the workload identity
+  pools and the roles in apps' own projects. The host playbook only gets the k3s token. CI can't change either pool, so
+  it can't loosen its own conditions: both pools are applied by a project owner from their own machine, and CI's apply
+  then finds nothing to change.
+
+### The environments
+
+| Environment | Rules | Used by |
+|---|---|---|
+| `coven` | Only `main`. Holds the WireGuard and SSH secrets | apply and the host playbook |
+| `coven-plan` | No reviewers | plans of pull requests from this repository, opened and triggered by Chris or Meg |
+| `coven-plan-review` | Chris or Meg must approve, and admins can't bypass it | every other plan, including Renovate's |
+
+`tfplan-stack.yml` chooses between the plan environments from the event, never from inputs: it's `coven-plan` only for
+a `pull_request` event whose head repository is this one, and where both the pull request's author and the user who
+triggered the run (`github.actor_id`) are Chris (462992) or Meg (116823812). Anything else, such as a Renovate pull
+request, a push to someone else's pull request, or a re-run of a Renovate run, waits for approval.
+
+### Approving plans
+
+**Approving a plan gives admin to the code in that pull request**, and admin can make itself permanent (new Vault
+tokens, Kubernetes service account tokens, GCP service account keys). A bad approval means rotating Vault,
+Kubernetes, GCP, Hetzner and Keycloak credentials. Most of these are Renovate's: about one per weekly bundle, plus
+separate updates and rebases. Before approving, from the run's page (**Review deployments**):
+
+- Read the whole diff, not just the description. For a rebase, check what changed since the last plan you approved.
+- Look hardest at anything that runs code in CI: provider and module versions and lock files, chart versions,
+  action versions and anything in `.github/`, `data "external"` and other scripts.
+- If anything's unexpected, reject it. A rejected plan changes nothing.
+
+### Plan output
+
+Plans are public, as they're posted on pull requests. The plan job writes the plan to a file rather than the log, and
+scans it with a pinned gitleaks. If gitleaks finds anything, only the changed resource addresses and actions are posted,
+and the job fails: look at the plan locally (`./terraform.sh --coven plan <stack>`) to see what it found. A separate job
+with no cloud credentials posts the comment and the job summary, treating the plan as untrusted text.
+
+### Checking the gate
+
+The rulesets and environments are repository settings, not code, so if one is changed the gate quietly goes. Check
+them after changing settings, and now and then:
+
+```bash
+gh api repos/omelette-gay/coven/rulesets --jq '.[] | {name, target, enforcement}'
+gh api repos/omelette-gay/coven/environments --jq '.environments[] | {name, protection_rules, deployment_branch_policy, can_admins_bypass}'
+gh api repos/omelette-gay/coven/environments/coven/deployment-branch-policies --jq '.branch_policies[].name'
+```
+
+Expect: a `main` branch ruleset with pull requests only and no bypass actors, and a tag ruleset blocking `main`; `coven`
+limited to `main`; `coven-plan-review` with Chris and Meg as required reviewers and `can_admins_bypass` false. Fork pull
+requests from outside contributors must also need approval to run (Settings → Actions → General).
 
 ## Alerting
 

@@ -1,40 +1,18 @@
-# Trust tokens for the cluster's Kubernetes service accounts, so pods can act as GCP service accounts without keys. The
-# pool only identifies them: each GCP service account says which Kubernetes service accounts can act as it, with the
-# gcp-workload-identity module. GCP service accounts in any project can use this pool.
-#
-# CI's permission to manage pools in this project is granted in the bootstrap stack.
+# The cluster's workload identity pool moved to the bootstrap stack (ADR 006), so CI can't change it. Forget it here
+# without deleting it. These, and the external provider in main.tf, can go once platform's state no longer has them.
 
-# Google can't reach the cluster's API server, so give it the cluster's issuer and public signing keys, read from the
-# cluster on each plan. They aren't secret.
-data "external" "coven_service_account_issuer" {
-  program = ["sh", "-c", <<-EOT
-    jq -n \
-      --argjson config "$(kubectl get --raw /.well-known/openid-configuration)" \
-      --argjson jwks "$(kubectl get --raw /openid/v1/jwks)" \
-      '{issuer: $config.issuer, jwks: ($jwks | tojson)}'
-  EOT
-  ]
-}
+removed {
+  from = google_iam_workload_identity_pool.coven
 
-resource "google_iam_workload_identity_pool" "coven" {
-  workload_identity_pool_id = "coven"
-  display_name              = "coven cluster"
-  description               = "Service accounts in the coven k3s cluster"
-}
-
-resource "google_iam_workload_identity_pool_provider" "coven" {
-  workload_identity_pool_id          = google_iam_workload_identity_pool.coven.workload_identity_pool_id
-  workload_identity_pool_provider_id = "coven-k3s"
-  display_name                       = "coven k3s"
-
-  attribute_mapping = {
-    "google.subject" = "assertion.sub" # system:serviceaccount:<namespace>:<name>
+  lifecycle {
+    destroy = false
   }
+}
 
-  attribute_condition = "assertion.sub.startsWith('system:serviceaccount:')"
+removed {
+  from = google_iam_workload_identity_pool_provider.coven
 
-  oidc {
-    issuer_uri = data.external.coven_service_account_issuer.result.issuer
-    jwks_json  = data.external.coven_service_account_issuer.result.jwks
+  lifecycle {
+    destroy = false
   }
 }

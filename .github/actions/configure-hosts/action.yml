@@ -1,0 +1,40 @@
+name: Configure coven hosts
+description: Connects to the coven network, then runs the host playbook
+
+inputs:
+  wireguard-private-key:
+    description: The WIREGUARD_PRIVATE_KEY secret
+    required: true
+  wireguard-server-public-key:
+    description: The WIREGUARD_SERVER_PUBLIC_KEY secret
+    required: true
+  wireguard-server-preshared-key:
+    description: The WIREGUARD_SERVER_PRESHARED_KEY secret
+    required: true
+  ssh-key:
+    description: The SSH_KEY secret
+    required: true
+  ssh-known-hosts:
+    description: The SSH_KNOWN_HOSTS secret
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: set up Ansible
+      uses: ./.github/actions/ansible-setup
+      with:
+        wireguard-private-key: ${{ inputs.wireguard-private-key }}
+        wireguard-server-public-key: ${{ inputs.wireguard-server-public-key }}
+        wireguard-server-preshared-key: ${{ inputs.wireguard-server-preshared-key }}
+        ssh-key: ${{ inputs.ssh-key }}
+        ssh-known-hosts: ${{ inputs.ssh-known-hosts }}
+
+    - name: run Ansible
+      shell: bash
+      run: uv run ansible-playbook -u github -i coven/inventory plays/configure-hosts.yml
+
+    - name: close down WireGuard connection
+      if: always()
+      shell: bash
+      run: sudo wg-quick down wg0 || true

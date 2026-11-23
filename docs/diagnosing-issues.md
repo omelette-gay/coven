@@ -448,6 +448,45 @@ strix is the only controller, so:
 If the datastore is lost, it can be restored from the snapshots in GCS - see
 [backups and recovery](./backups-and-recovery.md#disaster-recovery-rebuilding-the-controller). This needs a human.
 
+### CI can't log in, or a plan is waiting for approval
+
+Only `main`'s copy of three reusable workflows, in the right environment, can log in (see
+[CI and its credentials](./cluster-overview.md#ci-and-its-credentials)). Refusals look like:
+
+- **Vault** (the `login to Vault` or `log in to k8s` step): `error validating claims: claim "job_workflow_ref" does not
+  match any associated bound claim values`, or the same for `environment` or `repository_id`, or
+  `claim "environment" is missing`.
+- **GCP** (the `login to GCP` step, or the first Google API call): `unauthorized_client` from the token exchange
+  (`sts.googleapis.com`), or `403` / `Permission ... denied` when Terraform or Ansible first uses Google.
+
+Work out which claim didn't match:
+
+1. **Is the job running `main`'s copy of the reusable workflow?** The run's page shows which workflow file and ref each
+   job used. A caller that uses `./.github/workflows/...`, `@` a branch or tag, or steps copied out of the reusable
+   workflow is refused, as it should be. Put the caller back to `omelette-gay/coven/.github/workflows/<file>@main`.
+2. **Does the job have the right environment?** A job with no environment, or the wrong one, is refused. Apply and the
+   host playbook only work on `main`. GitHub blocks other branches before the job starts, with `Branch "..." is not
+   allowed to deploy to coven due to environment protection rules`.
+3. **Did a role name change?** The composite actions name the Vault roles (`coven-tfplan` and so on). If they don't
+   match [tfmodules/stack-platform/vault.tf](../tfmodules/stack-platform/vault.tf) and
+   [coven/platform/githubactions.tf](../coven/platform/githubactions.tf), Vault says the role doesn't exist.
+4. **Did a reusable workflow get renamed, or the repository recreated?** The bindings name each file and coven's
+   repository ID. Both are in the Vault roles and in `coven_ci_workflows` in
+   [coven/bootstrap/githubactions.tf](../coven/bootstrap/githubactions.tf), and need changing in the same pull request.
+   GCP's side is applied by a project owner, as CI can't change the pools, so apply bootstrap locally before merging.
+5. **Has someone changed the environments or rulesets?** Check them as in
+   [Checking the gate](./cluster-overview.md#checking-the-gate).
+
+Don't loosen a binding to get a run through, for example by adding a branch's ref or allowing no environment. That's
+the gate. Fix the workflow instead, and if a deploy is urgent, apply from your own machine as break-glass (see the
+README).
+
+**A plan waiting with `Waiting for review: coven-plan-review needs approval`** isn't a failure. Renovate's plans, and
+any plan not opened and triggered by Chris or Meg, need one of them to approve it, after
+[checking the change](./cluster-overview.md#approving-plans). A plan that **fails with a gitleaks error** found
+something that looks like a secret in the plan, so the comment only lists the changed addresses. Run the plan locally
+to see what it was.
+
 ### Vulnerability reports
 
 Trivy Operator scans running images. These are informational rather than alerts, but are available with

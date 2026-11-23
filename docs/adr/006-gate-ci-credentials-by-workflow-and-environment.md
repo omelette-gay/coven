@@ -141,8 +141,11 @@ reviewers on private repositories, and we're moving to a public repository anywa
 - Removing pool admin protects the gate, not everything else. CI still has `roles/editor`, which can create service
   account keys, so a bad approval can still leave lasting access that way. Unlike a loosened pool condition, extra keys
   show up in `gcloud iam service-accounts keys list`.
-- To check in the testlab before relying on it: `job_workflow_ref` is set as expected for reusable workflows, and Vault
-  and GCP refuse a token from the pull request's own copy, from a branch, from a tag called `main`, from steps copied
-  into the caller, and from a job with no environment.
+- **The refusals can only be checked on coven.** GitHub's runners can't reach the testlab's Vault, so the testlab only
+  checks the Terraform side: that the new Vault roles apply. Straight after Actions is turned on for `coven`, we check
+  from throwaway pull requests and branches that Vault and GCP refuse a token from the pull request's own copy of a
+  workflow, from a branch, from steps copied into the caller and from a job with no environment, and that a normal pull
+  request from one of us gets a plan while a non-pull-request run waits for approval. A tag called `main` can't be
+  created, as the tag ruleset blocks it.
 - **Worth adding later:** an alert on Vault audit log writes to `sys/auth*`, `sys/policy*`, `auth/github/role/*` and
   `auth/token/create*` that don't come from an apply run.

@@ -16,6 +16,8 @@ There are multiple ways to authenticate to Vault. Humans can use Keycloak SSO to
 to use alternative ways to log in. Vault will be set up to trust both GitHub and our Kubernetes cluster, as well as
 Keycloak, as trusted identity stores. This means that a GitHub access token (for GitHub Actions jobs) can be used
 to authenticate to Vault, and k8s service accounts can also be used to connect to Vault to read secrets from it.
+This repository's own CI is admin, so only some of its workflows can log in: see
+[CI and its credentials](./cluster-overview.md#ci-and-its-credentials).
 
 To follow the principle of least responsibility, each machine user should be created with a policy that limits it to
 only the secrets it needs.
@@ -54,9 +56,12 @@ with `kubernetes_secret_v1` for that reason: moving it to Vault wouldn't remove 
 **Don't give pods Google service account keys where we can avoid it.** Let them act as the service account through
 workload identity federation instead, so there's no key to store, leak or rotate:
 
-- The cluster's workload identity pool is in the platform stack
-  ([coven/platform/workloadidentity.tf](../coven/platform/workloadidentity.tf)). GCP checks tokens for Kubernetes
+- The cluster's workload identity pool is in the bootstrap stack
+  ([coven/bootstrap/workloadidentity.tf](../coven/bootstrap/workloadidentity.tf)). GCP checks tokens for Kubernetes
   service accounts against the cluster's public signing keys, which Terraform reads from the cluster with `kubectl`.
+  CI can't change workload identity pools ([ADR 006](./adr/006-gate-ci-credentials-by-workflow-and-environment.md)), so
+  after a cluster rebuild changes the keys, a project owner applies bootstrap from their own machine before CI's next
+  apply.
 - The [gcp-workload-identity](../tfmodules/gcp-workload-identity/) module lets one Kubernetes service account act as
   one GCP service account, in any project, and gives the pods a credentials file with nothing secret in it. See the
   weight tracker in [coven/apps/weight-tracker.tf](../coven/apps/weight-tracker.tf).
