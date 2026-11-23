@@ -130,7 +130,11 @@ reviewers on private repositories, and we're moving to a public repository anywa
   request can change *what* runs with the credentials, as it already can through the Terraform code, but not *whether*
   it gets them: the environment is chosen before any of its steps run.
 - The rulesets and environments are set in the repository settings, not in code. If they're misconfigured, for example
-  `coven-plan-review` with no reviewers, the gate quietly disappears. The setup is documented in the cluster docs.
+  `coven-plan-review` with no reviewers, the gate quietly disappears. The setup, and how to check it, has to be
+  written up in the cluster docs.
+- **Worth considering:** managing the rulesets and environments in Terraform with the GitHub provider, in `bootstrap`
+  and applied by an owner like the workload identity pools, so drift shows up in plans. They must not be something CI
+  can apply, as CI would then be managing its own gate.
 - Changes to either workload identity pool (in practice, the cluster's signing keys after a rebuild) need a project owner
   to apply `bootstrap` locally before merging, or CI's apply fails. Moving the cluster's pool between stacks needs a
   `removed` block in `platform` and an `import` block in `bootstrap`.
