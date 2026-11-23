@@ -14,6 +14,7 @@ in the rest of [docs/](./), which is written with AI agents in mind. Read the re
 | [docs/secrets.md](./secrets.md) | How Vault, External Secrets and auth fit together |
 | [docs/sso.md](./sso.md) | Adding or changing a Keycloak client, putting an app behind SSO, or giving someone a Keycloak account |
 | [docs/https.md](./https.md) | Exposing a service: Traefik, cert-manager, external-dns |
+| [docs/working-in-public.md](./working-in-public.md) | Before committing anything that might be sensitive, or changing GitHub settings or CI. What never goes in, and the settings the credential gate relies on |
 | [docs/names-and-numbers.md](./names-and-numbers.md) | Naming hosts/domains, IP ranges |
 | [docs/bootstrapping.md](./bootstrapping.md) | Building something from scratch |
 | [docs/adr/](./adr/README.md) | Before reversing a deliberate choice; when making a hard-to-undo decision |

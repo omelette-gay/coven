@@ -1,6 +1,23 @@
-# gitops
+# coven
 
-This repo contains all the infrastructure-as-code stuff for deploying and managing Chris & Meg's server and IoT setup.
+Infrastructure as code for Chris & Meg's k3s cluster ("coven") and home network: a Hetzner server and a machine at
+home, joined over WireGuard and configured with Ansible, with everything on the cluster managed by Terraform and
+deployed from GitHub Actions. We use it for our own apps and services, and as a place to practise how we'd run
+infrastructure at work.
+
+It's public so others can see how it fits together, and the decisions and mistakes along the way. Good places to
+start:
+
+- [The cluster overview](./docs/cluster-overview.md): the machines, the network, which tool owns what, and how CI gets
+  its credentials
+- [Architecture decision records](./docs/adr/README.md): why things are the way they are
+- [Incident write-ups](./docs/incidents/README.md): what broke, and what we changed afterwards
+- [The agent instructions](./docs/agents.md): the map of the docs we and our AI agents work from
+
+There's no licence, so the usual copyright applies: you're welcome to read it and learn from it, but it isn't offered
+for reuse. To report a security problem, see [SECURITY.md](./SECURITY.md). History from before this repository was
+published, including older issues, pull requests and commits, is in a private archive (`omelette-gay/gitops`), so links
+to it won't work for you.
 
 # Getting Started
 
