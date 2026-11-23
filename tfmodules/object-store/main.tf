@@ -94,6 +94,12 @@ resource "helm_release" "this" {
         enabled = false
       }
 
+      # Without this, the kubelet changes the owner of every file on the volume each time RustFS starts, which took
+      # about an hour for Loki's 50Gi. This only does it when the volume's top folder is wrong.
+      podSecurityContext = {
+        fsGroupChangePolicy = "OnRootMismatch"
+      }
+
       secret = {
         existingSecret = module.credentials.k8s_secret_name
       }
