@@ -124,19 +124,6 @@ resource "vault_jwt_auth_backend" "github" {
   }
 }
 
-# The gitops repo's workflows, as admins. Removed with gitops's trust when gitops is archived (ADR 005, step 7).
-resource "vault_jwt_auth_backend_role" "gitops" {
-  backend         = vault_jwt_auth_backend.github.path
-  role_name       = "gitops"
-  role_type       = "jwt"
-  user_claim      = "actor"
-  bound_audiences = ["https://github.com/omelette-gay"]
-  bound_claims = {
-    repository = "omelette-gay/gitops"
-  }
-  token_policies = [vault_policy.admin.name]
-}
-
 locals {
   # Each of coven's reusable workflows, and the environments it may run in. Only main's copy of the workflow, running
   # in one of those environments, can log in (ADR 006). Keep in step with coven_ci_workflows in
