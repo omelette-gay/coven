@@ -1,4 +1,4 @@
-# Task lists and kanban boards, replacing Planka (#592)
+# Task lists and kanban boards
 module "vikunja" {
   source = "../../tfmodules/vikunja"
 

@@ -10,7 +10,7 @@ or changing a Keycloak client, or before giving someone new an account.
 
 - The `master` realm is only for administering Keycloak itself.
 - The `omelette.gay` realm holds everyone who logs in to our apps.
-- The `admins` group in `omelette.gay` is for Chris and Meg. It's given the admin role in Vault and Grafana (and Planka, until it's deleted),
+- The `admins` group in `omelette.gay` is for Chris and Meg. It's given the admin role in Vault and Grafana,
   and Vault admin can read every secret and issue cluster-admin Kubernetes credentials. Treat membership of `admins` as
   full control of everything.
 - Anyone else (for example friends using a tool we host) should be in a group that describes them, such as `friends`,
@@ -53,7 +53,6 @@ That can be acceptable, but it should be a deliberate choice.
 | Home Assistant | `coven/apps/home-assistant.tf`; gate in the `omelette-gay/home-assistant` chart | `auth_oidc` `roles.user` is `resident` and `roles.admin` is `admin`, so users need one of them | Login refused (1) |
 | Wedding | `coven/apps/wedding.tf`; gate in `omelette-gay/wedding` | Django admin requires `is_staff`, which SSO-created users don't have. RSVPs use invite codes, not login | An account that can't see anything (2) |
 | GlitchTip | `tfmodules/glitchtip` (via `tfmodules/keycloak-client`) | Everything is inside organizations. New users belong to none, and only superusers can create them (`ENABLE_ORGANIZATION_CREATION` defaults to false) | An account that can't see anything until invited to an organization (2) |
-| Planka | Nowhere: its Ansible role was deleted, and it's left running unmanaged until it's removed (#592) | Only admin rights come from Keycloak | An account that can use Planka (3). Accepted because Planka is being decommissioned |
 | Vikunja | `tfmodules/vikunja` (via `tfmodules/keycloak-client`) | Nothing: Vikunja's OpenID login can't require a role or group claim | Their own empty account, which can create projects but sees nobody else's unless they're shared with it (3). Accepted |
 
 Things to know about these:
@@ -65,7 +64,7 @@ Things to know about these:
   so it can't see Chris and Meg's tasks. Accounts are linked to Keycloak by issuer and `sub`, not email.
 - **Role mappings are made by Terraform.** The platform stack maps Vault's `vault-admin` and Grafana's `grafana-admin`
   roles to `admins`, and the apps stack maps Home Assistant's `admin` role to `admins` (`role_groups` in
-  `coven/apps/home-assistant.tf`). Planka's mapping was made by Ansible and is left as it is until Planka is removed. Nobody has
+  `coven/apps/home-assistant.tf`). Nobody has
   its `resident` role, as nobody but Chris and Meg lives there. See [known gaps](#known-gaps).
 
 ### Realm settings that affect everyone
@@ -181,4 +180,3 @@ feature: build it in the testlab first, manage it with Terraform, and record the
 - **Wedding links logins to existing accounts by email** without checking `email_verified` (`omelette_wedding/auth.py`
   in the wedding repo). Keycloak doesn't allow two users to share an email, which limits this, but it should match on
   `sub` or check `email_verified`.
-- **Planka lets any realm user in with full use of it.** Accepted until it's removed (#592).
