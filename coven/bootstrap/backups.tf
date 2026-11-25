@@ -31,3 +31,9 @@ resource "google_storage_bucket_iam_member" "backup_writer" {
   role   = "roles/storage.objectAdmin"
   member = google_service_account.backup_service_account.member
 }
+
+resource "google_storage_bucket_iam_member" "backup_bucket_reader" {
+  bucket = google_storage_bucket.backup_bucket.name
+  role   = "roles/storage.legacyBucketReader"
+  member = google_service_account.backup_service_account.member
+}
