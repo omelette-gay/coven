@@ -47,7 +47,9 @@ this repo (see [the agent instructions](./docs/agents.md)) do more without needi
 - [logcli](https://grafana.com/docs/loki/latest/query/logcli/getting-started/) for querying Loki
 - [jq](https://jqlang.org/download/) and [yq](https://github.com/mikefarah/yq#install) for picking apart JSON and YAML
 - [TFLint](https://github.com/terraform-linters/tflint#installation). CI runs it on every pull request, with
-  `tflint --recursive --config "$PWD/.tflint.hcl"` from the repo root
+  `tflint --recursive --config "$PWD/.tflint.hcl"` from the repo root. On macOS it's no longer in Homebrew's core
+  formulae, so install it from its own tap: `brew install terraform-linters/tap/tflint`. Run
+  `tflint --init --config "$PWD/.tflint.hcl"` once to download its plugins
 - [ansible-lint](https://docs.ansible.com/projects/lint/installing/): `uv tool install ansible-lint`
 - [ShellCheck](https://github.com/koalaman/shellcheck#installing)
 - [actionlint](https://github.com/rhysd/actionlint) for checking GitHub Actions workflows: `uv tool install actionlint-py`.

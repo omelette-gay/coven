@@ -423,6 +423,20 @@ Each cluster normally has a primary and a replica on different nodes. After a re
 node; the rolling reboot playbook rebalances this. `PostgresReplicationRoleChanged` fires on any switchover, which
 is expected during a rolling reboot.
 
+**A new cluster that has never archived WAL** (`LastFailedArchiveTime` soon after it's created, its first backup stuck
+in `started`, then `LongRunningTransaction` and `CNPGClusterLowDiskSpaceWarning`) is usually a GCS permission problem.
+Before a new cluster archives its first WAL file, Barman Cloud checks the bucket, which needs `storage.buckets.get`.
+Existing clusters passed that check long ago, so they keep working with the same key. Look for `403` in the plugin
+sidecar's logs:
+
+```shell
+kubectl -n <namespace> logs <cluster>-<n> -c plugin-barman-cloud | grep -i 'error'
+```
+
+Until archiving works, WAL builds up on the primary's volume (about 2.3 GB a day even when idle, as CNPG switches WAL
+file every 5 minutes), and Postgres stops when the volume is full. See the
+[2026-11-22 incident](./incidents/2026-11-22-new-vikunja-database-could-not-archive-wal-to-gcs.md).
+
 ### `TraefikConfigReloadFailuresIncreasing` and routing problems
 
 Use the Traefik dashboard to find the router or middleware that's failing, and check Traefik's logs:
