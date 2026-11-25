@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Status** | Ongoing (fix in review, needs applying by a project owner) |
+| **Status** | Resolved |
 | **Detected** | 2026-11-22 19:31 UTC, when `LastFailedArchiveTime` fired. It was first looked at on 2026-11-25 after `CNPGClusterLowDiskSpaceWarning` |
 | **Impact started** | 2026-11-22 ~19:29 UTC, when the cluster was created |
-| **Resolved** | |
+| **Resolved** | 2026-11-25 11:21 UTC |
 | **Severity** | Minor (no data lost and Vikunja stayed up, but its database had no backups and was about 16 hours from a full disk) |
 | **Alerts** | `LastFailedArchiveTime`, `LongRunningTransaction`, `CNPGClusterLowDiskSpaceWarning` |
 
@@ -36,7 +36,10 @@ volume. The fix grants the account `roles/storage.legacyBucketReader` on the buc
 | 2026-11-22 19:36 | `LongRunningTransaction` fires on `db-cluster-1`, probably the stuck backup (not confirmed) |
 | 2026-11-25 08:34 | `CNPGClusterLowDiskSpaceWarning` fires |
 | 2026-11-25 ~11:00 | Investigated. 218 WAL files waiting to be archived. Root cause found in the plugin sidecar's logs |
-| | Bucket IAM change applied by a project owner, WAL backlog archived, alerts clear (to fill in) |
+| 2026-11-25 ~11:17 | Bucket IAM change applied locally by a project owner |
+| 2026-11-25 11:18 | WAL archiving starts working. `LastFailedArchiveTime` and `LongRunningTransaction` resolve |
+| 2026-11-25 11:19 | The stuck first backup completes, followed by a catch-up scheduled backup |
+| 2026-11-25 11:21 | WAL backlog archived and the primary's volume down to 58%. `CNPGClusterLowDiskSpaceWarning` resolves |
 
 ## Root cause
 
@@ -85,28 +88,25 @@ Granted the backup service account `roles/storage.legacyBucketReader` on `coven-
 `objectAdmin`. CI's `roles/editor` can't change bucket IAM, so a project owner applies the bootstrap stack from their
 own machine and then merges the pull request.
 
-Once it's applied, check that the WAL backlog has been archived and the disk space is freed. Check whether the stuck
-backup completes, and if it doesn't, replace it with a new one.
+Within a minute of the apply, the sidecar archived the backlog of 218 WAL files, the stuck first backup completed, and
+the primary's volume went from 71% to 58%. The code change is in
+[pull request #152](https://github.com/omelette-gay/coven/pull/152).
 
 ## Lessons
 
-- The alert that would have caught this fired within two minutes of the cluster being created, but no one looked at
-  it for two and a half days. Only the disk space warning got attention.
-- Nothing checked that a newly deployed database was actually backed up. Its first backup stayed in `started` without
-  any alert about it.
+- The alerts worked: `LastFailedArchiveTime` fired within two minutes of the cluster being created. It just took two
+  and a half days for someone to investigate, and it was the disk space warning that got attention.
+- The plugin sidecar's logs named the missing permission exactly, so once someone looked, the cause took minutes to
+  find.
 - We were lucky the database was new and small. On a busier database, the volume would have filled sooner.
 
 ## Follow-up actions
 
-- [ ] Apply the bootstrap stack locally as a project owner, then merge the fix
-- [ ] Confirm the WAL backlog is archived, the backup completes and the alerts clear, then fill in the timeline and
-      mark this resolved
-- [ ] Consider an alert for a CNPG backup that's been in `started` for more than a few hours, or a cluster with no
-      completed backup
-- [ ] When deploying an app with a database, check its first backup completes (add this to
-      [deploying-apps.md](../deploying-apps.md))
+- [x] Apply the bootstrap stack locally as a project owner
+- [x] Confirm the WAL backlog is archived, the backup completes and the alerts clear
 
 ## References
 
+- [Pull request #152](https://github.com/omelette-gay/coven/pull/152)
 - [docs/diagnosing-issues.md, Postgres alerts](../diagnosing-issues.md#postgres-alerts)
 - [docs/backups-and-recovery.md](../backups-and-recovery.md)
