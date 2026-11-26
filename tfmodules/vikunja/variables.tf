@@ -149,3 +149,8 @@ variable "mcp_keycloak_secret_revision" {
     error_message = "mcp_keycloak_secret_revision must be a whole number, 1 or more."
   }
 }
+
+variable "postgresql_image_catalog" {
+  description = "ClusterImageCatalog the database takes its PostgreSQL image from (see ADR 009)"
+  type        = string
+}

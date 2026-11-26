@@ -93,6 +93,9 @@ locals {
   # The Longhorn recurring job that backs volumes up off-site
   nightly_backup_job = "nightly-backup"
 
+  # The ClusterImageCatalog PostgreSQL clusters take their image from, installed by the bootstrap stack
+  postgresql_image_catalog = "postgresql"
+
   # Outbound mail, installed by the platform stack
   smtp_host = "mail.mail.svc.cluster.local"
   smtp_port = 587

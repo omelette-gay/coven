@@ -5,6 +5,7 @@ module "keycloak" {
   url                       = var.keycloak_url
   cluster_issuer            = var.cluster_issuer
   backup_bucket             = var.backup_bucket
+  postgresql_image_catalog  = var.postgresql_image_catalog
   backup_credentials_secret = var.keycloak_backup_credentials_secret
   bootstrap_admin_username  = var.keycloak_bootstrap_admin_username
   bootstrap_admin_password  = var.keycloak_bootstrap_admin_password

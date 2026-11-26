@@ -13,4 +13,5 @@ module "vikunja" {
 
   # Must be set on first deploy: adding it later moves attachments to a new, empty volume
   longhorn_recurring_job_name = local.nightly_backup_job
+  postgresql_image_catalog    = local.postgresql_image_catalog
 }
