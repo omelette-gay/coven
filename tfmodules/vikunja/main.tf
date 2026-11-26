@@ -26,6 +26,9 @@ locals {
   trusted_ca_dir = "/etc/vikunja-ca"
 
   files_bucket = "vikunja"
+
+  # Created by cert-manager for the Ingress, and also used by the router that blocks the metrics path
+  tls_secret_name = "vikunja-tls"
 }
 
 # Names that are global rather than per namespace (Vault paths and roles, the Keycloak client ID and the default backup
@@ -151,7 +154,7 @@ module "block_metrics_path" {
   namespace       = local.namespace
   host            = var.host
   path_regexp     = "^/api/v1/metrics"
-  tls_secret_name = "vikunja-tls"
+  tls_secret_name = local.tls_secret_name
 }
 
 resource "helm_release" "this" {
@@ -212,7 +215,7 @@ resource "helm_release" "this" {
             }]
             tls = [{
               hosts      = [var.host]
-              secretName = "vikunja-tls"
+              secretName = local.tls_secret_name
             }]
           }
         }

@@ -23,6 +23,11 @@ resource "kubernetes_namespace_v1" "vault" {
   }
 }
 
+locals {
+  # Created by cert-manager for the Ingress, and also used by the router that blocks the metrics path
+  tls_secret_name = "vault-tls"
+}
+
 # Hides Vault's metrics from the web. Prometheus scrapes them inside the cluster.
 module "block_metrics_path" {
   source = "../traefik-block-path"
@@ -30,7 +35,7 @@ module "block_metrics_path" {
   namespace       = kubernetes_namespace_v1.vault.metadata[0].name
   host            = var.host
   path_regexp     = "^/v1/sys/metrics"
-  tls_secret_name = "vault-tls"
+  tls_secret_name = local.tls_secret_name
 }
 
 # Vault is configured by platform, through the vault provider, once it's been initialised and unsealed by hand. The chart
@@ -59,7 +64,7 @@ resource "helm_release" "vault" {
           }
           tls = [{
             hosts      = [var.host]
-            secretName = "vault-tls"
+            secretName = local.tls_secret_name
           }]
         }
         dataStorage = {

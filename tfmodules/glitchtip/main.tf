@@ -61,6 +61,11 @@ module "object_store" {
   vault_kubernetes_auth_backend = var.vault_kubernetes_auth_backend
 }
 
+locals {
+  # Created by cert-manager for the Ingress, and also used by the router that blocks the metrics path
+  tls_secret_name = "glitchtip-tls"
+}
+
 # Hides GlitchTip's metrics from the web. Prometheus scrapes them inside the cluster.
 module "block_metrics_path" {
   source = "../traefik-block-path"
@@ -68,7 +73,7 @@ module "block_metrics_path" {
   namespace       = kubernetes_namespace_v1.this.metadata[0].name
   host            = var.host
   path_regexp     = "^/metrics"
-  tls_secret_name = "glitchtip-tls"
+  tls_secret_name = local.tls_secret_name
 }
 
 resource "helm_release" "this" {
@@ -173,7 +178,7 @@ resource "helm_release" "this" {
         }]
         tls = [{
           hosts      = [var.host]
-          secretName = "glitchtip-tls"
+          secretName = local.tls_secret_name
         }]
       }
 

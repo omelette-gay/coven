@@ -17,6 +17,9 @@ locals {
   # e.g. auth.coven.omelette.gay and /auth
   host      = regex("^https://([^/]+)", var.url)[0]
   base_path = trimprefix(var.url, "https://${local.host}")
+
+  # Created by cert-manager for the Ingress, and also used by the router that blocks the metrics path
+  tls_secret_name = "keycloak-tls"
 }
 
 resource "kubernetes_namespace_v1" "keycloak" {
@@ -88,7 +91,7 @@ module "block_metrics_path" {
   namespace       = kubernetes_namespace_v1.keycloak.metadata[0].name
   host            = local.host
   path_regexp     = "^${local.base_path}/realms/[^/]*/metrics"
-  tls_secret_name = "keycloak-tls"
+  tls_secret_name = local.tls_secret_name
 }
 
 # The temporary admin Keycloak creates on its first start, only on a fresh cluster. Keycloak reads it through optional
@@ -215,7 +218,7 @@ resource "helm_release" "keycloak" {
       }
       tls = [{
         hosts      = [local.host]
-        secretName = "keycloak-tls"
+        secretName = local.tls_secret_name
       }]
     }
   })]
