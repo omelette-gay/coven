@@ -204,6 +204,8 @@ resource "keycloak_role" "vault_admin" {
   name      = "vault-admin"
 }
 
+# Granted here, as well as in the apps stack's sso-groups.tf, so admins can log in to Vault on a fresh cluster before the
+# apps stack is applied. Not exhaustive, as sso-groups.tf manages the full list of the group's roles (see docs/sso.md)
 resource "keycloak_group_roles" "admins_vault" {
   realm_id   = keycloak_realm.omelette_gay.id
   group_id   = keycloak_group.admins.id

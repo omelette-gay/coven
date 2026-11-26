@@ -17,7 +17,8 @@ resource "keycloak_realm" "omelette_gay" {
   }
 }
 
-# Chris and Meg, who get admin roles in the apps that map them to this group
+# Chris and Meg, who get admin roles in the apps that map them to this group. Its members are managed in the Keycloak UI,
+# and its full list of roles in the apps stack's sso-groups.tf. Other groups are made there (see docs/sso.md)
 resource "keycloak_group" "admins" {
   realm_id = keycloak_realm.omelette_gay.id
   name     = "admins"

@@ -10,12 +10,24 @@ module "grafana_sso" {
   client_name         = "grafana"
   valid_redirect_uris = ["https://${var.grafana_host}/login/generic_oauth"]
   client_roles        = ["grafana-admin"]
-  role_groups         = { grafana-admin = [keycloak_group.admins.name] }
-  group_ids           = { (keycloak_group.admins.name) = keycloak_group.admins.id }
   keycloak_url        = var.keycloak_url
   k8s_namespace       = var.namespaces.monitoring
   k8s_secret_name     = var.grafana_oauth_secret
   secret_revision     = var.grafana_keycloak_secret_revision
+}
+
+# Not exhaustive, as the apps stack's sso-groups.tf manages the full list of the group's roles (see docs/sso.md)
+resource "keycloak_group_roles" "admins_grafana" {
+  realm_id   = keycloak_realm.omelette_gay.id
+  group_id   = keycloak_group.admins.id
+  role_ids   = [module.grafana_sso.role_ids["grafana-admin"]]
+  exhaustive = false
+}
+
+# The grant used to be made by the keycloak-client module
+moved {
+  from = module.grafana_sso.keycloak_group_roles.this["admins"]
+  to   = keycloak_group_roles.admins_grafana
 }
 
 # Checks over HTTPS that the services bootstrap installs are up (the HttpProbeFailed alert)

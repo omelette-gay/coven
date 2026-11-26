@@ -49,6 +49,6 @@ the same value, writing the Secret through Vault instead wouldn't help. See
 
 ## Granting roles
 
-`role_groups` grants client roles to groups that already exist, as a map of role to group names. The module doesn't
-create groups or manage who's in them, and it only adds the grants: other roles the group holds, from this client or
-any other, are left alone.
+The module creates the client roles but doesn't grant them. Its `role_ids` output maps each role's name to its ID, for
+granting it to a group in the apps stack's `sso-groups.tf`, which holds every group's full list of roles (see
+[single sign-on](../../docs/sso.md#2-create-the-client-with-the-keycloak-client-module)).

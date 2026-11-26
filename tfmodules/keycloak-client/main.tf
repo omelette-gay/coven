@@ -56,33 +56,6 @@ resource "keycloak_role" "this" {
   name      = each.value
 }
 
-# Grants client roles to groups. The groups must already exist; this module doesn't create or manage them. Each mapping is
-# added without touching the group's other roles, as a group holds roles from many clients (exhaustive = false), so a
-# role someone adds to the group by hand isn't removed.
-locals {
-  group_roles = {
-    for group in distinct(flatten(values(var.role_groups))) :
-    group => [for role, groups in var.role_groups : role if contains(groups, group)]
-  }
-}
-
-# Groups whose IDs aren't passed in are looked up by name, so they must exist when the stack is planned
-data "keycloak_group" "this" {
-  for_each = { for group, roles in local.group_roles : group => roles if !contains(keys(var.group_ids), group) }
-
-  realm_id = var.keycloak_realm
-  name     = each.key
-}
-
-resource "keycloak_group_roles" "this" {
-  for_each = local.group_roles
-
-  realm_id   = var.keycloak_realm
-  group_id   = try(var.group_ids[each.key], data.keycloak_group.this[each.key].id)
-  role_ids   = [for role in each.value : keycloak_role.this[role].id]
-  exhaustive = false
-}
-
 resource "kubernetes_secret_v1" "this" {
   metadata {
     name      = var.k8s_secret_name
