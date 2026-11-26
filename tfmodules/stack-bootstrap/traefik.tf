@@ -1,6 +1,8 @@
 # Traefik is installed by k3s, whose CRDs exist before this stack is applied, so these can use kubernetes_manifest.
 
-# Traefik's metrics, and the blockpath plugin that services use to hide their metrics endpoints from the web
+# Traefik's metrics, and the blockpath plugin. Services in this repo use the traefik-block-path module instead, as
+# Traefik only downloads plugins when it starts and turns them off for good if that fails (issue #141). The plugin stays
+# until the self-deploying apps that still use it (Home Assistant and virtualflightonlinetransmitter) have moved off it.
 resource "kubernetes_manifest" "traefik_config" {
   manifest = {
     apiVersion = "helm.cattle.io/v1"

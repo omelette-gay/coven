@@ -82,22 +82,13 @@ resource "helm_release" "keycloak_db" {
 }
 
 # Hides Keycloak's realm metrics from the web. Prometheus scrapes them inside the cluster.
-resource "kubernetes_manifest" "keycloak_block_metrics_path" {
-  manifest = {
-    apiVersion = "traefik.io/v1alpha1"
-    kind       = "Middleware"
-    metadata = {
-      name      = "block-metrics-path"
-      namespace = kubernetes_namespace_v1.keycloak.metadata[0].name
-    }
-    spec = {
-      plugin = {
-        plugin-blockpath = {
-          Regex = ["^${local.base_path}/realms/([^/]*)/metrics(.*)"]
-        }
-      }
-    }
-  }
+module "block_metrics_path" {
+  source = "../traefik-block-path"
+
+  namespace       = kubernetes_namespace_v1.keycloak.metadata[0].name
+  host            = local.host
+  path_regexp     = "^${local.base_path}/realms/[^/]*/metrics"
+  tls_secret_name = "keycloak-tls"
 }
 
 # The temporary admin Keycloak creates on its first start, only on a fresh cluster. Keycloak reads it through optional
@@ -220,7 +211,7 @@ resource "helm_release" "keycloak" {
       }]
       annotations = {
         "cert-manager.io/cluster-issuer"                   = var.cluster_issuer
-        "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd,${var.namespace}-${kubernetes_manifest.keycloak_block_metrics_path.manifest.metadata.name}@kubernetescrd"
+        "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
       }
       tls = [{
         hosts      = [local.host]
@@ -229,5 +220,5 @@ resource "helm_release" "keycloak" {
     }
   })]
 
-  depends_on = [helm_release.keycloak_db, kubernetes_manifest.keycloak_block_metrics_path]
+  depends_on = [helm_release.keycloak_db, module.block_metrics_path]
 }
