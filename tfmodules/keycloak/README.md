@@ -17,3 +17,9 @@ deleting it doesn't restart Keycloak. Delete the temporary admin and unset the p
 With `backup_bucket` set, the database backs up to `gs://<backup_bucket>/cnpg/keycloak/` with the service account key
 the platform stack syncs from Vault, so on a fresh cluster backups fail until platform has been applied. The testlab
 sets no bucket, so it doesn't back up.
+
+## Database image
+
+The database takes its image from the shared ClusterImageCatalog (`postgresql_image_catalog`, see
+[ADR 007](../../docs/adr/007-take-postgres-images-from-a-shared-image-catalog.md)), at the major version set in
+`main.tf`. Changing the major upgrades the database in place.

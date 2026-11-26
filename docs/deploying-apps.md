@@ -78,3 +78,31 @@ them. `role_groups` grants roles to groups that already exist; it doesn't manage
 client to an app.
 
 Like every other change, it's applied when it's merged to `main` (see the [cluster overview](./cluster-overview.md)).
+
+## PostgreSQL databases
+
+Apps that need PostgreSQL install their own CloudNativePG cluster with the
+[`cluster` chart](https://github.com/cloudnative-pg/charts/tree/main/charts/cluster), usually as a subchart. Take the
+image from the shared `postgresql` ClusterImageCatalog (see [ADR 007](./adr/007-take-postgres-images-from-a-shared-image-catalog.md))
+rather than setting an image, and set only the major version:
+
+```yaml
+version:
+  postgresql: "18"
+cluster:
+  imageCatalogRef:
+    kind: ClusterImageCatalog
+    name: postgresql
+```
+
+The catalog is updated weekly through this repo's Renovate pull requests, and the operator then rolls the database to
+the new image on its own, with a switchover. Apps don't need any extra permissions to use it.
+
+- Use the newest major in the catalog for a new database. Older majors drop out of the catalog after they're end of
+  life, and a cluster whose major isn't in the catalog stops being reconciled.
+- Changing `version.postgresql` to a newer major upgrades the database in place when the app next deploys. Test it on a
+  copy first, and make sure a recent backup exists.
+- The chart truncates `version.postgresql` to the major, so `"18.4"` still means the latest 18.x in the catalog. If you
+  really need a specific minor version, set a digest-pinned `cluster.imageName` instead, but then nothing updates it.
+- Every database here uses `C` collation, the chart's default. Keep it: the catalog's minimal images have no other
+  locales.

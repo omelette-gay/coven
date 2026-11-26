@@ -86,11 +86,15 @@ resource "helm_release" "db" {
 
   values = [
     yamlencode({
+      # Vikunja's major version, with its image from the shared catalog (see ADR 007). Changing the major upgrades the
+      # database in place
+      version = { postgresql = "18" }
       cluster = {
         instances = var.postgresql_instances
-        # Pinned to a minimal image until there's a ClusterImageCatalog to follow (#128). Without this, the chart
-        # picks the deprecated rolling `16` tag
-        imageName = "ghcr.io/cloudnative-pg/postgresql:18.7-202611122305-minimal-trixie"
+        imageCatalogRef = {
+          kind = "ClusterImageCatalog"
+          name = var.postgresql_image_catalog
+        }
         initdb = {
           database = "vikunja"
         }

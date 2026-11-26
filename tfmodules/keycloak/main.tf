@@ -42,8 +42,15 @@ resource "helm_release" "keycloak_db" {
 
   values = [yamlencode(merge(
     {
+      # Keycloak's major version, with its image from the shared catalog (see ADR 007). Changing the major upgrades the
+      # database in place
+      version = { postgresql = "16" }
       cluster = {
         instances = 2
+        imageCatalogRef = {
+          kind = "ClusterImageCatalog"
+          name = var.postgresql_image_catalog
+        }
         initdb = {
           database = "keycloak"
         }

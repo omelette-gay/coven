@@ -25,6 +25,16 @@
     },
     {
       "customType": "regex",
+      "description": "Git repositories pinned to a commit as branch@sha, e.g. the CNPG image catalog in tfmodules/cnpg",
+      "managerFilePatterns": [
+        "/\\.tf$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>git-refs)\\s+depName=(?<depName>\\S+)\\n\\s*\\w+\\s*=\\s*\"(?<currentValue>[^\"@]+)@(?<currentDigest>[a-f0-9]{40})\""
+      ]
+    },
+    {
+      "customType": "regex",
       "description": "Images run with docker run in workflows, e.g. the linters in lint.yml, pinned as image:version@digest",
       "managerFilePatterns": [
         "/^\\.github/workflows/[^/]+\\.ya?ml$/"
@@ -72,6 +82,22 @@
       ],
       "matchUpdateTypes": [
         "patch"
+      ],
+      "groupName": "Platform (non-major)",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    },
+    {
+      "description": "Platform: the CNPG image catalog. Each update rolls every PostgreSQL cluster, so it's bundled weekly (see ADR 007)",
+      "matchDatasources": [
+        "git-refs"
+      ],
+      "matchPackageNames": [
+        "https://github.com/cloudnative-pg/artifacts"
+      ],
+      "matchUpdateTypes": [
+        "digest"
       ],
       "groupName": "Platform (non-major)",
       "schedule": [

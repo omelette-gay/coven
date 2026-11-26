@@ -41,3 +41,9 @@ Redis is configured. RustFS itself is also a single pod.
 Vikunja 2.8 has an MCP server at `/api/v2/mcp`, using per-user API tokens with the `mcp:access` scope. Clients that
 can send a bearer token (e.g. Claude Code) can use it directly. claude.ai needs OAuth, which Vikunja doesn't do, so
 that needs a gateway in front (#106).
+
+## Database image
+
+The database takes its image from the shared ClusterImageCatalog (`postgresql_image_catalog`, see
+[ADR 007](../../docs/adr/007-take-postgres-images-from-a-shared-image-catalog.md)), at the major version set in
+`main.tf`. Changing the major upgrades the database in place.

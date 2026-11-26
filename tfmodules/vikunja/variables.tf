@@ -139,3 +139,8 @@ variable "blackbox_prober" {
     path = string
   })
 }
+
+variable "postgresql_image_catalog" {
+  description = "ClusterImageCatalog the database takes its PostgreSQL image from (see ADR 007)"
+  type        = string
+}

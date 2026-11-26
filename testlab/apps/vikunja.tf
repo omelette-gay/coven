@@ -17,6 +17,9 @@
 #   # The testlab has a single node, so a standby wouldn't add anything
 #   postgresql_instances = 1
 #
+#   # Installed by the bootstrap stack
+#   postgresql_image_catalog = "postgresql"
+#
 #   # Keep the testlab's backups apart from coven's, which will use /cnpg/vikunja/
 #   backup_path = "/testlab/cnpg/vikunja/"
 #

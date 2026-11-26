@@ -67,3 +67,4 @@ What we gain, what we give up, and what we'll need to watch for.
 | [004](./004-bundle-renovate-updates-weekly.md) | Bundle non-major Renovate updates into weekly pull requests by area | Accepted |
 | [005](./005-publish-a-filtered-copy-of-this-repository-as-coven.md) | Publish a filtered copy of this repository as a new public repository, `coven` | Accepted |
 | [006](./006-gate-ci-credentials-by-workflow-and-environment.md) | Only `main`'s workflows get CI credentials, and Renovate's plans need approval | Accepted |
+| [007](./007-take-postgres-images-from-a-shared-image-catalog.md) | Take every PostgreSQL image from a shared ClusterImageCatalog | Accepted |

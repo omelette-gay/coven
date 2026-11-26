@@ -137,3 +137,8 @@ variable "grafana_oauth_secret" {
   description = "Secret holding Grafana's Keycloak client, which the platform stack makes"
   type        = string
 }
+
+variable "postgresql_image_catalog" {
+  description = "Name of the ClusterImageCatalog every PostgreSQL cluster takes its image from (see ADR 007). The cnpg module makes it, and the apps stack and self-deploying apps reference it by this name"
+  type        = string
+}

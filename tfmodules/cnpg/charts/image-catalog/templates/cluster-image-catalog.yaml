@@ -1,0 +1,11 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ClusterImageCatalog
+metadata:
+  name: {{ required "name is required" .Values.name }}
+  {{- with .Values.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  images:
+    {{- required "images is required" .Values.images | toYaml | nindent 4 }}
