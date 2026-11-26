@@ -30,4 +30,7 @@ started, and it served its metrics on the public port, under each realm.
 
 The database takes its image from the shared ClusterImageCatalog (`postgresql_image_catalog`, see
 [ADR 009](../../docs/adr/009-take-postgres-images-from-a-shared-image-catalog.md)), at the major version set in
-`main.tf`. Changing the major upgrades the database in place.
+`main.tf`. Changing the major upgrades the database in place, which takes Keycloak (and so SSO for everything) down for
+a few minutes: follow "Major upgrades" in [backups and recovery](../../docs/backups-and-recovery.md#major-upgrades).
+Its WAL archive is named after the major, e.g. `gs://<backup_bucket>/cnpg/keycloak/db-cluster-pg18/`. Backups from
+PostgreSQL 16 are under `db-cluster/`.

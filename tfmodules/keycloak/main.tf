@@ -29,6 +29,12 @@ resource "kubernetes_namespace_v1" "keycloak" {
   }
 }
 
+locals {
+  # Keycloak's PostgreSQL major version. Changing it upgrades the database in place, with downtime: read "Major upgrades"
+  # in docs/backups-and-recovery.md first
+  postgresql_major = "18"
+}
+
 # Keycloak's database. Backups go to GCS with the service account key platform syncs from Vault, so on a fresh cluster
 # they fail until platform has been applied. Without a backup_bucket there are no backups.
 resource "helm_release" "keycloak_db" {
@@ -40,11 +46,12 @@ resource "helm_release" "keycloak_db" {
   atomic     = true
   wait       = true
 
-  values = [yamlencode(merge(
-    {
+  # Two values documents, which Helm merges deeply, so the backup settings can add to `cluster`
+  values = concat(
+    [yamlencode({
       # Keycloak's major version, with its image from the shared catalog (see ADR 009). Changing the major upgrades the
       # database in place
-      version = { postgresql = "16" }
+      version = { postgresql = local.postgresql_major }
       cluster = {
         instances = 2
         imageCatalogRef = {
@@ -56,9 +63,19 @@ resource "helm_release" "keycloak_db" {
         }
         monitoring = { enabled = true }
       }
-    },
+    })],
     # with no backup bucket (the testlab), the database isn't backed up
-    var.backup_bucket == null ? {} : {
+    var.backup_bucket == null ? [] : [yamlencode({
+      cluster = {
+        plugins = [{
+          name = "barman-cloud.cloudnative-pg.io"
+          parameters = {
+            # An upgrade to a new major starts a new database system, whose WAL would overwrite the old one's in the same
+            # archive, so each major archives under its own name (see docs/backups-and-recovery.md)
+            serverName = "db-cluster-pg${local.postgresql_major}"
+          }
+        }]
+      }
       backups = {
         enabled = true
         method  = "plugin"
@@ -84,8 +101,8 @@ resource "helm_release" "keycloak_db" {
           }
         }]
       }
-    },
-  ))]
+    })],
+  )
 }
 
 # The temporary admin Keycloak creates on its first start, only on a fresh cluster. Keycloak reads it through optional
