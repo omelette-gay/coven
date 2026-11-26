@@ -82,6 +82,24 @@ resource "kubernetes_manifest" "block_metrics_path" {
 locals {
   # Created by the CNPG cluster chart (release `db`), with the app user's credentials and connection details
   db_secret_name = "db-cluster-app"
+
+  # GlitchTip's PostgreSQL major version. Changing it upgrades the database in place, with downtime: read "Major
+  # upgrades" in docs/backups-and-recovery.md first
+  postgresql_major = "18"
+}
+
+# The GCP service account key the Barman Cloud plugin uses to write backups and WAL to GCS, as for Keycloak
+module "backup_credentials" {
+  source = "../vault-k8s-secret"
+  count  = var.backup_bucket != null ? 1 : 0
+
+  vault_secret_name             = "backups/service-account-key"
+  vault_kv_mountpoint           = var.vault_kv_mountpoint
+  vault_kubernetes_auth_backend = var.vault_kubernetes_auth_backend
+  k8s_secret_name               = "glitchtip-gcp-backup-creds"
+  k8s_namespace                 = kubernetes_namespace_v1.this.metadata[0].name
+  k8s_service_account_name      = "glitchtip-gcp-backup-creds"
+  vault_role_name               = "glitchtip-gcp-backup-creds"
 }
 
 # GlitchTip's database. It's made with the CNPG cluster chart rather than the GlitchTip chart's own `postgresql`, which
@@ -101,13 +119,13 @@ resource "helm_release" "db" {
   # importing the old database happens before the cluster is ready
   timeout = 900
 
-  values = [
-    yamlencode({
+  # Two values documents, which Helm merges deeply, so the backup settings can add to `cluster`
+  values = concat(
+    [yamlencode({
       mode = "recovery"
 
-      # GlitchTip's major version, with its image from the shared catalog (see ADR 007). Changing the major upgrades the
-      # database in place
-      version = { postgresql = "18" }
+      # GlitchTip's major version, with its image from the shared catalog (see ADR 007)
+      version = { postgresql = local.postgresql_major }
       cluster = {
         instances = var.postgresql_instances
         imageCatalogRef = {
@@ -148,8 +166,67 @@ resource "helm_release" "db" {
           }
         }
       }
-    })
-  ]
+    })],
+    # with no backup bucket (the testlab), the database isn't backed up
+    var.backup_bucket == null ? [] : [yamlencode({
+      cluster = {
+        plugins = [{
+          name = "barman-cloud.cloudnative-pg.io"
+          parameters = {
+            # An upgrade to a new major starts a new database system, whose WAL would overwrite the old one's in the same
+            # archive, so each major archives under its own name (see docs/backups-and-recovery.md)
+            serverName = "db-cluster-pg${local.postgresql_major}"
+          }
+        }]
+      }
+      backups = {
+        enabled = true
+        method  = "plugin"
+        pluginConfiguration = {
+          name = "barman-cloud.cloudnative-pg.io"
+        }
+        provider = "google"
+        google = {
+          bucket = var.backup_bucket
+          path   = "/cnpg/glitchtip/"
+        }
+        secret = {
+          name   = module.backup_credentials[0].k8s_secret_name
+          create = false
+        }
+        # Staggered from Keycloak (08:30 and 20:30) and Vikunja (09:00 and 21:00)
+        scheduledBackups = [{
+          name                 = "daily-backup"
+          schedule             = "0 30 9,21 * * *"
+          backupOwnerReference = "self"
+          method               = "plugin"
+          pluginConfiguration = {
+            name = "barman-cloud.cloudnative-pg.io"
+          }
+        }]
+      }
+    })],
+  )
+}
+
+# Backs up RustFS's volume (uploaded files such as source maps) with a Longhorn recurring job. The RustFS chart made the
+# volume, so it's labelled here rather than by the object-store module, which would switch to a new, empty volume.
+# Longhorn copies a PVC's recurring job labels to its volume when it has the `source` label
+resource "kubernetes_labels" "object_store_backup" {
+  count = var.longhorn_recurring_job_name != null ? 1 : 0
+
+  api_version = "v1"
+  kind        = "PersistentVolumeClaim"
+  metadata {
+    name      = "glitchtip-rustfs-data"
+    namespace = kubernetes_namespace_v1.this.metadata[0].name
+  }
+  labels = {
+    "recurring-job.longhorn.io/${var.longhorn_recurring_job_name}" = "enabled"
+    "recurring-job.longhorn.io/source"                             = "enabled"
+  }
+
+  depends_on = [module.object_store]
 }
 
 resource "helm_release" "this" {
