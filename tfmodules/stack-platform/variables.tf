@@ -199,3 +199,8 @@ variable "grafana_oauth_secret" {
   description = "Secret to write Grafana's Keycloak client into. The bootstrap stack points Grafana at it"
   type        = string
 }
+
+variable "postgresql_image_catalog" {
+  description = "Name of the ClusterImageCatalog PostgreSQL clusters take their image from, which the bootstrap stack makes (see ADR 009)"
+  type        = string
+}
