@@ -79,6 +79,75 @@ resource "kubernetes_manifest" "block_metrics_path" {
   }
 }
 
+# GlitchTip's database. It's made with the CNPG cluster chart rather than the GlitchTip chart's own `postgresql`, which
+# can't set an image (so it couldn't use the shared catalog, see ADR 007) and ignores monitoring.
+#
+# It's created by importing the database from the GlitchTip chart's cluster, `glitchtip-pg`, while GlitchTip is scaled
+# down (#128). GlitchTip moves to it in a later change, once it's ready: Helm doesn't wait for the import, so doing both
+# at once would race it. The import only runs when the cluster is created, so the settings below do nothing afterwards,
+# and are removed once the old cluster is deleted.
+resource "helm_release" "db" {
+  name       = "db"
+  namespace  = kubernetes_namespace_v1.this.metadata[0].name
+  repository = "https://cloudnative-pg.github.io/charts"
+  chart      = "cluster"
+  version    = "0.9.0"
+  atomic     = true
+  wait       = true
+  # importing the old database happens before the cluster is ready
+  timeout = 900
+
+  values = [
+    yamlencode({
+      mode = "recovery"
+
+      # GlitchTip's major version, with its image from the shared catalog (see ADR 007). Changing the major upgrades the
+      # database in place
+      version = { postgresql = "18" }
+      cluster = {
+        instances = var.postgresql_instances
+        imageCatalogRef = {
+          kind = "ClusterImageCatalog"
+          name = var.postgresql_image_catalog
+        }
+        initdb = {
+          database = "glitchtip"
+          owner    = "glitchtip"
+        }
+        storage = {
+          size = var.postgresql_storage_size
+        }
+        monitoring = {
+          enabled = true
+        }
+      }
+
+      recovery = {
+        method = "import"
+        import = {
+          type      = "microservice"
+          databases = ["glitchtip"]
+          source = {
+            host     = "glitchtip-pg-rw"
+            port     = 5432
+            username = "glitchtip"
+            database = "glitchtip"
+            sslMode  = "verify-full"
+            passwordSecret = {
+              name = "glitchtip-pg-app"
+              key  = "password"
+            }
+            sslRootCertSecret = {
+              name = "glitchtip-pg-ca"
+              key  = "ca.crt"
+            }
+          }
+        }
+      }
+    })
+  ]
+}
+
 resource "helm_release" "this" {
   name          = "glitchtip"
   namespace     = kubernetes_namespace_v1.this.metadata[0].name
