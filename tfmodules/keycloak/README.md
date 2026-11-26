@@ -17,3 +17,11 @@ deleting it doesn't restart Keycloak. Delete the temporary admin and unset the p
 With `backup_bucket` set, the database backs up to `gs://<backup_bucket>/cnpg/keycloak/` with the service account key
 the platform stack syncs from Vault, so on a fresh cluster backups fail until platform has been applied. The testlab
 sets no bucket, so it doesn't back up.
+
+## Metrics
+
+Keycloak serves its metrics on its management port (9000), which the Ingress doesn't expose, and the chart's
+ServiceMonitor scrapes them there. User events such as logins and failed logins are counted in
+`keycloak_user_events_total`, labelled by realm, event and error. They don't need events to be turned on in the realm.
+We used to use the aerogear keycloak-metrics-spi plugin for this, but it was downloaded from GitHub every time Keycloak
+started, and it served its metrics on the public port, under each realm.

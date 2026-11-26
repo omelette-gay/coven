@@ -144,8 +144,8 @@ Self-deploying apps use the same module, from their own file in `coven/apps/` (s
 - **Turn off the app's own sign-up and local logins**, so SSO is the only way in.
 - **Don't link logins to existing accounts by email** unless the app checks the `email_verified` claim. Users can
   change their own email in Keycloak. Match on `sub` where possible.
-- **Block metrics endpoints** at Traefik if the app serves them on its public host, as Keycloak, GlitchTip, wedding and
-  Home Assistant do.
+- **Block metrics endpoints** at Traefik if the app serves them on its public host, as Vault, GlitchTip, Vikunja and
+  Home Assistant do (see [hiding paths from the web](./https.md#hiding-paths-from-the-web)).
 
 ### 4. Check what a user with no roles gets
 
