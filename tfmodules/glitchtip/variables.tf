@@ -99,3 +99,15 @@ variable "postgresql_image_catalog" {
   description = "ClusterImageCatalog the database takes its PostgreSQL image from (see ADR 009)"
   type        = string
 }
+
+variable "backup_bucket" {
+  description = "GCS bucket the database's base backups and WAL are archived to, under /cnpg/glitchtip/, or null for no backups (as on the testlab)"
+  type        = string
+  default     = null
+}
+
+variable "longhorn_recurring_job_name" {
+  description = "Longhorn recurring job to back RustFS's volume (uploaded files such as source maps) up with, e.g. nightly-backup, or null for no backups"
+  type        = string
+  default     = null
+}
