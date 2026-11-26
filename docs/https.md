@@ -22,10 +22,9 @@ allows requests from `127.0.0.1`. Everyone else gets a 403. In this repo, the
 [`traefik-block-path`](../tfmodules/traefik-block-path/) module does this. A self-deploying app can do the same in its
 own chart with an `IngressRoute` and an `ipAllowList` `Middleware` (see that module's `main.tf`).
 
-Don't use Traefik plugins such as `plugin-blockpath` for this. Traefik downloads plugins every time it starts, and if
-the download fails it turns plugins off until the pod restarts, which drops every route that uses one, so the whole
-service returns 404 (issue #141). Home Assistant and virtualflightonlinetransmitter still use it, so Traefik still loads
-it until they've moved off it.
+Don't use Traefik plugins such as `plugin-blockpath` for this, and Traefik doesn't load any. Traefik downloads plugins
+every time it starts, and if the download fails it turns plugins off until the pod restarts, which drops every route
+that uses one, so the whole service returns 404 (issue #141).
 
 ## Certificates and DNS
 
