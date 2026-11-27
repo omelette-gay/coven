@@ -58,6 +58,7 @@ That can be acceptable, but it should be a deliberate choice.
 | Wedding | `coven/apps/wedding.tf`; gate in `omelette-gay/wedding` | Django admin requires `is_staff`, which SSO-created users don't have. RSVPs use invite codes, not login | An account that can't see anything (2) |
 | GlitchTip | `tfmodules/glitchtip` (via `tfmodules/keycloak-client`) | Everything is inside organizations. New users belong to none, and only superusers can create them (`ENABLE_ORGANIZATION_CREATION` defaults to false) | An account that can't see anything until invited to an organization (2) |
 | Vikunja | `tfmodules/vikunja` (via `tfmodules/keycloak-client`) | Nothing: Vikunja's OpenID login can't require a role or group claim | Their own empty account, which can create projects but sees nobody else's unless they're shared with it (3). Accepted |
+| Vikunja MCP (claude.ai) | `tfmodules/vikunja` (via `tfmodules/keycloak-client`) | Nothing in Keycloak. The gateway refuses tokens without a `vikunja_mcp_token` claim, and Vikunja checks the token's own permissions | Login works, but every MCP request is refused until they set a Vikunja token on their account page (1) |
 
 Things to know about these:
 
@@ -66,6 +67,10 @@ Things to know about these:
 - **Any realm user can use Vikunja.** It has no setting to require a role or group claim (checked at v2.8.0), so
   everyone in `omelette.gay` gets an account. That account only sees projects it creates or that are shared with it,
   so it can't see Chris and Meg's tasks. Accounts are linked to Keycloak by issuer and `sub`, not email.
+- **The Vikunja MCP client puts a secret in access tokens.** Its user attribute mapper copies each person's
+  `vikunja_mcp_token` attribute into the access tokens for that client only, so the gateway can send it to Vikunja.
+  Never add that mapper to a shared client scope, or every app would get everyone's Vikunja token. See
+  [ADR 008](./adr/008-put-an-oauth-gateway-in-front-of-vikunjas-mcp-server.md).
 - **Role mappings are made by Terraform.** `coven/apps/sso-groups.tf` gives `admins` Vault's `vault-admin`, Grafana's
   `grafana-admin` and Home Assistant's `admin`, and nothing else. The platform stack also grants `vault-admin` and
   `grafana-admin`, so they work on a fresh cluster before the apps stack is applied. Nobody has Home Assistant's
@@ -79,6 +84,58 @@ Things to know about these:
 - **Self-registration** is off (`registration_allowed = false` in `tfmodules/stack-platform/keycloak.tf`).
 - **Users can edit their own profile**, including their email address, through the account console. Apps shouldn't
   trust an email address to identify an existing account unless it's verified.
+- **The user profile is managed by Terraform** (`tfmodules/stack-platform/keycloak-user-profile.tf`), to add the
+  `vikunja_mcp_token` attribute. The resource replaces the whole profile, so it repeats Keycloak's default attributes:
+  change them there, not in the admin console.
+
+## Letting Claude use Vikunja
+
+Claude reaches Vikunja through its MCP server at `https://tasks.omelette.gay/api/v2/mcp`, as you, through the
+`vikunja-mcp` client. This is for claude.ai: the client only allows claude.ai's callback addresses, so other MCP
+clients, such as Claude Code, can't log in. Vikunja's MCP server only takes Vikunja's own API tokens, so each person
+keeps one in their Keycloak account, and a gateway swaps it in for their Keycloak login. This is unusual: it's the
+only place we keep a secret in Keycloak rather than Vault. See
+[ADR 008](./adr/008-put-an-oauth-gateway-in-front-of-vikunjas-mcp-server.md) for why.
+
+### 1. Create a Vikunja API token
+
+In Vikunja, open **Settings → API Tokens** and create a token:
+
+- **Title:** something like `Claude`, so you know what it's for.
+- **Expiry:** when it expires, Claude stops working until you create a new one and repeat step 2. Pick a date you'll
+  remember, or no expiry.
+- **Permissions:** tick **mcp → access**, and the read, create and update permissions for whatever Claude should work
+  with (projects, tasks, labels, comments and so on). **Leave every delete permission unticked.** Vikunja has no
+  trash or undo, and the token's permissions are the only thing stopping Claude deleting things.
+
+Copy the token. Vikunja only shows it once.
+
+### 2. Add it to your Keycloak account
+
+Go to your account page (`https://auth.coven.omelette.gay/auth/realms/omelette.gay/account`), open **Personal info**,
+paste the token into **Vikunja MCP token**, and save.
+
+An admin can also set it for someone in the admin console: `omelette.gay` realm → **Users** → the user → **Details**.
+
+### 3. Connect claude.ai
+
+In claude.ai, go to **Settings → Connectors → Add custom connector**:
+
+- **URL:** `https://tasks.omelette.gay/api/v2/mcp`
+- **Advanced settings:** the OAuth client ID and secret, from the `vikunja-mcp-oidc` Secret. An admin can read them
+  with `kubectl get secret vikunja-mcp-oidc -n vikunja -o jsonpath='{.data.client_id}' | base64 -d` (and the same
+  for `client_secret`).
+
+claude.ai sends you to Keycloak to log in, and then Claude can use Vikunja as you.
+
+### Changing or revoking it
+
+- **To replace the token**, paste the new one on your account page. Claude picks it up when its access token is next
+  refreshed, within a few minutes.
+- **To revoke Claude's access**, delete the token in Vikunja's settings. That takes effect straight away. Clearing the
+  attribute in Keycloak also works, once Claude's current access token expires (5 minutes).
+- If a token might have leaked, delete it in Vikunja, not just in Keycloak: it works against Vikunja's API on its
+  own.
 
 ## Integrating a new app
 

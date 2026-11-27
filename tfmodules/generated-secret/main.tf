@@ -22,6 +22,12 @@ ephemeral "random_password" "this" {
   special = false
 }
 
+ephemeral "random_bytes" "this" {
+  for_each = var.hex_keys
+
+  length = each.value
+}
+
 # Write-only, so the values aren't stored in state. Unlike a Kubernetes Secret, this isn't read back either, which is why
 # the Secret is made through Vault and External Secrets Operator rather than by Terraform (see docs/secrets.md).
 # Terraform only writes the values when `revision` changes.
@@ -29,7 +35,10 @@ resource "vault_kv_secret_v2" "this" {
   mount = var.vault_kv_mountpoint
   name  = var.vault_secret_name
 
-  data_json_wo         = jsonencode({ for key, password in ephemeral.random_password.this : key => password.result })
+  data_json_wo = jsonencode(merge(
+    { for key, password in ephemeral.random_password.this : key => password.result },
+    { for key, bytes in ephemeral.random_bytes.this : key => bytes.hex },
+  ))
   data_json_wo_version = var.revision
 }
 

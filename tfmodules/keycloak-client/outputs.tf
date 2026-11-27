@@ -7,3 +7,8 @@ output "role_ids" {
   description = "IDs of the client roles, as a map of role name to ID, for granting them to groups (see docs/sso.md)"
   value       = { for name, role in keycloak_role.this : name => role.id }
 }
+
+output "id" {
+  description = "Keycloak's internal ID for the client, for adding protocol mappers to it"
+  value       = keycloak_openid_client.this.id
+}

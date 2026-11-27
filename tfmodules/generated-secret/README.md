@@ -27,7 +27,8 @@ module "rcon" {
   the new Secret a different name, and delete the old resource.
 - Increase `revision` to generate new values. It's written to Vault, and ESO updates the Secret within the refresh
   interval (an hour). Whatever reads the Secret when it starts needs restarting.
-- The values are random letters and digits only.
+- The values in `keys` are random letters and digits only. Use `hex_keys` for a key of an exact number of bytes, such
+  as an AES key, which is generated as random bytes and written in lowercase hex.
 - Terraform remembers it has written the current `revision` and won't write it again. If a secret is missing from Vault
   when it should exist (Vault was rebuilt without restoring it, or it was deleted), increase `revision` to write new
   values. Restoring Vault from a backup brings the secrets back with it, so that needs nothing.

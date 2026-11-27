@@ -1,9 +1,20 @@
 variable "keys" {
   description = "Secret values to generate, as a map of key name to length. They're random letters and digits, and the key names are the keys of the Kubernetes Secret"
   type        = map(number)
+  default     = {}
   validation {
-    condition     = length(var.keys) > 0 && alltrue([for length in values(var.keys) : length >= 16 && floor(length) == length])
-    error_message = "keys must have at least one key, and each length must be a whole number of at least 16."
+    condition     = alltrue([for length in values(var.keys) : length >= 16 && floor(length) == length])
+    error_message = "Each length in keys must be a whole number of at least 16."
+  }
+}
+
+variable "hex_keys" {
+  description = "Secret values to generate as random bytes in lowercase hex, for things that need a key of an exact size (e.g. 32 for an AES-256 key, which is 64 hex characters), as a map of key name to number of bytes"
+  type        = map(number)
+  default     = {}
+  validation {
+    condition     = alltrue([for length in values(var.hex_keys) : length >= 16 && floor(length) == length]) && length(var.keys) + length(var.hex_keys) > 0 && length(setintersection(keys(var.keys), keys(var.hex_keys))) == 0
+    error_message = "Each length in hex_keys must be a whole number of bytes, at least 16. There must be at least one key in keys or hex_keys, and none in both."
   }
 }
 
