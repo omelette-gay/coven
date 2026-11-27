@@ -161,6 +161,10 @@ resource "helm_release" "keycloak" {
       # Count logins, failed logins and other user events in Keycloak's own metrics, as keycloak_user_events_total
       - name: KC_EVENT_METRICS_USER_ENABLED
         value: "true"
+      # The default pool of 100 is more than Postgres allows (100 less its superuser slots), so a burst could exhaust
+      # the database as it did Vikunja's (docs/incidents/2026-11-27-vikunja-exhausted-postgres-connections-during-bulk-update.md)
+      - name: KC_DB_POOL_MAX_SIZE
+        value: "20"
       - name: KC_BOOTSTRAP_ADMIN_USERNAME
         valueFrom:
           secretKeyRef:
