@@ -41,3 +41,8 @@ variable "backup_credentials_secret" {
   type        = string
   default     = null
 }
+
+variable "postgresql_image_catalog" {
+  description = "ClusterImageCatalog the database takes its PostgreSQL image from (see ADR 009)"
+  type        = string
+}

@@ -69,3 +69,4 @@ What we gain, what we give up, and what we'll need to watch for.
 | [006](./006-gate-ci-credentials-by-workflow-and-environment.md) | Only `main`'s workflows get CI credentials, and Renovate's plans need approval | Accepted |
 | [007](./007-manage-keycloak-group-roles-in-code-and-membership-in-the-ui.md) | Manage Keycloak groups and their roles in code, and group membership in the UI | Accepted |
 | [008](./008-put-an-oauth-gateway-in-front-of-vikunjas-mcp-server.md) | Put an OAuth gateway in front of Vikunja's MCP server, with each person's Vikunja token in their access token | Accepted |
+| [009](./009-take-postgres-images-from-a-shared-image-catalog.md) | Take every PostgreSQL image from a shared ClusterImageCatalog | Accepted |

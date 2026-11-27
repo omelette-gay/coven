@@ -1,0 +1,4 @@
+apiVersion: v2
+name: image-catalog
+description: The ClusterImageCatalog every PostgreSQL cluster takes its image from, as a chart so the bootstrap stack can create it in the same apply as the CloudNativePG operator (see ADR 002)
+version: 1.0.0

@@ -62,3 +62,9 @@ ID and secret from the `vikunja-mcp-oidc` Secret.
 
 Increase `mcp_keycloak_secret_revision` by one. It writes a new secret to Keycloak and the `vikunja-mcp-oidc` Secret.
 claude.ai keeps its own copy, so each connector has to be updated with the new secret.
+
+## Database image
+
+The database takes its image from the shared ClusterImageCatalog (`postgresql_image_catalog`, see
+[ADR 009](../../docs/adr/009-take-postgres-images-from-a-shared-image-catalog.md)), at the major version set in
+`main.tf`. Changing the major upgrades the database in place.

@@ -25,3 +25,9 @@ ServiceMonitor scrapes them there. User events such as logins and failed logins 
 `keycloak_user_events_total`, labelled by realm, event and error. They don't need events to be turned on in the realm.
 We used to use the aerogear keycloak-metrics-spi plugin for this, but it was downloaded from GitHub every time Keycloak
 started, and it served its metrics on the public port, under each realm.
+
+## Database image
+
+The database takes its image from the shared ClusterImageCatalog (`postgresql_image_catalog`, see
+[ADR 009](../../docs/adr/009-take-postgres-images-from-a-shared-image-catalog.md)), at the major version set in
+`main.tf`. Changing the major upgrades the database in place.

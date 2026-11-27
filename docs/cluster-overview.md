@@ -77,8 +77,8 @@ Between them, they manage:
 
 - Bootstrap: Longhorn (`longhorn-system`, the default storage class), the Prometheus Operator CRDs, kube-prometheus-stack
   with its alert rules, the blackbox exporter and helm-exporter (`monitoring`), Traefik's metrics config,
-  cert-manager and the Let's Encrypt issuer, the HTTPS redirect middleware, the CloudNativePG operator and barman-cloud
-  plugin (`cnpg-system`), Vault (`vault`), External Secrets Operator (`external-secrets`), and Keycloak and its
+  cert-manager and the Let's Encrypt issuer, the HTTPS redirect middleware, the CloudNativePG operator, barman-cloud
+  plugin and PostgreSQL image catalog (`cnpg-system`), Vault (`vault`), External Secrets Operator (`external-secrets`), and Keycloak and its
   Postgres cluster (`keycloak`)
 - Platform: Vault's auth methods, policies, secrets engines and CA, and cert-manager's Vault issuer; the `omelette.gay`
   realm, its `admins` group and Terraform's own Keycloak user; Grafana's SSO client and Discord alerting; Loki (with a
@@ -340,6 +340,10 @@ These are worth knowing about as they can explain alerts and restarts:
   only copy what's changed since the last checksummed snapshot over the WireGuard tunnel, rather than the whole
   volume. Backed-up volumes already get a snapshot with each backup.
 - **CNPG and MariaDB backups** run on per-database schedules defined in their Helm values.
+- **PostgreSQL image updates** arrive in the weekly Platform Renovate PR as a new commit of the CNPG image catalog
+  (see [ADR 009](./adr/009-take-postgres-images-from-a-shared-image-catalog.md)). Once merged, the operator rolls every
+  database whose image changed, five minutes apart, with a switchover each, so expect brief primary changes and
+  restarts across all the Postgres clusters.
 - **k3s datastore snapshots** are taken on strix every 6 hours (00:00, 06:00, 12:00 and 18:00 UTC, plus up to 30
   minutes of random delay), and kept for 14 days.
 - **Backup service account keys** are rotated every 30 days by Terraform, which rewrites the secrets in Vault; the
