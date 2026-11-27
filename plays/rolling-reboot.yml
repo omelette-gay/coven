@@ -19,26 +19,38 @@
     - name: Drain, Reboot, and Uncordon Node
       when: reboot_check.rc == 1 # exit code 1 = reboot required
       block:
-        - name: Gracefully switchover any CNPG primaries on this node
+        # A CNPG primary's PodDisruptionBudget allows no disruptions, so the drain would wait on it until it times out.
+        # Promote a running replica on another node first, and stop here if that doesn't work.
+        - name: Switch over any CNPG primaries on this node
           delegate_to: localhost
           become: false
           ansible.builtin.shell: |
-            # Find all CNPG primaries running on this specific node and trigger switchover
-            for pod in $(kubectl get pods -A -l cnpg.io/instanceRole=primary --field-selector spec.nodeName={{ k3s_agent['node-name'] }} -o jsonpath='{range .items[*]}{.metadata.namespace}{"/"}{.metadata.labels.cnpg\.io\/cluster}{"\n"}{end}'); do
-              NS=$(echo $pod | cut -d'/' -f1)
-              CLUSTER=$(echo $pod | cut -d'/' -f2)
-              kubectl cnpg switchover $CLUSTER -n $NS
+            set -euo pipefail
+            node='{{ k3s_agent['node-name'] }}'
+            for primary in $(kubectl get pods -A -l cnpg.io/instanceRole=primary --field-selector spec.nodeName="$node" -o jsonpath='{range .items[*]}{.metadata.namespace}{"/"}{.metadata.labels.cnpg\.io\/cluster}{"\n"}{end}'); do
+              ns=${primary%%/*}
+              cluster=${primary#*/}
+              target=$(kubectl get pods -n "$ns" -l cnpg.io/cluster="$cluster",cnpg.io/instanceRole=replica --field-selector spec.nodeName!="$node",status.phase=Running -o jsonpath='{.items[*].metadata.name}')
+              target=${target%% *}
+              if [ -z "$target" ]; then
+                echo "$ns/$cluster has no running replica on another node to promote" >&2
+                exit 1
+              fi
+              kubectl cnpg promote "$cluster" "$target" -n "$ns"
+              for _ in $(seq 60); do
+                if [ "$(kubectl get clusters.postgresql.cnpg.io "$cluster" -n "$ns" -o jsonpath='{.status.currentPrimary}')" = "$target" ]; then
+                  echo "Promoted $ns/$target"
+                  continue 2
+                fi
+                sleep 5
+              done
+              echo "$ns/$target didn't become primary within 5 minutes" >&2
+              exit 1
             done
-          failed_when: false
-          changed_when: false
-
-        - name: Scale down matter server on grimhilde which blocks drain
-          delegate_to: localhost
-          become: false
-          ansible.builtin.command: >
-            kubectl -n home-assistant scale statefulset gs-home-assistant-matter-server --replicas=0
-          failed_when: false
-          when: inventory_hostname == "grimhilde"
+          args:
+            executable: /bin/bash
+          register: cnpg_switchover
+          changed_when: cnpg_switchover.stdout != ""
 
         # After a node reboots, its Longhorn replicas are stale and get rebuilt from the other node over the WireGuard
         # tunnel, which can take a while. Until that finishes, the other node holds the only healthy replica, and
@@ -120,11 +132,3 @@
             done
           failed_when: false
           changed_when: false
-
-        - name: Scale up matter server on grimhilde which blocks drain
-          delegate_to: localhost
-          become: false
-          ansible.builtin.command: >
-            kubectl -n home-assistant scale statefulset gs-home-assistant-matter-server --replicas=1
-          failed_when: false
-          when: inventory_hostname == "grimhilde"
