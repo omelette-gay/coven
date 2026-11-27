@@ -9,14 +9,12 @@ module "keycloak" {
   bootstrap_admin_username  = var.keycloak_bootstrap_admin_username
   bootstrap_admin_password  = var.keycloak_bootstrap_admin_password
 
-  # Longhorn first, so the database's volumes get its storage class, and Traefik's config first, as the metrics
-  # middleware needs its blockpath plugin
+  # Longhorn first, so the database's volumes get its storage class
   depends_on = [
     helm_release.prometheus_operator_crds,
     module.longhorn,
     module.cnpg,
     module.cert_manager,
-    kubernetes_manifest.traefik_config,
     kubernetes_manifest.redirect_https,
   ]
 }

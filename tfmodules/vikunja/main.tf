@@ -26,6 +26,9 @@ locals {
   trusted_ca_dir = "/etc/vikunja-ca"
 
   files_bucket = "vikunja"
+
+  # Created by cert-manager for the Ingress, and also used by the router that blocks the metrics path
+  tls_secret_name = "vikunja-tls"
 }
 
 # Names that are global rather than per namespace (Vault paths and roles, the Keycloak client ID and the default backup
@@ -144,22 +147,14 @@ module "object_store" {
   longhorn_recurring_job_name = var.longhorn_recurring_job_name
 }
 
-resource "kubernetes_manifest" "block_metrics_path" {
-  manifest = {
-    apiVersion = "traefik.io/v1alpha1"
-    kind       = "Middleware"
-    metadata = {
-      name      = "block-metrics-path"
-      namespace = local.namespace
-    }
-    spec = {
-      plugin = {
-        "plugin-blockpath" = {
-          Regex = ["^/api/v1/metrics(.*)"]
-        }
-      }
-    }
-  }
+# Hides Vikunja's metrics from the web. Prometheus scrapes them inside the cluster.
+module "block_metrics_path" {
+  source = "../traefik-block-path"
+
+  namespace       = local.namespace
+  host            = var.host
+  path_regexp     = "^/api/v1/metrics"
+  tls_secret_name = local.tls_secret_name
 }
 
 resource "helm_release" "this" {
@@ -209,7 +204,7 @@ resource "helm_release" "this" {
             enabled = true
             annotations = {
               "cert-manager.io/cluster-issuer"                   = var.cluster_issuer
-              "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd,${local.namespace}-block-metrics-path@kubernetescrd"
+              "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
             }
             hosts = [{
               host = var.host
@@ -220,7 +215,7 @@ resource "helm_release" "this" {
             }]
             tls = [{
               hosts      = [var.host]
-              secretName = "vikunja-tls"
+              secretName = local.tls_secret_name
             }]
           }
         }
@@ -312,7 +307,7 @@ resource "helm_release" "this" {
     })
   ]
 
-  depends_on = [helm_release.db, module.object_store, kubernetes_manifest.block_metrics_path]
+  depends_on = [helm_release.db, module.object_store, module.block_metrics_path]
 }
 
 resource "kubernetes_manifest" "probe" {
