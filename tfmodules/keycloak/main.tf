@@ -17,9 +17,6 @@ locals {
   # e.g. auth.coven.omelette.gay and /auth
   host      = regex("^https://([^/]+)", var.url)[0]
   base_path = trimprefix(var.url, "https://${local.host}")
-
-  # Created by cert-manager for the Ingress, and also used by the router that blocks the metrics path
-  tls_secret_name = "keycloak-tls"
 }
 
 resource "kubernetes_namespace_v1" "keycloak" {
@@ -84,16 +81,6 @@ resource "helm_release" "keycloak_db" {
   ))]
 }
 
-# Hides Keycloak's realm metrics from the web. Prometheus scrapes them inside the cluster.
-module "block_metrics_path" {
-  source = "../traefik-block-path"
-
-  namespace       = kubernetes_namespace_v1.keycloak.metadata[0].name
-  host            = local.host
-  path_regexp     = "^${local.base_path}/realms/[^/]*/metrics"
-  tls_secret_name = local.tls_secret_name
-}
-
 # The temporary admin Keycloak creates on its first start, only on a fresh cluster. Keycloak reads it through optional
 # environment variables, so its Helm values are the same whether this exists or not, and deleting it doesn't restart
 # Keycloak. Its password is in this stack's state while it exists.
@@ -109,13 +96,6 @@ resource "kubernetes_secret_v1" "keycloak_bootstrap_admin" {
     username = var.bootstrap_admin_username
     password = var.bootstrap_admin_password
   }
-}
-
-locals {
-  # renovate: datasource=github-releases depName=aerogear/keycloak-metrics-spi
-  keycloak_metrics_spi_version = "7.0.0"
-  # renovate: datasource=docker depName=alpine
-  init_image_tag = "3.24.4"
 }
 
 # Keycloak itself. The realm, groups, clients and Terraform's own admin user are made by platform, through the keycloak
@@ -143,6 +123,9 @@ resource "helm_release" "keycloak" {
           -Djgroups.dns.query=keycloak-keycloakx-headless
       - name: KC_PROXY
         value: "edge"
+      # Count logins, failed logins and other user events in Keycloak's own metrics, as keycloak_user_events_total
+      - name: KC_EVENT_METRICS_USER_ENABLED
+        value: "true"
       - name: KC_BOOTSTRAP_ADMIN_USERNAME
         valueFrom:
           secretKeyRef:
@@ -170,35 +153,10 @@ resource "helm_release" "keycloak" {
       existingSecretKey = "password"
     }
 
-    # configure monitoring for Keycloak
+    # Keycloak serves its metrics on the management port (9000), which isn't exposed through the Ingress, so they
+    # don't need hiding from the web
     serviceMonitor = { enabled = true }
     prometheusRule = { enabled = true }
-
-    # use the extra metrics-spi-provider plugin to expose realm metrics for Keycloak
-    extraServiceMonitor = { enabled = true }
-    extraInitContainers = <<-EOT
-      - name: metrics-spi-provider
-        image: alpine:${local.init_image_tag}
-        imagePullPolicy: IfNotPresent
-        command:
-          - sh
-        args:
-          - -c
-          - |
-            echo "Downloading metrics-spi-provider"
-            wget -O /providers/keycloak-metrics-spi.jar https://github.com/aerogear/keycloak-metrics-spi/releases/download/${local.keycloak_metrics_spi_version}/keycloak-metrics-spi-${local.keycloak_metrics_spi_version}.jar
-        volumeMounts:
-          - name: providers
-            mountPath: /providers
-    EOT
-    extraVolumeMounts   = <<-EOT
-      - name: providers
-        mountPath: /opt/keycloak/providers
-    EOT
-    extraVolumes        = <<-EOT
-      - name: providers
-        emptyDir: {}
-    EOT
 
     # expose Keycloak to the public Internet
     proxy = {
@@ -218,10 +176,10 @@ resource "helm_release" "keycloak" {
       }
       tls = [{
         hosts      = [local.host]
-        secretName = local.tls_secret_name
+        secretName = "keycloak-tls"
       }]
     }
   })]
 
-  depends_on = [helm_release.keycloak_db, module.block_metrics_path]
+  depends_on = [helm_release.keycloak_db]
 }
