@@ -288,6 +288,12 @@ resource "helm_release" "this" {
                     }
                   }
                 }
+                # The default of 100 open connections is more than Postgres allows (100 less its superuser slots), and
+                # each task update's event handlers take their own connection, so a bulk update can exhaust the database
+                database = {
+                  maxopenconnections = 20
+                  maxidleconnections = 5
+                }
                 files = {
                   type = "s3"
                   s3 = {
