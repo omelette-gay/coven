@@ -78,6 +78,34 @@ to tell it to restore from the backup on create:
 You will then want to tidy this up by reverting the values file to the previous version, and once you are confident
 that the restore has completed, you can delete the old backup folder (as it will no longer be auto expired).
 
+If the database's archive isn't in a folder named after the cluster (for example Keycloak's, which is named after its
+major version, see below), also set `recovery.clusterName` to the folder's name inside the path, e.g. `db-cluster-pg18`.
+
+### Major upgrades
+
+Changing a cluster's `version.postgresql` to a newer major upgrades it in place with `pg_upgrade` (see
+[ADR 009](./adr/009-take-postgres-images-from-a-shared-image-catalog.md)). Every instance stops while it runs, so the
+app is down for a few minutes, and the standbys are deleted and cloned again afterwards. The cluster has to be on the
+same Debian release before and after, which it is as long as it takes its image from the catalog.
+
+The upgraded database is a new database system, so before upgrading one that's backed up:
+
+- Give its WAL archive a new name in the same change, by setting the barman-cloud plugin's `serverName` (in
+  `cluster.plugins`) to one that includes the new major, e.g. `db-cluster-pg18`. Otherwise its WAL overwrites the old
+  archive's, which then can't be restored. The old archive stays where it was, and expires as normal.
+- Take a backup straight after the upgrade, rather than waiting for the next scheduled one. Backups and WAL from before
+  the upgrade can only restore the old major version, so until then there's nothing to restore the new one from:
+
+  ```sh
+  kubectl cnpg backup <cluster> -n <namespace> --method plugin --plugin-name barman-cloud.cloudnative-pg.io
+  ```
+
+- `pg_upgrade` doesn't keep the query planner's statistics, so run `ANALYZE` afterwards:
+  `kubectl cnpg psql <cluster> -n <namespace> -- <database> -c 'ANALYZE'`.
+
+If the upgrade fails, set `version.postgresql` back. The operator deletes the failed upgrade job and starts the old
+version again on the untouched data.
+
 ## MariaDB databases
 
 To backup MariaDB databases, first sync the backups/service-account-creds secret from Vault into the same k8s namespace
