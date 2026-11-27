@@ -249,6 +249,10 @@ resource "helm_release" "this" {
                   publicurl          = "https://${var.host}/"
                   enableregistration = false
                   timezone           = "Europe/London"
+                  # By default Vikunja uses the TCP peer, which is Traefik. Its pod IP changes on every restart, so
+                  # trust the whole k3s pod network.
+                  ipextractionmethod = "xff"
+                  trustedproxies     = "10.42.0.0/16"
                 }
                 auth = {
                   local = {
