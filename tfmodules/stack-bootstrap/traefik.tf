@@ -30,6 +30,15 @@ resource "kubernetes_manifest" "traefik_config" {
             enabled: true
             serviceMonitor:
               enabled: true
+
+        # Keep clients' real IP addresses, so apps see them in X-Forwarded-For. With the default (Cluster), kube-proxy
+        # rewrites the source address on the way to Traefik. Local only sends traffic to a Traefik pod on the node it
+        # arrived at, so Traefik must run where ServiceLB does (only strix on coven).
+        service:
+          spec:
+            externalTrafficPolicy: Local
+        nodeSelector:
+          svccontroller.k3s.cattle.io/enablelb: "true"
       EOT
       )
     }

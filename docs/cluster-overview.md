@@ -116,8 +116,9 @@ repo, whose name is in that file as `github_repo`, not here. See [deploying apps
 
 k3s ships with some components that are not deployed by us directly: Traefik (ingress, in `kube-system`), CoreDNS,
 metrics-server, ServiceLB (`svclb-*` pods) and the local-path provisioner. We customise Traefik through a
-`HelmChartConfig` in the bootstrap stack (enabling metrics, the dashboard and a plugin). Longhorn is made the
-default storage class instead of local-path.
+`HelmChartConfig` in the bootstrap stack (enabling metrics, the dashboard and a plugin, and running it where ServiceLB
+runs so it sees clients' real IP addresses: see [Nodes](#nodes)). Longhorn is made the default storage class instead of
+local-path.
 
 ## Nodes
 
@@ -145,6 +146,12 @@ that only affect one node, or that started after an OS update on one node.
   nodes, and k3s logs `Slow SQL` warnings.
 - Only strix has `svccontroller.k3s.cattle.io/enablelb=true`, so **all external traffic enters through strix**
   (public IPs 168.119.4.112 and 2a01:4f8:242:4f21::2), including traffic for pods running on grimhilde.
+- **Traefik runs on strix too**, pinned to nodes with the same label. Its Service uses `externalTrafficPolicy: Local`,
+  so kube-proxy doesn't rewrite the client's address on the way in, and apps see real IP addresses in
+  `X-Forwarded-For` (with `Cluster`, they saw a 10.42 address). `Local` only sends traffic to a Traefik pod on the node
+  it arrived at, which is why Traefik has to be where ServiceLB is. While strix is drained or rebooting, Traefik has
+  nowhere to run, so public sites are down until strix is uncordoned. Traefik has no PodDisruptionBudget, so it doesn't
+  block the drain.
 - Workloads that must use a datacentre IP (e.g. outbound mail, the Minecraft and Factorio servers) are pinned or prefer
   `coven.omelette.gay/location=xdc`.
 - See [names and numbers](./names-and-numbers.md) for naming conventions and IP ranges.
