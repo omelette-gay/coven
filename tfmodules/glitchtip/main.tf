@@ -76,13 +76,17 @@ module "block_metrics_path" {
   tls_secret_name = local.tls_secret_name
 }
 
+locals {
+  # Created by the CNPG cluster chart (release `db`), with the app user's credentials and connection details
+  db_secret_name = "db-cluster-app"
+}
+
 # GlitchTip's database. It's made with the CNPG cluster chart rather than the GlitchTip chart's own `postgresql`, which
 # can't set an image (so it couldn't use the shared catalog, see ADR 009) and ignores monitoring.
 #
-# It's created by importing the database from the GlitchTip chart's cluster, `glitchtip-pg`, while GlitchTip is scaled
-# down (#128). GlitchTip moves to it in a later change, once it's ready: Helm doesn't wait for the import, so doing both
-# at once would race it. The import only runs when the cluster is created, so the settings below do nothing afterwards,
-# and are removed once the old cluster is deleted.
+# It was first created by importing the database from the GlitchTip chart's cluster, `glitchtip-pg` (#128). The import
+# only runs when the cluster is created, so the settings below do nothing afterwards, and are removed once the old
+# cluster is deleted.
 resource "helm_release" "db" {
   name       = "db"
   namespace  = kubernetes_namespace_v1.this.metadata[0].name
@@ -161,6 +165,10 @@ resource "helm_release" "this" {
       glitchtip = {
         existingSecret = module.secret_key.k8s_secret_name
         domain         = "https://${var.host}"
+        database = {
+          existingSecret    = local.db_secret_name
+          existingSecretKey = "uri"
+        }
       }
 
       extraEnvVars = [
@@ -264,22 +272,15 @@ resource "helm_release" "this" {
         }
       }
 
+      # The database is the `db` release above. Turning this off removes the chart's old cluster, `glitchtip-pg`, from
+      # the release; it's annotated so Helm leaves it running, until it's deleted by hand after the migration (#128)
       postgresql = {
-        enabled = true
-        cluster = {
-          instances = var.postgresql_instances
-          storage = {
-            size = var.postgresql_storage_size
-          }
-          monitoring = {
-            enabled = true
-          }
-        }
+        enabled = false
       }
     })
   ]
 
-  depends_on = [module.object_store, module.block_metrics_path]
+  depends_on = [module.object_store, module.block_metrics_path, helm_release.db]
 }
 
 # The Job below copies the Keycloak client secret into GlitchTip's database, and a Job only runs once, so it has to be
@@ -336,7 +337,7 @@ resource "kubernetes_job_v1" "configure_oidc" {
             name = "DATABASE_URL"
             value_from {
               secret_key_ref {
-                name = "glitchtip-pg-app"
+                name = local.db_secret_name
                 key  = "uri"
               }
             }
