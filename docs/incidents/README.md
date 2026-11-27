@@ -84,3 +84,4 @@ Links to pull requests, ADRs and docs.
 | 2026-10-23 | [Litestream stalled k3s datastore writes, crash-looping leader-elected controllers](./2026-10-23-litestream-stalled-k3s-datastore-writes.md) | Resolved |
 | 2026-11-14 | [The `minio/mc` image became unpullable, which failed the platform apply and left GlitchTip half-migrated](./2026-11-14-minio-mc-image-unavailable-blocked-glitchtip-apply.md) | Resolved |
 | 2026-11-22 | [The new Vikunja database couldn't archive WAL to GCS, so it was never backed up and its disk filled](./2026-11-22-new-vikunja-database-could-not-archive-wal-to-gcs.md) | Resolved |
+| 2026-11-27 | [Keycloak's database replica failed to start on the minimal image, which lacks the locale its config names](./2026-11-27-keycloak-replica-failed-to-start-on-minimal-image-missing-locale.md) | Ongoing |

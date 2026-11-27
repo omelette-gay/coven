@@ -423,6 +423,20 @@ Each cluster normally has a primary and a replica on different nodes. After a re
 node; the rolling reboot playbook rebalances this. `PostgresReplicationRoleChanged` fires on any switchover, which
 is expected during a rolling reboot.
 
+**A replica that won't start after an image change** (`CNPGClusterHACritical`, the cluster stuck in `Waiting for the
+instances to become active`, the replica's startup probe failing) is usually the new image rejecting the old
+`postgresql.conf`. Postgres's own messages are in the instance manager's `stderr` field:
+
+```shell
+kubectl -n <namespace> logs <cluster>-<n> -c postgres | grep -m1 'startup value of a parameter' | jq -r .stderr
+```
+
+`invalid value for parameter "lc_messages": "en_US.utf8"` means the database was created on the legacy
+`postgresql:16` image and needs `lc_messages`, `lc_monetary`, `lc_numeric` and `lc_time` set to `C.UTF-8` in
+`cluster.postgresql.parameters` before it can run on the catalog's minimal images. The primary keeps running the old
+image until the replica is healthy, so the app stays up. See the
+[2026-11-27 incident](./incidents/2026-11-27-keycloak-replica-failed-to-start-on-minimal-image-missing-locale.md).
+
 **A new cluster that has never archived WAL** (`LastFailedArchiveTime` soon after it's created, its first backup stuck
 in `started`, then `LongRunningTransaction` and `CNPGClusterLowDiskSpaceWarning`) is usually a GCS permission problem.
 Before a new cluster archives its first WAL file, Barman Cloud checks the bucket, which needs `storage.buckets.get`.
