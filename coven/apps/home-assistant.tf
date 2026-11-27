@@ -22,9 +22,16 @@ module "home_assistant_sso" {
   client_name         = "Home Assistant"
   valid_redirect_uris = ["https://home.gs.omelette.gay/auth/oidc/callback"]
   client_roles        = ["admin", "resident"]
-  role_groups = {
-    admin = ["admins"]
+  k8s_namespace       = module.home_assistant_namespace.name
+  k8s_secret_name     = "home-assistant-sso-secrets"
+}
+
+# The admin role's grant used to be made by the keycloak-client module, and is now in sso-groups.tf. Forget it rather
+# than destroying it, which would take the role away from admins.
+removed {
+  from = module.home_assistant_sso.keycloak_group_roles.this
+
+  lifecycle {
+    destroy = false
   }
-  k8s_namespace   = module.home_assistant_namespace.name
-  k8s_secret_name = "home-assistant-sso-secrets"
 }

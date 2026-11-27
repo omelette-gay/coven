@@ -61,8 +61,7 @@ module "example_sso" {                            # optional
   client_id           = "example-app"
   client_name         = "Example"
   valid_redirect_uris = ["https://example.omelette.gay/oidc/callback/"]
-  client_roles        = ["admin"]                 # optional
-  role_groups         = { admin = ["admins"] }    # optional: grant a role to existing groups
+  client_roles        = ["admin"]                 # optional: grant them to groups in sso-groups.tf
   k8s_namespace       = module.example_namespace.name
   k8s_secret_name     = "sso-secrets"
 }
@@ -73,8 +72,8 @@ The values in Vault aren't in the repo: write them with the Vault UI or CLI befo
 The Keycloak client's Secret has the same keys for every app: `client_id`, `client_secret`, `authorization_endpoint`,
 `token_endpoint`, `userinfo_endpoint` and `jwks_endpoint` (see the [module](../tfmodules/keycloak-client/)). The client's
 roles are passed through as the `roles` claim when logging in, and the app is responsible for reacting appropriately to
-them. `role_groups` grants roles to groups that already exist; it doesn't manage the groups or who's in them (tracked in
-#140). Any user in the realm can log in to any client, so read [single sign-on](./sso.md) before adding a Keycloak
+them. Grant roles to groups in `coven/apps/sso-groups.tf` using the module's `role_ids` output; who's in each group is
+managed in the Keycloak UI. Any user in the realm can log in to any client, so read [single sign-on](./sso.md) before adding a Keycloak
 client to an app.
 
 Like every other change, it's applied when it's merged to `main` (see the [cluster overview](./cluster-overview.md)).

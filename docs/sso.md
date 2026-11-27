@@ -10,11 +10,15 @@ or changing a Keycloak client, or before giving someone new an account.
 
 - The `master` realm is only for administering Keycloak itself.
 - The `omelette.gay` realm holds everyone who logs in to our apps.
-- The `admins` group in `omelette.gay` is for Chris and Meg. It's given the admin role in Vault and Grafana,
-  and Vault admin can read every secret and issue cluster-admin Kubernetes credentials. Treat membership of `admins` as
-  full control of everything.
+- The `admins` group in `omelette.gay` is for Chris and Meg. It's given the admin role in Vault, Grafana and Home
+  Assistant, and Vault admin can read every secret and issue cluster-admin Kubernetes credentials. Treat membership of
+  `admins` as full control of everything.
 - Anyone else (for example friends using a tool we host) should be in a group that describes them, such as `friends`,
   and never in `admins`.
+- **Groups and the roles they hold are in code; who's in each group is not.** Every group and its full list of roles
+  is in `coven/apps/sso-groups.tf`, and a role granted to a group in the Keycloak UI is removed on the next apply.
+  Add people to groups in the Keycloak UI (see [ADR 007](./adr/007-manage-keycloak-group-roles-in-code-and-membership-in-the-ui.md)).
+  Only `admins` exists today.
 
 ### Clients, roles and tokens
 
@@ -62,10 +66,10 @@ Things to know about these:
 - **Any realm user can use Vikunja.** It has no setting to require a role or group claim (checked at v2.8.0), so
   everyone in `omelette.gay` gets an account. That account only sees projects it creates or that are shared with it,
   so it can't see Chris and Meg's tasks. Accounts are linked to Keycloak by issuer and `sub`, not email.
-- **Role mappings are made by Terraform.** The platform stack maps Vault's `vault-admin` and Grafana's `grafana-admin`
-  roles to `admins`, and the apps stack maps Home Assistant's `admin` role to `admins` (`role_groups` in
-  `coven/apps/home-assistant.tf`). Nobody has
-  its `resident` role, as nobody but Chris and Meg lives there. See [known gaps](#known-gaps).
+- **Role mappings are made by Terraform.** `coven/apps/sso-groups.tf` gives `admins` Vault's `vault-admin`, Grafana's
+  `grafana-admin` and Home Assistant's `admin`, and nothing else. The platform stack also grants `vault-admin` and
+  `grafana-admin`, so they work on a fresh cluster before the apps stack is applied. Nobody has Home Assistant's
+  `resident` role, as nobody but Chris and Meg lives there.
 
 ### Realm settings that affect everyone
 
@@ -107,7 +111,6 @@ module "keycloak_client" {
   client_name         = "Example"
   valid_redirect_uris = ["https://${var.domain}/oidc/callback"]
   client_roles        = ["admin", "user"]
-  role_groups         = { admin = ["admins"] }
   k8s_namespace       = kubernetes_namespace_v1.this.metadata[0].name
   k8s_secret_name     = "example-oidc"
 
@@ -123,11 +126,23 @@ The module creates:
 - a Kubernetes Secret with the keys `client_id`, `client_secret`, `authorization_endpoint`, `token_endpoint`,
   `userinfo_endpoint` and `jwks_endpoint`. Every client has the same keys, so point the app at whichever it needs.
 
-It only grants roles to the groups in `role_groups`, which must already exist (or, in the platform stack, which makes
-the `admins` group, be passed in `group_ids`). It doesn't create groups or manage who's
-in them, and it never removes a role from a group, so grants made in the Keycloak UI stay. Anything not in
-`role_groups` has to be granted in the UI until the other apps move (see [known gaps](#known-gaps)). Record which group
-has which role in the [current apps](#current-apps) table.
+It doesn't grant the roles to anyone. Grant them to groups by adding the module's `role_ids` output to the group's
+`keycloak_group_roles` in `coven/apps/sso-groups.tf` (and `testlab/apps/sso-groups.tf` if the testlab runs the app):
+
+```hcl
+resource "keycloak_group_roles" "admins" {
+  ...
+  role_ids = [
+    ...
+    module.example_sso.role_ids["admin"],
+  ]
+  exhaustive = true
+}
+```
+
+To give a role to a group that doesn't exist yet, add a `keycloak_group` and its own `keycloak_group_roles`, with
+`exhaustive = true`, to `sso-groups.tf`, then add people to it in the Keycloak UI. Don't grant roles in the UI: they're
+removed on the next apply. Record which group has which role in the [current apps](#current-apps) table.
 
 Keep `valid_redirect_uris` to the exact callback URLs the app uses, not wildcards.
 
@@ -174,8 +189,9 @@ feature: build it in the testlab first, manage it with Terraform, and record the
 
 ## Known gaps
 
-- **Group membership isn't in code.** The realm, the `admins` group and the role mappings are in Terraform, but other
-  groups and who's in each group are managed in the Keycloak UI. Because the module never removes a grant, a role added to a group by hand isn't reverted. See #140.
+- **Roles granted directly to a user, rather than to a group, aren't reverted.** Only groups' roles are exhaustive.
+  None exist today: grant roles to groups instead.
+- **Grants made in the UI last until the apps stack is next applied**, which is on merge to `main`.
 - **GlitchTip's `ENABLE_ORGANIZATION_CREATION` isn't set explicitly.** Set it to `false` in `tfmodules/glitchtip`.
 - **Wedding links logins to existing accounts by email** without checking `email_verified` (`omelette_wedding/auth.py`
   in the wedding repo). Keycloak doesn't allow two users to share an email, which limits this, but it should match on
