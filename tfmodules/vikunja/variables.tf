@@ -139,3 +139,13 @@ variable "blackbox_prober" {
     path = string
   })
 }
+
+variable "mcp_keycloak_secret_revision" {
+  description = "Increase this to rotate the MCP Keycloak client's secret. claude.ai's connector then needs the new secret entering by hand"
+  type        = number
+  default     = 1
+  validation {
+    condition     = var.mcp_keycloak_secret_revision >= 1 && floor(var.mcp_keycloak_secret_revision) == var.mcp_keycloak_secret_revision
+    error_message = "mcp_keycloak_secret_revision must be a whole number, 1 or more."
+  }
+}

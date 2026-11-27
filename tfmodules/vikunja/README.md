@@ -38,6 +38,27 @@ Redis is configured. RustFS itself is also a single pod.
 
 ## MCP
 
-Vikunja 2.8 has an MCP server at `/api/v2/mcp`, using per-user API tokens with the `mcp:access` scope. Clients that
-can send a bearer token (e.g. Claude Code) can use it directly. claude.ai needs OAuth, which Vikunja doesn't do, so
-that needs a gateway in front (#106).
+Vikunja 2.8 has an MCP server at `/api/v2/mcp`, which only takes Vikunja API tokens with the `mcp:access` scope.
+claude.ai's custom connectors need OAuth, so an [agentgateway](../agentgateway/) in the namespace takes over that path
+(and its OAuth metadata), and everything else on the host still goes to Vikunja. See
+[ADR 008](../../docs/adr/008-put-an-oauth-gateway-in-front-of-vikunjas-mcp-server.md).
+
+- MCP clients log in through Keycloak with the `vikunja-mcp` client, whose access tokens carry the person's
+  `vikunja_mcp_token` user attribute and have the MCP endpoint's URL as their audience. The gateway swaps the access
+  token for that Vikunja token, so Vikunja checks that person's own permissions.
+- The attribute is added to the realm's user profile by the platform stack
+  (`tfmodules/stack-platform/keycloak-user-profile.tf`).
+- Only claude.ai can log in: the client only allows its callback addresses. Vikunja API tokens are no longer accepted
+  at `/api/v2/mcp`, so other MCP clients such as Claude Code can't use it. The rest of the API (`/api/v1`) still takes
+  them.
+
+### Setting it up for someone
+
+See [letting Claude use Vikunja](../../docs/sso.md#letting-claude-use-vikunja): each person creates a Vikunja token
+without delete permissions, pastes it on their Keycloak account page, and adds claude.ai's connector with the client
+ID and secret from the `vikunja-mcp-oidc` Secret.
+
+### Rotating the MCP client secret
+
+Increase `mcp_keycloak_secret_revision` by one. It writes a new secret to Keycloak and the `vikunja-mcp-oidc` Secret.
+claude.ai keeps its own copy, so each connector has to be updated with the new secret.

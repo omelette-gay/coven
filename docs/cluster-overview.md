@@ -93,8 +93,8 @@ Between them, they manage:
   cluster's service accounts (applied by a project owner, as CI can only read them), billing budget alerts
 - Hetzner DNS zones and static records (Fastmail, Bluesky and GitHub verification, GitHub Pages CNAMEs)
 - `glitchtip` namespace - GlitchTip error tracking (errors.omelette.gay)
-- `vikunja` namespace - Vikunja task lists and kanban boards (tasks.omelette.gay), with its Postgres cluster and a
-  RustFS object store for attachments
+- `vikunja` namespace - Vikunja task lists and kanban boards (tasks.omelette.gay), with its Postgres cluster, a
+  RustFS object store for attachments, and agentgateway in front of its MCP server for OAuth (see ADR 008)
 - `minecraft-<server_id>` namespaces - Minecraft servers
 - `factorio-<server_id>` namespaces - Factorio servers
 - A namespace per self-deploying app, with Vault access for its GitHub repo, and any secrets and Keycloak client it needs

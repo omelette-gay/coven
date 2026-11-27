@@ -57,6 +57,7 @@
         "!cert-manager",
         "!external-dns",
         "!longhorn",
+        "!agentgateway-standalone",
         "!mariadb-operator",
         "!mariadb-operator-crds"
       ],

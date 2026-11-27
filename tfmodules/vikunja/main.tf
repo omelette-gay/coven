@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/helm"
       version = ">= 3.2.0"
     }
+    keycloak = {
+      source  = "keycloak/keycloak"
+      version = ">= 5.9.0"
+    }
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = ">= 3.2.1"
@@ -29,6 +33,22 @@ locals {
 
   # Created by cert-manager for the Ingress, and also used by the router that blocks the metrics path
   tls_secret_name = "vikunja-tls"
+
+  mcp_path = "/api/v2/mcp"
+  mcp_url  = "https://${var.host}${local.mcp_path}"
+
+  # The user attribute holding each person's Vikunja token for MCP. It's added to the realm's user profile by the
+  # platform stack (tfmodules/stack-platform/keycloak-user-profile.tf), so the names have to match
+  mcp_token_attribute = "vikunja_mcp_token"
+
+  # The gateway fetches Keycloak's signing keys in-cluster, so it doesn't need the public hostname or its CA
+  keycloak_internal_url = "http://keycloak-keycloakx-http.keycloak.svc.cluster.local/auth"
+
+  # Where claude.ai's custom connectors return to after logging in
+  claude_callback_urls = [
+    "https://claude.ai/api/mcp/auth_callback",
+    "https://claude.com/api/mcp/auth_callback",
+  ]
 }
 
 # Names that are global rather than per namespace (Vault paths and roles, the Keycloak client ID and the default backup
@@ -312,6 +332,60 @@ resource "helm_release" "this" {
   ]
 
   depends_on = [helm_release.db, module.object_store, module.block_metrics_path]
+}
+
+# The MCP server at /api/v2/mcp only takes Vikunja API tokens, and claude.ai's connectors need OAuth, so agentgateway
+# takes over that path: MCP clients log in to Keycloak, and the gateway swaps their access token for the Vikunja token
+# in their vikunja_mcp_token user attribute. See ADR 008 and the README.
+module "mcp_keycloak_client" {
+  source = "../keycloak-client"
+
+  keycloak_url        = var.keycloak_url
+  secret_revision     = var.mcp_keycloak_secret_revision
+  keycloak_realm      = var.keycloak_realm
+  client_id           = "${local.namespace}-mcp"
+  client_name         = "Vikunja MCP (Claude)"
+  valid_redirect_uris = local.claude_callback_urls
+  k8s_namespace       = local.namespace
+  k8s_secret_name     = "vikunja-mcp-oidc"
+}
+
+# Tokens for this client are only accepted by the gateway
+resource "keycloak_openid_audience_protocol_mapper" "mcp" {
+  realm_id                 = var.keycloak_realm
+  client_id                = module.mcp_keycloak_client.id
+  name                     = "mcp endpoint audience"
+  included_custom_audience = local.mcp_url
+  add_to_id_token          = false
+  add_to_access_token      = true
+}
+
+# Only on this client, and only in access tokens: every other app would otherwise get everyone's Vikunja token
+resource "keycloak_openid_user_attribute_protocol_mapper" "mcp_token" {
+  realm_id            = var.keycloak_realm
+  client_id           = module.mcp_keycloak_client.id
+  name                = "vikunja mcp token"
+  user_attribute      = local.mcp_token_attribute
+  claim_name          = local.mcp_token_attribute
+  add_to_id_token     = false
+  add_to_access_token = true
+  add_to_userinfo     = false
+}
+
+module "mcp_gateway" {
+  source = "../agentgateway"
+
+  name             = "vikunja-mcp"
+  namespace        = local.namespace
+  host             = var.host
+  path             = local.mcp_path
+  tls_secret_name  = local.tls_secret_name
+  upstream_url     = "http://vikunja.${local.namespace}.svc.cluster.local:3456${local.mcp_path}"
+  oidc_issuer      = "${var.keycloak_url}/realms/${var.keycloak_realm}"
+  oidc_jwks_url    = "${local.keycloak_internal_url}/realms/${var.keycloak_realm}/protocol/openid-connect/certs"
+  credential_claim = local.mcp_token_attribute
+
+  depends_on = [helm_release.this]
 }
 
 resource "kubernetes_manifest" "probe" {
