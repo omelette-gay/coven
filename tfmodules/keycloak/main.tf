@@ -54,6 +54,17 @@ resource "helm_release" "keycloak_db" {
         initdb = {
           database = "keycloak"
         }
+        # The database was created on the legacy `postgresql:16` image, whose initdb wrote en_US.utf8 into
+        # postgresql.conf for these. The catalog's minimal images only have the C locales, so Postgres won't start
+        # with those lines. Setting them here puts them in CNPG's include file, which comes later and wins
+        postgresql = {
+          parameters = {
+            lc_messages = "C.UTF-8"
+            lc_monetary = "C.UTF-8"
+            lc_numeric  = "C.UTF-8"
+            lc_time     = "C.UTF-8"
+          }
+        }
         monitoring = { enabled = true }
       }
     },
