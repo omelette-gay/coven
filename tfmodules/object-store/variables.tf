@@ -52,12 +52,13 @@ variable "versioned_buckets" {
 }
 
 variable "public_api" {
-  description = "Serve the S3 API on a public hostname, for apps whose users upload and download directly with presigned URLs. Only `buckets` are routed, and they get CORS rules allowing `cors_allowed_origins`. Buckets stay private: requests still need a signature. Removing a bucket, or the whole setting, doesn't remove its CORS rules"
+  description = "Serve the S3 API on a public hostname, for apps whose users fetch files directly: with presigned URLs, or anonymously from `public_read_buckets`. Only `buckets` are routed. If `cors_allowed_origins` is set, they get CORS rules allowing those origins. `public_read_buckets` (a subset of `buckets`) let anyone fetch an object by its key, without listing the bucket; the rest need a signature. Removing a bucket, or the whole setting, removes its route but not its CORS rules or anonymous read policy"
   type = object({
     host                 = string
     cluster_issuer       = string
     buckets              = set(string)
-    cors_allowed_origins = list(string)
+    cors_allowed_origins = optional(list(string), [])
+    public_read_buckets  = optional(set(string), [])
   })
   default = null
   validation {
@@ -69,8 +70,12 @@ variable "public_api" {
     error_message = "public_api.buckets must contain at least one bucket, and only buckets that are also in buckets."
   }
   validation {
-    condition     = var.public_api == null || (length(var.public_api.cors_allowed_origins) > 0 && alltrue([for origin in var.public_api.cors_allowed_origins : can(regex("^https://([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?(:[0-9]+)?$", origin))]))
-    error_message = "public_api.cors_allowed_origins must contain at least one origin, each https://<hostname> with an optional port and no path or trailing slash."
+    condition     = var.public_api == null || alltrue([for origin in var.public_api.cors_allowed_origins : can(regex("^https://([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?(:[0-9]+)?$", origin))])
+    error_message = "public_api.cors_allowed_origins must each be https://<hostname> with an optional port and no path or trailing slash."
+  }
+  validation {
+    condition     = var.public_api == null || length(setsubtract(var.public_api.public_read_buckets, var.public_api.buckets)) == 0
+    error_message = "public_api.public_read_buckets must only contain buckets that are also in public_api.buckets."
   }
 }
 

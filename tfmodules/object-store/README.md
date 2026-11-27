@@ -15,16 +15,29 @@ Grist needs this for its document history. Taking a bucket out of the list doesn
 
 ## Public S3 API
 
-By default RustFS is only reachable inside the cluster. Some apps, such as Outline, have users upload and download
-directly with presigned URLs, so their browsers need to reach it. `public_api` serves the S3 API on a public hostname
-for those buckets:
+By default RustFS is only reachable inside the cluster. Some apps need people's browsers to reach their files directly:
+
+- Outline has users upload and download with presigned URLs.
+- A WordPress media offload plugin uploads from the server, then links to the files at plain URLs that anyone can
+  fetch.
+
+`public_api` serves the S3 API on a public hostname for those buckets:
 
 ```hcl
+# Presigned URLs only, from a web app on another origin
 public_api = {
   host                 = "docs-files.omelette.gay"
   cluster_issuer       = "letsencrypt"
   buckets              = ["outline"]
   cors_allowed_origins = ["https://docs.omelette.gay"]
+}
+
+# Files anyone can fetch by URL
+public_api = {
+  host                = "media.example.com"
+  cluster_issuer      = "letsencrypt"
+  buckets             = ["media"]
+  public_read_buckets = ["media"]
 }
 ```
 
@@ -32,13 +45,21 @@ public_api = {
   RustFS's admin API under `/rustfs/`, which takes the same root keys the apps use, so the Ingress allows bucket paths
   rather than blocking admin ones. Other buckets, the admin API and the health checks get Traefik's 404. The console
   (port 9001) is never exposed.
-- **The buckets stay private.** Every request still needs a signature, so only presigned URLs work. The app has to
-  presign against the `public_endpoint` output rather than `endpoint`, as the signature covers the host.
-- **CORS rules** are set on the listed buckets, allowing `GET`, `HEAD`, `PUT` and `POST` from `cors_allowed_origins`.
-  RustFS only sends CORS headers for buckets with rules, so other origins are refused. Taking a bucket out of the list,
-  or removing `public_api`, removes its route but not its CORS rules.
-- The app holds RustFS's root keys, as with any store from this module. They can't reach the admin API from outside,
-  but they can still use it from inside the cluster.
+- **Buckets need a signature unless they're in `public_read_buckets`.** For signed requests, the app has to use the
+  `public_endpoint` output rather than `endpoint`, as the signature covers the host.
+- **`public_read_buckets` let anyone fetch an object by its key, but not list the bucket.** RustFS's own `download`
+  permission also allows listing, which would expose every file name, so the module sets a bucket policy with only
+  `s3:GetObject` instead. Uploads, deletes and reading the policy still need the keys. A missing object returns 404
+  rather than 403, so someone can check whether a guessed key exists. Taking a bucket out of the list makes it private
+  again.
+- **CORS rules** are set on the listed buckets if `cors_allowed_origins` is given, allowing `GET`, `HEAD`, `PUT` and
+  `POST` from those origins. RustFS only sends CORS headers for buckets with rules, so other origins are refused.
+  Images and links don't need CORS; uploads from the browser, and files fetched by scripts or as web fonts, do.
+- Taking a bucket out of `buckets`, or removing `public_api`, removes its route, but not its CORS rules or anonymous
+  read policy. They can't be reached from outside, but take the bucket out of `public_read_buckets` first if you want
+  it private.
+- The app holds RustFS's root keys, as with any store from this module, so keep each app's store to itself. The keys
+  can't reach the admin API from outside, but they can still use it from inside the cluster.
 
 ## Backups
 
