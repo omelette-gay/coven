@@ -126,8 +126,9 @@ resource "helm_release" "this" {
       extraEnv = [
         # RustFS only logs to stdout by default outside production, and this shouldn't depend on obs_environment
         { name = "RUSTFS_OBS_LOG_STDOUT_ENABLED", value = "true" },
-        # labels for the metrics RustFS sends Prometheus
-        { name = "OTEL_SERVICE_NAME", value = "${var.name}-rustfs" },
+        # labels for the metrics RustFS sends Prometheus. RustFS sets service.name itself, from RUSTFS_OBS_SERVICE_NAME
+        # (default "RustFS"), which overrides OTEL_SERVICE_NAME.
+        { name = "RUSTFS_OBS_SERVICE_NAME", value = "${var.name}-rustfs" },
         { name = "K8S_POD_NAME", valueFrom = { fieldRef = { fieldPath = "metadata.name" } } },
         {
           name  = "OTEL_RESOURCE_ATTRIBUTES"
