@@ -189,7 +189,7 @@ only talk to the Kubernetes API on strix, Vault and cloud APIs, so they don't ne
 | TLS certificates     | cert-manager, `letsencrypt` ClusterIssuer (prod), `vault` issuer for the testlab                  |
 | DNS                  | Hetzner DNS; zones in Terraform, records from Ingresses created by external-dns                 |
 | Block storage        | Longhorn, 2 replicas by default (one per node), best-effort data locality, replica timeout increased to 30s because replication goes over the internet, snapshots checksummed on creation (fast-check) and fast replica rebuild enabled |
-| Object storage       | RustFS (S3-compatible), currently used as Loki's backend                                        |
+| Object storage       | RustFS (S3-compatible), for Loki, GlitchTip and Vikunja. Each store sends metrics to Prometheus over OTLP |
 | PostgreSQL           | CloudNativePG clusters, backed up to GCS via barman-cloud                                       |
 | MySQL                | MariaDB operator, physical backups to GCS                                                       |
 | Secrets              | Vault (manual unseal, no auto-unseal), synced into k8s by External Secrets Operator             |

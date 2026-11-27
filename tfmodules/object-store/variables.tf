@@ -41,12 +41,6 @@ variable "buckets" {
   }
 }
 
-variable "otlp_metrics" {
-  description = "Whether RustFS sends metrics to Prometheus over OTLP"
-  type        = bool
-  default     = false
-}
-
 variable "vault_kv_mountpoint" {
   description = "Vault KV v2 mount for the secret. Pass the mount's path from the stack that makes it, so the secret is written after it"
   type        = string

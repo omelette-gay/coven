@@ -14,3 +14,9 @@ RustFS keeps its data on a single Longhorn volume. Set `longhorn_recurring_job_n
 it up off-site: the module then creates the volume itself, labelled for that Longhorn recurring job, and points the
 chart at it. Without it, the chart creates an unlabelled volume that isn't backed up, which is fine for data that can
 be lost (like GlitchTip's). Set it when the store is first created: changing it later switches RustFS to a new, empty volume.
+
+## Telemetry
+
+Every store sends metrics to Prometheus's OTLP receiver, labelled `job="<namespace>/<name>-rustfs"`, and logs to
+stdout, where Alloy collects them into Loki. Traces and OTLP logs are turned off, as Prometheus only accepts metrics
+(see [#93](https://github.com/omelette-gay/coven/issues/93) for tracing).

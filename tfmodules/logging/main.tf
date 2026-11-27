@@ -21,7 +21,6 @@ module "object_store" {
   namespace    = var.namespace
   storage_size = var.storage_size
   buckets      = ["loki-chunks", "loki-ruler", "loki-admin"]
-  otlp_metrics = true
 
   vault_kv_mountpoint           = var.vault_kv_mountpoint
   vault_kubernetes_auth_backend = var.vault_kubernetes_auth_backend
