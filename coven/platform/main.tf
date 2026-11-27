@@ -124,6 +124,9 @@ locals {
 
   backup_bucket = "coven-backups"
 
+  # The PostgreSQL image catalog, which the apps stack and self-deploying apps also reference by name
+  postgresql_image_catalog = "postgresql"
+
   # Made by platform, used by bootstrap's services
   longhorn_backup_job_name           = "nightly-backup"
   longhorn_backup_credentials_secret = "gcp-backup-creds"
@@ -150,6 +153,7 @@ module "platform" {
   keycloak_realm                     = local.keycloak_realm
   backup_bucket                      = local.backup_bucket
   longhorn_backup_job_name           = local.longhorn_backup_job_name
+  postgresql_image_catalog           = local.postgresql_image_catalog
   longhorn_backup_credentials_secret = local.longhorn_backup_credentials_secret
   keycloak_backup_credentials_secret = local.keycloak_backup_credentials_secret
   grafana_oauth_secret               = local.grafana_oauth_secret
