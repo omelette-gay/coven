@@ -70,8 +70,7 @@ resource "helm_release" "this" {
   create_namespace = false
   wait             = true
 
-  # compact drops the metrics values when they're off, so other stores' values don't change
-  values = compact([
+  values = [
     yamlencode({
       mode = {
         standalone = merge(
@@ -105,31 +104,39 @@ resource "helm_release" "this" {
       }
 
       config = {
-        rustfs = merge(
-          { log_level = "warn" },
-          var.otlp_metrics ? {
-            obs_endpoint = {
-              enabled       = true
-              base_endpoint = "http://kube-prometheus-kube-prome-prometheus.monitoring.svc.cluster.local:9090/api/v1/otlp"
-              use_stdout    = true
-              metrics       = { enabled = true }
-            }
-          } : {}
-        )
+        rustfs = {
+          log_level = "warn"
+
+          # Logs go to stdout for Alloy to collect, rather than to a file on a separate volume
+          obs_log_directory = ""
+
+          # Only metrics go over OTLP, as Prometheus's OTLP receiver doesn't accept traces or logs. use_stdout would
+          # also print every span and metrics export to stdout, which made Loki's store the biggest source of logs.
+          obs_endpoint = {
+            enabled       = true
+            base_endpoint = "http://kube-prometheus-kube-prome-prometheus.monitoring.svc.cluster.local:9090/api/v1/otlp"
+            use_stdout    = false
+            metrics       = { enabled = true }
+            trace         = { enabled = false }
+            logs          = { enabled = false }
+          }
+        }
       }
-    }),
-    # labels for the metrics RustFS sends Prometheus
-    var.otlp_metrics ? yamlencode({
+
       extraEnv = [
-        { name = "OTEL_SERVICE_NAME", value = "${var.name}-rustfs" },
+        # RustFS only logs to stdout by default outside production, and this shouldn't depend on obs_environment
+        { name = "RUSTFS_OBS_LOG_STDOUT_ENABLED", value = "true" },
+        # labels for the metrics RustFS sends Prometheus. RustFS sets service.name itself, from RUSTFS_OBS_SERVICE_NAME
+        # (default "RustFS"), which overrides OTEL_SERVICE_NAME.
+        { name = "RUSTFS_OBS_SERVICE_NAME", value = "${var.name}-rustfs" },
         { name = "K8S_POD_NAME", valueFrom = { fieldRef = { fieldPath = "metadata.name" } } },
         {
           name  = "OTEL_RESOURCE_ATTRIBUTES"
           value = "service.namespace=${var.namespace},service.instance.id=$(K8S_POD_NAME),k8s.namespace.name=${var.namespace},k8s.pod.name=$(K8S_POD_NAME)"
         },
       ]
-    }) : "",
-  ])
+    }),
+  ]
 }
 
 resource "kubernetes_job_v1" "bucket" {
