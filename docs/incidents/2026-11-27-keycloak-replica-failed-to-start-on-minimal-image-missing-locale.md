@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Status** | Ongoing (fix in the pull request that adds this file) |
-| **Detected** | 2026-11-27, when `CNPGClusterHACritical` fired for `keycloak/db-cluster`. The exact time hasn't been checked: `ALERTS{alertname="CNPGClusterHACritical"}` in Prometheus has it |
+| **Status** | Resolved |
+| **Detected** | 2026-11-27 20:54 UTC, when `CNPGClusterHACritical` fired for `keycloak/db-cluster` |
 | **Impact started** | 2026-11-27 20:48 UTC, when the operator restarted the replica on the new image |
-| **Resolved** | |
+| **Resolved** | 2026-11-27 21:18 UTC |
 | **Severity** | Minor (Keycloak stayed up, but its database had no replica to fail over to) |
 | **Alerts** | `CNPGClusterHACritical` |
 
@@ -19,7 +19,7 @@ minimal images don't have. The fix sets those four parameters to `C.UTF-8` in th
 
 ## Impact
 
-- `keycloak/db-cluster` ran on its primary (`db-cluster-1`, on strix) alone from 20:48 UTC. Had strix or the primary
+- `keycloak/db-cluster` ran on its primary (`db-cluster-1`, on strix) alone from 20:48 to 21:14 UTC. Had strix or the primary
   failed in that time, Keycloak, and so SSO for every app, would have gone down with no automatic failover.
 - Keycloak itself kept working. The operator doesn't switch over until the updated replica is healthy, so the primary
   stayed on the old image.
@@ -31,9 +31,14 @@ minimal images don't have. The fix sets those four parameters to `C.UTF-8` in th
 |---|---|
 | 2026-11-27 20:46 | [Pull request #157](https://github.com/omelette-gay/coven/pull/157) merged and its apply starts |
 | 2026-11-27 20:48 | The operator restarts `db-cluster-2` on the catalog's image. Its startup probe starts failing |
-| 2026-11-27 ~20:50 | `CNPGClusterHACritical` fires (time not confirmed) |
+| 2026-11-27 20:49 | `CNPGClusterHACritical` goes pending |
+| 2026-11-27 20:54 | `CNPGClusterHACritical` fires |
 | 2026-11-27 ~21:00 | Investigated. Root cause found in the replica's logs |
 | 2026-11-27 ~21:05 | The fix confirmed locally against the minimal image with Docker |
+| 2026-11-27 21:08 | [Pull request #175](https://github.com/omelette-gay/coven/pull/175) merged. Its apply was cancelled by the next merge's, which applied it from 21:10 |
+| 2026-11-27 21:14 | `db-cluster-2` starts on the new image. `CNPGClusterHACritical` resolves |
+| 2026-11-27 21:16 | After the operator's rollout delay, it switches over to `db-cluster-2` and restarts `db-cluster-1` on the new image |
+| 2026-11-27 21:18 | Both instances on the new image and the cluster healthy |
 
 ## Root cause
 
@@ -78,6 +83,9 @@ applies the last value, so the invalid earlier lines are ignored. This was check
 `16.16-202611230809-minimal-trixie` image: with the `en_US.utf8` lines alone Postgres failed with the same error, and
 with a later include setting `C.UTF-8` it started.
 
+The change is in [pull request #175](https://github.com/omelette-gay/coven/pull/175). Once it was applied, the
+replica started on the new image and the operator finished the rollout, switching over to it.
+
 ## Lessons
 
 - The operator's rollout order (replica first, switch over only once it's healthy) meant a broken image cost us
@@ -88,12 +96,13 @@ with a later include setting `C.UTF-8` it started.
 
 ## Follow-up actions
 
-- [ ] Merge the fix and confirm `db-cluster-2` starts, the cluster finishes its switchover and the alert clears
+- [x] Merge the fix and confirm `db-cluster-2` starts, the cluster finishes its switchover and the alert clears
 - [ ] Add the same parameters to the wedding site and Home Assistant's databases, also created on the legacy image,
   before they move to the catalog (omelette-gay/wedding#292, omelette-gay/home-assistant#85)
 
 ## References
 
 - [Pull request #157](https://github.com/omelette-gay/coven/pull/157), which moved Keycloak to the catalog
+- [Pull request #175](https://github.com/omelette-gay/coven/pull/175), the fix
 - [ADR 009](../adr/009-take-postgres-images-from-a-shared-image-catalog.md)
 - [docs/diagnosing-issues.md, Postgres alerts](../diagnosing-issues.md#postgres-alerts)
