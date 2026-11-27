@@ -41,6 +41,39 @@ variable "buckets" {
   }
 }
 
+variable "versioned_buckets" {
+  description = "Buckets in `buckets` to turn versioning on for, so overwritten and deleted objects keep their old versions (Grist requires this). Removing a bucket from this list doesn't turn versioning off"
+  type        = set(string)
+  default     = []
+  validation {
+    condition     = length(setsubtract(var.versioned_buckets, var.buckets)) == 0
+    error_message = "versioned_buckets must only contain buckets that are also in buckets."
+  }
+}
+
+variable "public_api" {
+  description = "Serve the S3 API on a public hostname, for apps whose users upload and download directly with presigned URLs. Only `buckets` are routed, and they get CORS rules allowing `cors_allowed_origins`. Buckets stay private: requests still need a signature. Removing a bucket, or the whole setting, doesn't remove its CORS rules"
+  type = object({
+    host                 = string
+    cluster_issuer       = string
+    buckets              = set(string)
+    cors_allowed_origins = list(string)
+  })
+  default = null
+  validation {
+    condition     = var.public_api == null || can(regex("^([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.public_api.host))
+    error_message = "public_api.host must be a bare hostname, without https:// or a trailing slash."
+  }
+  validation {
+    condition     = var.public_api == null || (length(var.public_api.buckets) > 0 && length(setsubtract(var.public_api.buckets, var.buckets)) == 0)
+    error_message = "public_api.buckets must contain at least one bucket, and only buckets that are also in buckets."
+  }
+  validation {
+    condition     = var.public_api == null || (length(var.public_api.cors_allowed_origins) > 0 && alltrue([for origin in var.public_api.cors_allowed_origins : can(regex("^https://([a-z0-9]([-a-z0-9]*[a-z0-9])?\\.)+[a-z0-9]([-a-z0-9]*[a-z0-9])?(:[0-9]+)?$", origin))]))
+    error_message = "public_api.cors_allowed_origins must contain at least one origin, each https://<hostname> with an optional port and no path or trailing slash."
+  }
+}
+
 variable "vault_kv_mountpoint" {
   description = "Vault KV v2 mount for the secret. Pass the mount's path from the stack that makes it, so the secret is written after it"
   type        = string
