@@ -101,10 +101,7 @@ module "backup_credentials" {
 
 # GlitchTip's database. It's made with the CNPG cluster chart rather than the GlitchTip chart's own `postgresql`, which
 # can't set an image (so it couldn't use the shared catalog, see ADR 009) and ignores monitoring.
-#
-# It was first created by importing the database from the GlitchTip chart's cluster, `glitchtip-pg` (#128). The import
-# only runs when the cluster is created, so the settings below do nothing afterwards, and are removed once the old
-# cluster is deleted.
+# It was created by importing the database from the GlitchTip chart's old cluster, `glitchtip-pg` (#128).
 resource "helm_release" "db" {
   name       = "db"
   namespace  = kubernetes_namespace_v1.this.metadata[0].name
@@ -113,14 +110,10 @@ resource "helm_release" "db" {
   version    = "0.9.0"
   atomic     = true
   wait       = true
-  # importing the old database happens before the cluster is ready
-  timeout = 900
 
   # Two values documents, which Helm merges deeply, so the backup settings can add to `cluster`
   values = concat(
     [yamlencode({
-      mode = "recovery"
-
       # GlitchTip's major version, with its image from the shared catalog (see ADR 009)
       version = { postgresql = local.postgresql_major }
       cluster = {
@@ -138,29 +131,6 @@ resource "helm_release" "db" {
         }
         monitoring = {
           enabled = true
-        }
-      }
-
-      recovery = {
-        method = "import"
-        import = {
-          type      = "microservice"
-          databases = ["glitchtip"]
-          source = {
-            host     = "glitchtip-pg-rw"
-            port     = 5432
-            username = "glitchtip"
-            database = "glitchtip"
-            sslMode  = "verify-full"
-            passwordSecret = {
-              name = "glitchtip-pg-app"
-              key  = "password"
-            }
-            sslRootCertSecret = {
-              name = "glitchtip-pg-ca"
-              key  = "ca.crt"
-            }
-          }
         }
       }
     })],
@@ -349,8 +319,7 @@ resource "helm_release" "this" {
         }
       }
 
-      # The database is the `db` release above. Turning this off removes the chart's old cluster, `glitchtip-pg`, from
-      # the release; it's annotated so Helm leaves it running, until it's deleted by hand after the migration (#128)
+      # The database is the `db` release above
       postgresql = {
         enabled = false
       }
