@@ -110,7 +110,7 @@ resource "helm_release" "blackbox_exporter" {
   namespace  = var.namespace
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "prometheus-blackbox-exporter"
-  version    = "11.21.3"
+  version    = "12.0.0"
   atomic     = true
   wait       = true
 
