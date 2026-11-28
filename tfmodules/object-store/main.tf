@@ -160,12 +160,7 @@ resource "kubernetes_job_v1" "bucket" {
           name    = "create-bucket"
           image   = "rustfs/rc:${local.rc_image_tag}"
           command = ["/bin/sh", "-c"]
-          args = [<<-SHELL
-            set -eu
-            rc alias set object-store ${local.endpoint} "$RUSTFS_ACCESS_KEY" "$RUSTFS_SECRET_KEY"
-            rc bucket create object-store/${each.key} --ignore-existing
-          SHELL
-          ]
+          args    = [local.bucket_scripts[each.key]]
 
           env {
             name = "RUSTFS_ACCESS_KEY"
@@ -197,4 +192,50 @@ resource "kubernetes_job_v1" "bucket" {
   }
 
   depends_on = [helm_release.this]
+}
+
+# The S3 API on a public hostname, for apps whose users upload and download directly with presigned URLs (such as
+# Outline). Only the public buckets' paths are routed: the same port also serves RustFS's admin API under /rustfs/, and
+# the console (port 9001) is never exposed. Uses path-style URLs, https://<host>/<bucket>/<key>
+resource "kubernetes_ingress_v1" "public_api" {
+  count = var.public_api != null ? 1 : 0
+
+  metadata {
+    name      = "${var.name}-object-store"
+    namespace = var.namespace
+    annotations = {
+      "cert-manager.io/cluster-issuer"                   = var.public_api.cluster_issuer
+      "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
+    }
+  }
+
+  spec {
+    tls {
+      hosts       = [var.public_api.host]
+      secret_name = "${var.name}-object-store-tls"
+    }
+
+    rule {
+      host = var.public_api.host
+      http {
+        dynamic "path" {
+          for_each = var.public_api.buckets
+          content {
+            path      = "/${path.value}"
+            path_type = "Prefix"
+            backend {
+              service {
+                name = "${var.name}-rustfs-svc"
+                port {
+                  number = 9000
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [kubernetes_job_v1.bucket]
 }
